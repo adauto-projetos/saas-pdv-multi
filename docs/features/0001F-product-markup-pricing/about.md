@@ -10,7 +10,7 @@ related: [PRODUCT, OWNER]
 
 ## TL;DR
 
-Cadastro de produtos do SAAS PDV.multi com **markup automático**: o usuário informa custo e % de ganho, e o sistema calcula o preço de venda (custo + %). Existe porque calcular preço na mão erra e não dá base para estoque nem lucro. Headline: é a primeira feature da Fase 1 — sem produto cadastrado nada vende; a calculadora de markup é um auxílio, não obrigatória.
+Cadastro de produtos do SAAS PDV.multi com **markup automático**: o usuário informa custo e % de ganho, e o sistema calcula o preço de venda (custo + %). Existe porque calcular preço na mão erra e não dá base para estoque nem lucro. Headline: é a primeira feature da Fase 1 — sem produto cadastrado nada vende; a calculadora de markup é um auxílio: pode-se cadastrar sem informar custo/% (preço digitado direto) e o preço calculado é sempre editável.
 
 ## TOC
 
@@ -46,8 +46,9 @@ Notação `RF` (funcional), `RN` (regra de negócio).
 - **RF03:** Preço de venda calculado é editável — usuário pode sobrescrever manualmente.
 - **RF04:** Usuário pode cadastrar produto sem custo, informando o preço de venda direto.
 - **RF05:** Sistema oferece % de margem padrão configurável, pré-preenchida em cada novo cadastro.
-- **RF06:** Ao alterar o custo de um produto existente, o sistema reaplica a % e sugere novo preço; só aplica após confirmação do usuário.
+- **RF06:** Ao alterar o custo de um produto existente, o sistema sugere novo preço = custo + (custo × % armazenada) e só aplica após confirmação. Se o preço atual foi definido manualmente (RF03), a sugestão é exibida com aviso e o preço não muda sem confirmação. Cancelar a sugestão mantém o novo custo salvo e o preço inalterado.
 - **RF07:** Usuário lista e edita produtos já cadastrados.
+- **RF08:** Usuário visualiza a quantidade em estoque (somente leitura) na lista de produtos; a movimentação de estoque é tratada na feature de Estoque.
 - **RN01:** Código de barras é único por tenant (estabelecimento).
 - **RN02:** Custo e preço de venda não podem ser negativos.
 - **RN03:** Sem custo informado, a margem e o lucro do produto ficam indefinidos (aceito).
@@ -63,13 +64,13 @@ Notação `RF` (funcional), `RN` (regra de negócio).
 - % de margem padrão configurável por tenant.
 - Recalcular preço ao alterar o custo, com confirmação do usuário.
 - Unidade de venda por unidade (`un`) ou peso (`kg`).
-- Estoque inicial informado no cadastro.
+- Estoque inicial informado no cadastro e exibido (somente leitura) na lista de produtos.
 
 ### Does NOT Include
 - Arredondamento automático de preço (ex: R$13,00 → R$12,99) — decidido fora do MVP; entra depois se necessário.
 - Código de barras interno para granel/peso — fora do MVP; produtos sem código tratados manualmente por ora.
 - Categoria, descrição, foto, fornecedor — não bloqueiam vender; ficam para evolução do cadastro.
-- Margem sobre o preço de venda (custo ÷ (1−%)) — opção não escolhida; o relatório de lucro tratará a margem real.
+- Margem sobre o preço de venda (custo ÷ (1−%)) — opção não escolhida; o campo do cadastro é rotulado "margem %" e representa markup sobre o custo. A margem real sobre a venda (conceito distinto, sempre menor) será calculada e exibida no relatório de lucro, não aqui.
 - Movimentação de estoque além da inicial (entradas/baixas) — pertence à feature de Estoque (Fase 2 do roadmap em {{doc:PRODUCT}}).
 - Cálculo de lucro real — pertence à feature de Lucro/fechamento (Fase 2 do roadmap em {{doc:PRODUCT}}).
 
@@ -77,8 +78,8 @@ Notação `RF` (funcional), `RN` (regra de negócio).
 
 | metric | target | source |
 |---|---|---|
-| Produtos cadastrados com custo + margem preenchidos | ≥ 80% dos itens do tenant | dados do tenant (a instrumentar) |
-| Tempo médio para cadastrar um produto | < 30s | telemetria de uso (a instrumentar) |
+| Produtos cadastrados com custo + margem preenchidos | ≥ 80% dos itens do tenant | dados do tenant (query na tabela de produtos) |
+| Tempo médio para cadastrar um produto | < 30s | unknown — sem telemetria ainda |
 | Produtos salvos com preço inválido (0/negativo) | 0 | validação + logs |
 
 ## References
