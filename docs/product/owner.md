@@ -10,6 +10,13 @@ related: [PRODUCT]
 
 Perfil do founder do **SAAS PDV.multi** (PDV SaaS multi-tenant). Existe para orientar tom e profundidade da comunicação dos comandos ADD. Headline: founder beginner ("leigo esforçado"), pt-br — decisões técnicas devem ser explicadas, não apenas executadas.
 
+## TOC
+
+- [Founder](#founder)
+- [Skills](#skills)
+- [Constraints](#constraints)
+- [Goals](#goals)
+
 ## Founder
 
 - Nome: Djadauto.
