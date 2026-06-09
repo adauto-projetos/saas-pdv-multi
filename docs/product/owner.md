@@ -37,6 +37,7 @@ Perfil do founder do **SAAS PDV.multi** (PDV SaaS multi-tenant). Existe para ori
 | Equipe: founder solo | Toda decisão e execução concentrada em uma pessoa; throughput limitado, priorização é crítica. |
 | Tempo: unknown — não declarado | Disponibilidade semanal não definida ainda. |
 | Orçamento: unknown — não declarado | Limite de gasto com infra/ferramentas não definido ainda. |
+| Legal/fiscal: sem CNPJ, não pretende abrir | Cobrança limitada a meios que aceitam CPF (Asaas, Pix); Stripe inviável no Brasil. |
 
 ## Goals
 

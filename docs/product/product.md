@@ -48,7 +48,9 @@ O único PDV que opera varejo (código de barras + balança, checkout rápido) e
 
 ## Business Model
 
-`{"pricing":"assinatura mensal por estabelecimento (tenant); faixa de preço unknown — não definida","billing":"Stripe","channels":"unknown — não definido","unit_economics":"unknown — não definido"}`
+`{"pricing":"assinatura mensal por estabelecimento (tenant); faixa de preço unknown — não definida","billing":"Asaas (aceita CPF/pessoa física; Pix, boleto, cartão, cobrança recorrente) — integração adiada para fase pós-MVP","channels":"unknown — não definido","unit_economics":"unknown — não definido"}`
+
+Restrição de cobrança: founder sem CNPJ e sem intenção de abrir — Stripe inviável no Brasil (exige CNPJ). Asaas escolhido por aceitar pessoa física. Cobrança não integrada no MVP.
 
 ## MVP Scope
 
@@ -72,7 +74,7 @@ Risco aberto registrado: impressão de cozinha fora do MVP pode limitar o uso re
 ## Users & Integrations
 
 - Usuários (3): admin da plataforma (founder), dono do estabelecimento (tenant owner), operador/caixa (funcionário do tenant).
-- Integrações: Stripe (cobrança da assinatura). Hardware: leitor de código de barras (entrada via teclado) e balança. Pagamento de venda não integrado no MVP.
+- Integrações: Asaas (cobrança da assinatura; aceita CPF — adiada para pós-MVP). Hardware: leitor de código de barras (entrada via teclado) e balança. Pagamento de venda não integrado no MVP.
 
 ## Roadmap
 
