@@ -1,9 +1,9 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 import { config } from "dotenv";
 import postgres from "postgres";
 
-// Aplica db/migrations/0001_rls.sql no banco. Rode com: npm run db:rls
+// Aplica TODOS os db/migrations/*_rls.sql (em ordem). Rode com: npm run db:rls
 config({ path: ".env.local" });
 
 async function main() {
@@ -15,13 +15,19 @@ async function main() {
     process.exit(1);
   }
 
-  const sqlText = readFileSync("db/migrations/0001_rls.sql", "utf8");
-  const sql = postgres(url, { prepare: false });
+  const dir = "db/migrations";
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith("_rls.sql"))
+    .sort();
 
+  const sql = postgres(url, { prepare: false });
   try {
-    // simple() executa o script inteiro (vários statements + blocos DO $$) de uma vez.
-    await sql.unsafe(sqlText).simple();
-    console.log("✓ RLS aplicada com sucesso (0001_rls.sql)");
+    for (const file of files) {
+      const sqlText = readFileSync(`${dir}/${file}`, "utf8");
+      // simple() executa o script inteiro (vários statements + blocos DO $$).
+      await sql.unsafe(sqlText).simple();
+      console.log(`✓ RLS aplicada: ${file}`);
+    }
   } catch (error) {
     console.error("✗ Falha ao aplicar a RLS:", error);
     process.exitCode = 1;

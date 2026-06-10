@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { tenantMembers, tenants, users } from "@/db/schema";
+import { products, tenantMembers, tenants, users } from "@/db/schema";
+import type { ProductUnit } from "@/types/product";
 
 /**
  * Helpers para os testes de integração/RLS. Local: basta o Postgres do Docker
@@ -45,7 +46,32 @@ export async function seedTenant(
   return tenant.id;
 }
 
-/** Remove o tenant (cascade apaga members e products). */
+/** Remove o tenant (cascade apaga members, products, sales e sale_items). */
 export async function cleanupTenant(tenantId: string): Promise<void> {
   await db.delete(tenants).where(eq(tenants.id, tenantId));
+}
+
+export async function seedProduct(
+  tenantId: string,
+  opts: {
+    name?: string;
+    unit?: ProductUnit;
+    salePriceCents?: number;
+    stockQuantity?: number;
+    barcode?: string | null;
+  } = {},
+): Promise<string> {
+  const [product] = await db
+    .insert(products)
+    .values({
+      tenantId,
+      name: opts.name ?? "Produto Teste",
+      unit: opts.unit ?? "un",
+      salePriceCents: opts.salePriceCents ?? 1000,
+      stockQuantity: (opts.stockQuantity ?? 0).toString(),
+      priceIsManual: false,
+      barcode: opts.barcode ?? null,
+    })
+    .returning({ id: products.id });
+  return product.id;
 }

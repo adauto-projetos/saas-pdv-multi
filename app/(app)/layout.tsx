@@ -20,6 +20,12 @@ export default async function AppLayout({
             SAAS PDV<span className="text-primary">.multi</span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
+            <Link href="/caixa" className="font-medium hover:text-primary">
+              Caixa
+            </Link>
+            <Link href="/vendas" className="hover:text-primary">
+              Vendas
+            </Link>
             <Link href="/products" className="hover:text-primary">
               Produtos
             </Link>

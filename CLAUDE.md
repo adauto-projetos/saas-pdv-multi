@@ -58,6 +58,7 @@ Rodar antes de concluir qualquer feature. Todos devem sair com exit 0.
 
 - `test` roda Vitest. Testes que tocam o banco (RLS, constraints, integração) são **pulados** sem `DATABASE_URL` no `.env.local` — com o Postgres do Docker no ar, rodam de verdade (34 passam).
 - Banco: `docker compose up -d` (sobe o Postgres) → `npm run db:setup` (= `db:push` + `db:rls`). Exige `.env.local` (ver `.env.example`).
+- ⚠️ `drizzle-kit push` **derruba as RLS policies** (não as conhece). SEMPRE rode `npm run db:rls` depois de um `db:push` avulso — ou use `npm run db:setup`.
 
 ## Implementation Patterns
 

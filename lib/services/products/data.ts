@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, ilike } from "drizzle-orm";
 
 import type { Database } from "@/db";
 import { products, tenants } from "@/db/schema";
@@ -128,6 +128,36 @@ export async function selectProductById(
     .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
     .limit(1);
   return row ? toProductDto(row) : null;
+}
+
+/** Busca por código de barras (RF01) — único por tenant. */
+export async function selectProductByBarcode(
+  tx: Executor,
+  tenantId: string,
+  barcode: string,
+): Promise<ProductDto | null> {
+  const [row] = await tx
+    .select()
+    .from(products)
+    .where(and(eq(products.tenantId, tenantId), eq(products.barcode, barcode)))
+    .limit(1);
+  return row ? toProductDto(row) : null;
+}
+
+/** Busca por nome, parcial e case-insensitive (RF02). */
+export async function searchProductsByName(
+  tx: Executor,
+  tenantId: string,
+  query: string,
+  limit = 20,
+): Promise<ProductDto[]> {
+  const rows = await tx
+    .select()
+    .from(products)
+    .where(and(eq(products.tenantId, tenantId), ilike(products.name, `%${query}%`)))
+    .orderBy(asc(products.name))
+    .limit(limit);
+  return rows.map(toProductDto);
 }
 
 export async function selectTenantDefaultMarkup(
