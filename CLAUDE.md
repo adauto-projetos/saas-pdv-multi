@@ -4,21 +4,21 @@ PDV SaaS multi-tenant para comércios híbridos (mercado + bar + lanchonete num 
 
 ## Status
 
-Greenfield — stack decidida, scaffolding pendente. Esta spec é a stack-alvo que `/add.plan` e `/add.build` devem seguir, não um estado descoberto do código.
+Scaffolded — feature 0001F implementada e verificada local (Next 16 + React 19 + Tailwind v4 + Drizzle + Postgres em Docker). Dev local: `docker compose up -d` (Postgres) → `.env.local` (ver `.env.example`) → `npm run db:setup` → `npm run dev`.
 
 ## Tech Stack
 {"lang":"typescript","pkg":"npm","runtime":"node"}
-{"framework":{"name":"Next.js","router":"app","mode":"fullstack: server actions + route handlers"}}
-{"ui":{"css":"tailwindcss","components":"shadcn/ui"}}
-{"data":{"db":"PostgreSQL (Supabase)","orm":"drizzle-orm","auth":"Supabase Auth","validation":"zod"}}
-{"hosting":{"app":"Vercel","db":"Supabase"},"billing":"Asaas (pós-MVP)"}
+{"framework":{"name":"Next.js 16","router":"app","mode":"fullstack: server actions + route handlers"}}
+{"ui":{"css":"tailwindcss v4","components":"shadcn/ui (estilo base-nova, sobre Base UI @base-ui/react — NÃO Radix)"}}
+{"data":{"db":"PostgreSQL (Docker local)","orm":"drizzle-orm (postgres-js)","auth":"local (cookie httpOnly assinado + bcrypt)","validation":"zod v4"}}
+{"hosting":{"app":"Vercel (futuro)","db":"Postgres self-hosted/managed"},"billing":"Asaas (pós-MVP)"}
 
 ## Multi-Tenancy (CRITICAL)
 
 > Regra inviolável: todo dado de negócio pertence a um tenant (estabelecimento). Checar ANTES de modelar ou implementar qualquer tabela.
 
 - Toda tabela de negócio tem coluna `tenant_id` (FK obrigatória).
-- Isolamento garantido por **Row Level Security (RLS)** no Supabase — política por tabela filtrando pelo tenant do usuário autenticado.
+- Isolamento garantido por **Row Level Security (RLS)** no Postgres — política por tabela filtrando pelo tenant do usuário da sessão. O acesso roda sob o papel `app_user` via `withUserRls` (`db/rls.ts`), que injeta o id na GUC `app.current_user_id` lida por `current_app_user()`. Conexão `postgres` (dono) bypassa RLS — só onboarding/login/seed.
 - Nunca confiar só no filtro da aplicação; a RLS é a última linha de defesa contra vazar dados entre lojas.
 - Unicidade de código de barras é POR tenant, não global (ver feature 0001F, RN01).
 
@@ -27,7 +27,7 @@ Greenfield — stack decidida, scaffolding pendente. Esta spec é a stack-alvo q
 > Dependências e onde cada coisa mora. Consultar ANTES de implementar/revisar.
 
 ### Layers
-UI (`app/`) → server actions / route handlers → services (`lib/services/`) → data (Drizzle/Supabase). Camada interna nunca importa a externa.
+UI (`app/`) → server actions / route handlers → services (`lib/services/`) → data (Drizzle/Postgres). Camada interna nunca importa a externa.
 
 ### Placement
 | O quê | Onde |
@@ -36,7 +36,8 @@ UI (`app/`) → server actions / route handlers → services (`lib/services/`) �
 | Componentes de UI | `components/` |
 | Lógica de negócio | `lib/services/` |
 | Schema do banco (Drizzle) | `db/schema/` |
-| Cliente Supabase | `lib/supabase/` |
+| Cliente DB + RLS | `db/` (`index.ts`, `rls.ts`) |
+| Auth/sessão (cookie + bcrypt) | `lib/auth/` |
 | Schemas de validação (zod) | `lib/validation/` |
 
 ### Conventions
@@ -49,7 +50,14 @@ UI (`app/`) → server actions / route handlers → services (`lib/services/`) �
 
 ## Validation Gates
 
-Sem comandos ainda (projeto não scaffolded). Após o scaffolding, registrar aqui `lint`, `typecheck`, `build` e `test` reais.
+Rodar antes de concluir qualquer feature. Todos devem sair com exit 0.
+
+```json
+{"typecheck":"npm run typecheck","lint":"npm run lint","test":"npm test","build":"npm run build"}
+```
+
+- `test` roda Vitest. Testes que tocam o banco (RLS, constraints, integração) são **pulados** sem `DATABASE_URL` no `.env.local` — com o Postgres do Docker no ar, rodam de verdade (34 passam).
+- Banco: `docker compose up -d` (sobe o Postgres) → `npm run db:setup` (= `db:push` + `db:rls`). Exige `.env.local` (ver `.env.example`).
 
 ## Implementation Patterns
 
