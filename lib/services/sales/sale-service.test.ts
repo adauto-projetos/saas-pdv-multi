@@ -11,7 +11,7 @@ import {
   seedProduct,
   seedTenant,
 } from "@/db/__tests__/seed";
-import { products, sales } from "@/db/schema";
+import { products, sales, stockMovements } from "@/db/schema";
 import { ValidationError } from "@/lib/services/errors";
 import type { FinalizeSaleInput } from "@/lib/validation/sale";
 import { finalizeSaleSchema } from "@/lib/validation/sale";
@@ -94,6 +94,17 @@ suite("sale-service (integração)", () => {
   it("T08 — preço do item é snapshot do produto (servidor)", async () => {
     const sale = await finalize([{ productId: unId, quantity: 1 }]);
     expect(sale.items[0].unitPriceCents).toBe(1000);
+  });
+
+  it("T05 (0003F) — venda registra movimentação de saída com sale_id", async () => {
+    const sale = await finalize([{ productId: unId, quantity: 2 }]);
+    const movements = await db
+      .select()
+      .from(stockMovements)
+      .where(eq(stockMovements.saleId, sale.id));
+    expect(movements.length).toBeGreaterThan(0);
+    expect(movements[0].type).toBe("saida");
+    expect(Number(movements[0].quantity)).toBeLessThan(0);
   });
 
   it("T11 — estoque pode ficar negativo (não bloqueia)", async () => {

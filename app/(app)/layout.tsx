@@ -29,6 +29,9 @@ export default async function AppLayout({
             <Link href="/products" className="hover:text-primary">
               Produtos
             </Link>
+            <Link href="/estoque" className="hover:text-primary">
+              Estoque
+            </Link>
             <Link href="/settings" className="hover:text-primary">
               Configurações
             </Link>

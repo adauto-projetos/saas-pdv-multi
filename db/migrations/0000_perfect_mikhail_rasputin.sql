@@ -35,6 +35,7 @@ CREATE TABLE "products" (
 	"sale_price_cents" integer NOT NULL,
 	"price_is_manual" boolean DEFAULT false NOT NULL,
 	"stock_quantity" numeric(10, 3) DEFAULT '0' NOT NULL,
+	"min_stock" numeric(10, 3),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "products_cost_cents_non_negative" CHECK ("products"."cost_cents" >= 0),
@@ -65,7 +66,22 @@ CREATE TABLE "sale_items" (
 	"subtotal_cents" integer NOT NULL,
 	CONSTRAINT "sale_items_unit_price_non_negative" CHECK ("sale_items"."unit_price_cents" >= 0),
 	CONSTRAINT "sale_items_subtotal_non_negative" CHECK ("sale_items"."subtotal_cents" >= 0),
-	CONSTRAINT "sale_items_quantity_positive" CHECK ("sale_items"."quantity" > 0)
+	CONSTRAINT "sale_items_quantity_positive" CHECK ("sale_items"."quantity" > 0),
+	CONSTRAINT "sale_items_unit_valid" CHECK ("sale_items"."unit" in ('un', 'kg'))
+);
+--> statement-breakpoint
+CREATE TABLE "stock_movements" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"product_id" uuid NOT NULL,
+	"type" text NOT NULL,
+	"quantity" numeric(10, 3) NOT NULL,
+	"reason" text,
+	"sale_id" uuid,
+	"user_id" uuid NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "stock_movements_type_valid" CHECK ("stock_movements"."type" in ('entrada', 'saida', 'ajuste')),
+	CONSTRAINT "stock_movements_quantity_sign" CHECK ("stock_movements"."type" = 'ajuste' or ("stock_movements"."type" = 'entrada' and "stock_movements"."quantity" > 0) or ("stock_movements"."type" = 'saida' and "stock_movements"."quantity" < 0))
 );
 --> statement-breakpoint
 ALTER TABLE "tenant_members" ADD CONSTRAINT "tenant_members_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -76,8 +92,14 @@ ALTER TABLE "sales" ADD CONSTRAINT "sales_user_id_users_id_fk" FOREIGN KEY ("use
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "products_tenant_barcode_unique" ON "products" USING btree ("tenant_id","barcode") WHERE "products"."barcode" is not null;--> statement-breakpoint
 CREATE INDEX "products_tenant_id_idx" ON "products" USING btree ("tenant_id");--> statement-breakpoint
 CREATE INDEX "sales_tenant_created_idx" ON "sales" USING btree ("tenant_id","created_at");--> statement-breakpoint
 CREATE INDEX "sale_items_sale_idx" ON "sale_items" USING btree ("sale_id");--> statement-breakpoint
-CREATE INDEX "sale_items_tenant_idx" ON "sale_items" USING btree ("tenant_id");
+CREATE INDEX "sale_items_tenant_idx" ON "sale_items" USING btree ("tenant_id");--> statement-breakpoint
+CREATE INDEX "stock_movements_tenant_product_created_idx" ON "stock_movements" USING btree ("tenant_id","product_id","created_at");--> statement-breakpoint
+CREATE INDEX "stock_movements_tenant_idx" ON "stock_movements" USING btree ("tenant_id");

@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, ilike, isNotNull, sql } from "drizzle-orm";
 
 import type { Database } from "@/db";
 import { products, tenants } from "@/db/schema";
@@ -27,6 +27,7 @@ function toProductDto(row: ProductRow): ProductDto {
     salePriceCents: row.salePriceCents,
     priceIsManual: row.priceIsManual,
     stockQuantity: Number(row.stockQuantity),
+    minStock: row.minStock != null ? Number(row.minStock) : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -41,6 +42,7 @@ export type CreateProductData = {
   salePriceCents: number;
   priceIsManual: boolean;
   stockQuantity: number;
+  minStock?: number | null;
 };
 
 export type UpdateProductData = Partial<{
@@ -52,6 +54,7 @@ export type UpdateProductData = Partial<{
   salePriceCents: number;
   priceIsManual: boolean;
   stockQuantity: number;
+  minStock: number | null;
 }>;
 
 export async function insertProduct(
@@ -73,6 +76,7 @@ export async function insertProduct(
       salePriceCents: data.salePriceCents,
       priceIsManual: data.priceIsManual,
       stockQuantity: data.stockQuantity.toString(),
+      minStock: data.minStock != null ? data.minStock.toString() : null,
     })
     .returning();
   return toProductDto(row);
@@ -96,6 +100,8 @@ export async function updateProductRow(
   if (data.priceIsManual !== undefined) set.priceIsManual = data.priceIsManual;
   if (data.stockQuantity !== undefined)
     set.stockQuantity = data.stockQuantity.toString();
+  if (data.minStock !== undefined)
+    set.minStock = data.minStock === null ? null : data.minStock.toString();
 
   const [row] = await tx
     .update(products)
@@ -157,6 +163,72 @@ export async function searchProductsByName(
     .where(and(eq(products.tenantId, tenantId), ilike(products.name, `%${query}%`)))
     .orderBy(asc(products.name))
     .limit(limit);
+  return rows.map(toProductDto);
+}
+
+/** Soma `delta` (assinado: + entrada, − saída) ao estoque do produto (RF01/RF03). */
+export async function adjustProductStock(
+  tx: Executor,
+  tenantId: string,
+  productId: string,
+  delta: number,
+): Promise<void> {
+  await tx
+    .update(products)
+    .set({
+      stockQuantity: sql`${products.stockQuantity} + ${delta}`,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)));
+}
+
+/** Seta o estoque para um valor exato (usado no ajuste por contagem — evita drift de float). */
+export async function setProductStock(
+  tx: Executor,
+  tenantId: string,
+  productId: string,
+  quantity: number,
+): Promise<void> {
+  await tx
+    .update(products)
+    .set({ stockQuantity: quantity.toString(), updatedAt: new Date() })
+    .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)));
+}
+
+/** Define o nível mínimo do produto (aceita null para "sem alerta") (RF06). */
+export async function setProductMinStock(
+  tx: Executor,
+  tenantId: string,
+  productId: string,
+  minStock: number | null,
+): Promise<ProductDto | null> {
+  const [row] = await tx
+    .update(products)
+    .set({
+      minStock: minStock === null ? null : minStock.toString(),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+    .returning();
+  return row ? toProductDto(row) : null;
+}
+
+/** Produtos com estoque ≤ mínimo (e mínimo definido) (RF07/RN06). */
+export async function selectLowStockProducts(
+  tx: Executor,
+  tenantId: string,
+): Promise<ProductDto[]> {
+  const rows = await tx
+    .select()
+    .from(products)
+    .where(
+      and(
+        eq(products.tenantId, tenantId),
+        isNotNull(products.minStock),
+        sql`${products.stockQuantity} <= ${products.minStock}`,
+      ),
+    )
+    .orderBy(asc(products.name));
   return rows.map(toProductDto);
 }
 

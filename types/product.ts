@@ -18,6 +18,7 @@ export type ProductDto = {
   salePriceCents: number;
   priceIsManual: boolean;
   stockQuantity: number;
+  minStock: number | null;
   createdAt: string;
   updatedAt: string;
 };

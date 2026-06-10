@@ -58,6 +58,7 @@ export async function seedProduct(
     unit?: ProductUnit;
     salePriceCents?: number;
     stockQuantity?: number;
+    minStock?: number | null;
     barcode?: string | null;
   } = {},
 ): Promise<string> {
@@ -69,6 +70,7 @@ export async function seedProduct(
       unit: opts.unit ?? "un",
       salePriceCents: opts.salePriceCents ?? 1000,
       stockQuantity: (opts.stockQuantity ?? 0).toString(),
+      minStock: opts.minStock != null ? opts.minStock.toString() : null,
       priceIsManual: false,
       barcode: opts.barcode ?? null,
     })

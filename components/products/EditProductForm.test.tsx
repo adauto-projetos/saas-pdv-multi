@@ -39,6 +39,7 @@ const product: ProductDto = {
   salePriceCents: 1300,
   priceIsManual: false,
   stockQuantity: 0,
+  minStock: null,
   createdAt: "2026-06-09T00:00:00.000Z",
   updatedAt: "2026-06-09T00:00:00.000Z",
 };

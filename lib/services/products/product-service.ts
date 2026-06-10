@@ -39,6 +39,7 @@ export async function createProduct(
         salePriceCents,
         priceIsManual,
         stockQuantity: input.stockQuantity,
+        minStock: input.minStock ?? null,
       }),
     );
   } catch (error) {
@@ -59,6 +60,7 @@ export async function updateProduct(
   if (input.barcode !== undefined) patch.barcode = input.barcode ?? null;
   if (input.unit !== undefined) patch.unit = input.unit;
   if (input.stockQuantity !== undefined) patch.stockQuantity = input.stockQuantity;
+  if (input.minStock !== undefined) patch.minStock = input.minStock ?? null;
   if (input.costCents !== undefined) patch.costCents = input.costCents ?? null;
   if (input.markupPercent !== undefined)
     patch.markupPercent = input.markupPercent ?? null;

@@ -1,6 +1,7 @@
 import { withUserRls } from "@/db/rls";
 import { ValidationError } from "@/lib/services/errors";
 import { selectProductById } from "@/lib/services/products/data";
+import { recordSaleExit } from "@/lib/services/stock/data";
 import type { FinalizeSaleInput } from "@/lib/validation/sale";
 import type { AuthContext } from "@/types/product";
 import type { SaleDto } from "@/types/sale";
@@ -66,8 +67,16 @@ export async function finalizeSale(
     );
     const items = await data.insertSaleItems(tx, ctx.tenantId, sale.id, rows);
 
+    // Retrofit estoque (0003F): registra a saída (movimento + baixa) na mesma tx.
     for (const [productId, quantity] of merged) {
-      await data.decrementProductStock(tx, ctx.tenantId, productId, quantity);
+      await recordSaleExit(
+        tx,
+        ctx.tenantId,
+        ctx.userId,
+        productId,
+        quantity,
+        sale.id,
+      );
     }
 
     return {

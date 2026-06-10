@@ -23,6 +23,11 @@ export const createProductObject = z.object({
     .number()
     .min(0, "Estoque não pode ser negativo")
     .default(0),
+  // Nível mínimo de estoque (opcional) — alerta de estoque baixo (RF06, feature 0003F).
+  minStock: z.preprocess(
+    emptyToUndefined,
+    z.number().finite().min(0, "Mínimo não pode ser negativo").optional(),
+  ),
   // RN02: custo não negativo. Inteiro em centavos.
   costCents: z.preprocess(
     emptyToUndefined,

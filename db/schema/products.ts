@@ -40,6 +40,8 @@ export const products = pgTable(
     stockQuantity: numeric("stock_quantity", { precision: 10, scale: 3 })
       .notNull()
       .default("0"),
+    // Nível mínimo de estoque (opcional) — dispara alerta de estoque baixo (RF06/RN06).
+    minStock: numeric("min_stock", { precision: 10, scale: 3 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

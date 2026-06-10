@@ -73,6 +73,21 @@ describe("ProductForm", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("T19 — campo de estoque mínimo é enviado (RF06)", async () => {
+    const user = userEvent.setup();
+    const submit = okSubmit();
+    render(
+      <ProductForm mode="create" defaultMarkupPercent={30} onSubmit={submit} />,
+    );
+    await user.type(screen.getByLabelText("Nome"), "Item");
+    await user.type(screen.getByLabelText("Custo"), "10,00");
+    await user.type(screen.getByLabelText("Estoque mínimo (alerta)"), "5");
+    await user.click(screen.getByRole("button", { name: /salvar produto/i }));
+    await waitFor(() => expect(submit).toHaveBeenCalled());
+    const input = submit.mock.calls[0][0] as Record<string, unknown>;
+    expect(input.minStock).toBe(5);
+  });
+
   it("× volta o preço ao calculado (reset manual)", async () => {
     const user = userEvent.setup();
     render(

@@ -1,7 +1,7 @@
-import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
 
 import type { Database } from "@/db";
-import { products, saleItems, sales } from "@/db/schema";
+import { saleItems, sales } from "@/db/schema";
 import type { PaymentMethod } from "@/lib/validation/sale";
 import type { ProductUnit } from "@/types/product";
 import type { SaleDto, SaleItemDto } from "@/types/sale";
@@ -81,22 +81,6 @@ export async function insertSaleItems(
     )
     .returning();
   return rows.map(toSaleItemDto);
-}
-
-/** Baixa simples de estoque (RF07/RN05). Pode ficar negativo — não bloqueia. */
-export async function decrementProductStock(
-  tx: Executor,
-  tenantId: string,
-  productId: string,
-  quantity: number,
-): Promise<void> {
-  await tx
-    .update(products)
-    .set({
-      stockQuantity: sql`${products.stockQuantity} - ${quantity}`,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)));
 }
 
 /** Vendas no intervalo [from, to) do tenant, mais recentes primeiro (RF09). */

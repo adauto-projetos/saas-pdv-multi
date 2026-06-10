@@ -58,6 +58,9 @@ export function ProductForm({
   const [manualPrice, setManualPrice] = React.useState<number | null>(
     defaultValues?.priceIsManual ? (defaultValues.salePriceCents ?? null) : null,
   );
+  const [minStock, setMinStock] = React.useState<number | null>(
+    defaultValues?.minStock ?? null,
+  );
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
     {},
   );
@@ -79,6 +82,7 @@ export function ProductForm({
       barcode: barcode.trim() === "" ? undefined : barcode.trim(),
       unit,
       stockQuantity,
+      minStock: minStock ?? undefined,
       costCents: costCents ?? undefined,
       markupPercent: markupPercent ?? undefined,
       // Só envia salePrice quando é override manual (RF03/RF04); senão o backend calcula.
@@ -144,14 +148,32 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="stock">Estoque inicial</Label>
-        <QuantityInput
-          id="stock"
-          value={stockQuantity}
-          onChange={setStockQuantity}
-          unit={unit}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="stock">Estoque inicial</Label>
+          <QuantityInput
+            id="stock"
+            value={stockQuantity}
+            onChange={setStockQuantity}
+            unit={unit}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="minStock">Estoque mínimo (alerta)</Label>
+          <Input
+            id="minStock"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step={unit === "kg" ? 0.001 : 1}
+            className="text-base"
+            placeholder="Opcional"
+            value={minStock ?? ""}
+            onChange={(e) =>
+              setMinStock(e.target.value === "" ? null : Number(e.target.value))
+            }
+          />
+        </div>
       </div>
 
       <MarkupCalculatorFields

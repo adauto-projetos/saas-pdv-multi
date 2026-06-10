@@ -26,6 +26,7 @@ const product: ProductDto = {
   salePriceCents: 1300,
   priceIsManual: false,
   stockQuantity: 5,
+  minStock: null,
   createdAt: "2026-06-09T00:00:00.000Z",
   updatedAt: "2026-06-09T00:00:00.000Z",
 };
@@ -38,5 +39,12 @@ describe("ProductsTable (RF08)", () => {
     // nenhum input de estoque (spinbutton/textbox) na tabela
     expect(screen.queryByRole("spinbutton")).toBeNull();
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("T20 — realça estoque negativo (RF08)", () => {
+    render(<ProductsTable products={[{ ...product, stockQuantity: -2 }]} />);
+    const cell = screen.getByTestId("stock-cell");
+    expect(cell).toHaveTextContent("-2");
+    expect(cell.className).toContain("text-destructive");
   });
 });

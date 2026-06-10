@@ -38,7 +38,14 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
             <TableCell>
               <Badge variant="outline">{product.unit}</Badge>
             </TableCell>
-            <TableCell data-testid="stock-cell">
+            <TableCell
+              data-testid="stock-cell"
+              className={
+                product.stockQuantity < 0
+                  ? "font-medium text-destructive"
+                  : undefined
+              }
+            >
               {product.stockQuantity}
             </TableCell>
             <TableCell className="text-right">
