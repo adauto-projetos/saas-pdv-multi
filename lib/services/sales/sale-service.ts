@@ -1,4 +1,6 @@
 import { withUserRls } from "@/db/rls";
+import { insertCashMovement } from "@/lib/services/finance/cash-data";
+import { recordSaleReceivable } from "@/lib/services/finance/receivable-service";
 import { ValidationError } from "@/lib/services/errors";
 import { selectProductById } from "@/lib/services/products/data";
 import { recordSaleExit } from "@/lib/services/stock/data";
@@ -58,12 +60,14 @@ export async function finalizeSale(
       });
     }
 
+    const customerId = input.customerId ?? null;
     const sale = await data.insertSale(
       tx,
       ctx.tenantId,
       ctx.userId,
       input.paymentMethod,
       totalCents,
+      customerId,
     );
     const items = await data.insertSaleItems(tx, ctx.tenantId, sale.id, rows);
 
@@ -79,12 +83,32 @@ export async function finalizeSale(
       );
     }
 
+    // Retrofit financeiro (0004F): na MESMA tx —
+    // fiado → conta a receber (origem 'venda', RN07 garante customerId);
+    // dinheiro → entrada de caixa (origem 'venda', RN08). pix/cartão não tocam caixa.
+    if (input.paymentMethod === "fiado") {
+      await recordSaleReceivable(tx, ctx.tenantId, ctx.userId, {
+        customerId: customerId!,
+        totalCents,
+        saleId: sale.id,
+      });
+    } else if (input.paymentMethod === "dinheiro") {
+      await insertCashMovement(tx, ctx.tenantId, {
+        amountCents: totalCents,
+        type: "entrada",
+        origin: "venda",
+        userId: ctx.userId,
+        saleId: sale.id,
+      });
+    }
+
     return {
       id: sale.id,
       tenantId: ctx.tenantId,
       userId: ctx.userId,
       totalCents,
       paymentMethod: input.paymentMethod,
+      customerId,
       createdAt: sale.createdAt.toISOString(),
       items,
     };

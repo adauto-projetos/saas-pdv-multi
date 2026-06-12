@@ -19,6 +19,7 @@ export type SaleDto = {
   userId: string;
   totalCents: number;
   paymentMethod: PaymentMethod;
+  customerId: string | null;
   createdAt: string;
   items: SaleItemDto[];
 };

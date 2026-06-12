@@ -16,6 +16,7 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   dinheiro: "Dinheiro",
   pix: "Pix",
   cartao: "Cartão",
+  fiado: "Fiado",
 };
 
 export function TodaySalesList({ sales }: { sales: SaleDto[] }) {

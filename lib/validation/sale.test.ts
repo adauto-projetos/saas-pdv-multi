@@ -37,4 +37,29 @@ describe("finalizeSaleSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("0004F — fiado sem cliente é rejeitado (RN07)", () => {
+    const result = finalizeSaleSchema.safeParse({
+      items: [{ productId: PRODUCT_ID, quantity: 1 }],
+      paymentMethod: "fiado",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("0004F — fiado com cliente é aceito", () => {
+    const result = finalizeSaleSchema.safeParse({
+      items: [{ productId: PRODUCT_ID, quantity: 1 }],
+      paymentMethod: "fiado",
+      customerId: PRODUCT_ID,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("0004F — dinheiro sem cliente continua válido", () => {
+    const result = finalizeSaleSchema.safeParse({
+      items: [{ productId: PRODUCT_ID, quantity: 1 }],
+      paymentMethod: "dinheiro",
+    });
+    expect(result.success).toBe(true);
+  });
 });

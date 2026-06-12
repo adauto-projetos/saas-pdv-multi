@@ -43,7 +43,7 @@ export function CashierScreen() {
     }
   }
 
-  async function handleConfirm(method: PaymentMethod) {
+  async function handleConfirm(method: PaymentMethod, customerId?: string) {
     setSubmitting(true);
     const res = await finalizeSaleAction({
       items: cart.items.map((i) => ({
@@ -51,6 +51,7 @@ export function CashierScreen() {
         quantity: i.quantity,
       })),
       paymentMethod: method,
+      ...(method === "fiado" ? { customerId } : {}),
     });
     setSubmitting(false);
     setDialogOpen(false);

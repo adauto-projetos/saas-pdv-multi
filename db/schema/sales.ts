@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { customers } from "./customers";
 import { tenants } from "./tenants";
 import { users } from "./users";
 
@@ -31,6 +32,12 @@ export const sales = pgTable(
       .references(() => users.id, { onDelete: "restrict" }),
     totalCents: integer("total_cents").notNull(),
     paymentMethod: text("payment_method").notNull(),
+    // Nullable — obrigatório apenas quando paymentMethod='fiado' (RN07).
+    // Validado no serviço/zod, não como NOT NULL no banco (evita quebrar vendas
+    // dinheiro/pix/cartão existentes).
+    customerId: uuid("customer_id").references(() => customers.id, {
+      onDelete: "restrict",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -39,7 +46,7 @@ export const sales = pgTable(
     check("sales_total_cents_non_negative", sql`${t.totalCents} >= 0`),
     check(
       "sales_payment_method_valid",
-      sql`${t.paymentMethod} in ('dinheiro', 'pix', 'cartao')`,
+      sql`${t.paymentMethod} in ('dinheiro', 'pix', 'cartao', 'fiado')`,
     ),
     // Lista de vendas do dia: filtro por tenant + data.
     index("sales_tenant_created_idx").on(t.tenantId, t.createdAt),

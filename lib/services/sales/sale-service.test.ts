@@ -8,10 +8,17 @@ import {
   createTestUser,
   deleteTestUser,
   HAS_DB,
+  seedCustomer,
   seedProduct,
   seedTenant,
 } from "@/db/__tests__/seed";
-import { products, sales, stockMovements } from "@/db/schema";
+import {
+  cashMovements,
+  products,
+  receivables,
+  sales,
+  stockMovements,
+} from "@/db/schema";
 import { ValidationError } from "@/lib/services/errors";
 import type { FinalizeSaleInput } from "@/lib/validation/sale";
 import { finalizeSaleSchema } from "@/lib/validation/sale";
@@ -28,11 +35,13 @@ suite("sale-service (integração)", () => {
   let unId = "";
   let kgId = "";
   let lowId = "";
+  let customerId = "";
 
   beforeAll(async () => {
     user = await createTestUser();
     tenantId = await seedTenant(user.userId, "Loja Caixa");
     ctx = { userId: user.userId, tenantId };
+    customerId = await seedCustomer(tenantId, "Cliente Fiado");
     unId = await seedProduct(tenantId, {
       name: "Refri Lata",
       unit: "un",
@@ -149,5 +158,52 @@ suite("sale-service (integração)", () => {
         paymentMethod: "dinheiro",
       } as FinalizeSaleInput),
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("0004F — venda fiado gera conta a receber (origem 'venda') com cliente", async () => {
+    const sale = await finalizeSale(
+      ctx,
+      finalizeSaleSchema.parse({
+        items: [{ productId: unId, quantity: 1 }],
+        paymentMethod: "fiado",
+        customerId,
+      }),
+    );
+    expect(sale.customerId).toBe(customerId);
+    const [rcv] = await db
+      .select()
+      .from(receivables)
+      .where(eq(receivables.saleId, sale.id));
+    expect(rcv).toBeDefined();
+    expect(rcv.origin).toBe("venda");
+    expect(rcv.customerId).toBe(customerId);
+    expect(rcv.totalCents).toBe(sale.totalCents);
+    // Fiado NÃO entra no caixa.
+    const cash = await db
+      .select()
+      .from(cashMovements)
+      .where(eq(cashMovements.saleId, sale.id));
+    expect(cash.length).toBe(0);
+  });
+
+  it("0004F — venda dinheiro gera entrada de caixa (origem 'venda', +total)", async () => {
+    const sale = await finalize([{ productId: unId, quantity: 2 }]); // dinheiro
+    const [mv] = await db
+      .select()
+      .from(cashMovements)
+      .where(eq(cashMovements.saleId, sale.id));
+    expect(mv).toBeDefined();
+    expect(mv.type).toBe("entrada");
+    expect(mv.origin).toBe("venda");
+    expect(mv.amountCents).toBe(sale.totalCents);
+  });
+
+  it("0004F — venda pix NÃO gera movimentação de caixa", async () => {
+    const sale = await finalize([{ productId: unId, quantity: 1 }], "pix");
+    const cash = await db
+      .select()
+      .from(cashMovements)
+      .where(eq(cashMovements.saleId, sale.id));
+    expect(cash.length).toBe(0);
   });
 });

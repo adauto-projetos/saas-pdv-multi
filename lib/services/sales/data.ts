@@ -40,6 +40,7 @@ function toSaleDto(
     userId: row.userId,
     totalCents: row.totalCents,
     paymentMethod: row.paymentMethod as PaymentMethod,
+    customerId: row.customerId,
     createdAt: row.createdAt.toISOString(),
     items,
   };
@@ -51,10 +52,11 @@ export async function insertSale(
   userId: string,
   paymentMethod: PaymentMethod,
   totalCents: number,
+  customerId: string | null,
 ): Promise<{ id: string; createdAt: Date }> {
   const [row] = await tx
     .insert(sales)
-    .values({ tenantId, userId, paymentMethod, totalCents })
+    .values({ tenantId, userId, paymentMethod, totalCents, customerId })
     .returning({ id: sales.id, createdAt: sales.createdAt });
   return { id: row.id, createdAt: row.createdAt };
 }
