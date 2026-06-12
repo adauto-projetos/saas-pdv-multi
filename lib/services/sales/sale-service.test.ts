@@ -16,9 +16,15 @@ import {
   cashMovements,
   products,
   receivables,
+  saleItems,
   sales,
   stockMovements,
 } from "@/db/schema";
+import {
+  closeCashSession,
+  getOpenSession,
+  openCashSession,
+} from "@/lib/services/profit/cash-session-service";
 import { ValidationError } from "@/lib/services/errors";
 import type { FinalizeSaleInput } from "@/lib/validation/sale";
 import { finalizeSaleSchema } from "@/lib/validation/sale";
@@ -35,6 +41,8 @@ suite("sale-service (integração)", () => {
   let unId = "";
   let kgId = "";
   let lowId = "";
+  let costId = "";
+  let noCostId = "";
   let customerId = "";
 
   beforeAll(async () => {
@@ -59,6 +67,20 @@ suite("sale-service (integração)", () => {
       unit: "un",
       salePriceCents: 100,
       stockQuantity: 1,
+    });
+    costId = await seedProduct(tenantId, {
+      name: "Com Custo",
+      unit: "un",
+      salePriceCents: 1000,
+      stockQuantity: 100,
+      costCents: 400,
+    });
+    noCostId = await seedProduct(tenantId, {
+      name: "Sem Custo",
+      unit: "un",
+      salePriceCents: 1000,
+      stockQuantity: 100,
+      costCents: null,
     });
   });
 
@@ -205,5 +227,56 @@ suite("sale-service (integração)", () => {
       .from(cashMovements)
       .where(eq(cashMovements.saleId, sale.id));
     expect(cash.length).toBe(0);
+  });
+
+  // --- 0005F: retrofit cost snapshot + session link ------------------------
+
+  it("sale-RF01-cost-snapshot / sale-RNF02-same-tx: snapshot de custo por item na mesma tx", async () => {
+    const sale = await finalize([{ productId: costId, quantity: 2 }]);
+    const items = await db
+      .select()
+      .from(saleItems)
+      .where(eq(saleItems.saleId, sale.id));
+    expect(items.length).toBe(1);
+    // Venda e item (com snapshot não-undefined) persistidos juntos.
+    expect(items[0].costCentsSnapshot).toBe(400);
+  });
+
+  it("sale-RN04-null-cost-snapshot: produto sem custo → snapshot null", async () => {
+    const sale = await finalize([{ productId: noCostId, quantity: 1 }]);
+    const [item] = await db
+      .select()
+      .from(saleItems)
+      .where(eq(saleItems.saleId, sale.id));
+    expect(item.costCentsSnapshot).toBeNull();
+  });
+
+  it("sale-RF05-session-link: entrada dinheiro recebe session_id da sessão aberta", async () => {
+    // Garante uma sessão aberta.
+    if (!(await getOpenSession(ctx))) {
+      await openCashSession(ctx, { openingBalanceCents: 0 });
+    }
+    const open = await getOpenSession(ctx);
+    const sale = await finalize([{ productId: costId, quantity: 1 }]);
+    const [mv] = await db
+      .select()
+      .from(cashMovements)
+      .where(eq(cashMovements.saleId, sale.id));
+    expect(mv.sessionId).toBe(open?.id);
+    // Limpa: fecha a sessão para não vazar para os próximos testes.
+    await closeCashSession(ctx, { countedCents: 0 });
+  });
+
+  it("sale-RF05-no-session: venda dinheiro sem turno → session_id null", async () => {
+    // Sem sessão aberta.
+    if (await getOpenSession(ctx)) {
+      await closeCashSession(ctx, { countedCents: 0 });
+    }
+    const sale = await finalize([{ productId: costId, quantity: 1 }]);
+    const [mv] = await db
+      .select()
+      .from(cashMovements)
+      .where(eq(cashMovements.saleId, sale.id));
+    expect(mv.sessionId).toBeNull();
   });
 });

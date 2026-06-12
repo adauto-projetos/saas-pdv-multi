@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { cashSessions } from "./cash-sessions";
 import { sales } from "./sales";
 import { tenants } from "./tenants";
 import { users } from "./users";
@@ -46,6 +47,11 @@ export const cashMovements = pgTable(
     // cash_movements (não o inverso). FK circular causaria erro de bootstrap.
     receivablePaymentId: uuid("receivable_payment_id"),
     payablePaymentId: uuid("payable_payment_id"),
+    // Vínculo ao turno de caixa aberto no momento da movimentação (RF05).
+    // null = movimentação sem turno (ex: movimentos anteriores à feature 0005F).
+    sessionId: uuid("session_id").references(() => cashSessions.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

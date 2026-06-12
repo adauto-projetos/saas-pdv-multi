@@ -40,12 +40,20 @@ export const saleItems = pgTable(
     unitPriceCents: integer("unit_price_cents").notNull(),
     quantity: numeric("quantity", { precision: 10, scale: 3 }).notNull(),
     subtotalCents: integer("subtotal_cents").notNull(),
+    // Snapshot do custo unitário no momento da venda (RN03/RF01). null = produto
+    // sem custo cadastrado (RN04): conta como 0 no cálculo de lucro e dispara
+    // o aviso de itemsWithoutCost na ProfitSummaryCard.
+    costCentsSnapshot: integer("cost_cents_snapshot"),
   },
   (t) => [
     check("sale_items_unit_price_non_negative", sql`${t.unitPriceCents} >= 0`),
     check("sale_items_subtotal_non_negative", sql`${t.subtotalCents} >= 0`),
     check("sale_items_quantity_positive", sql`${t.quantity} > 0`),
     check("sale_items_unit_valid", sql`${t.unit} in ('un', 'kg')`),
+    check(
+      "sale_items_cost_snapshot_non_negative",
+      sql`${t.costCentsSnapshot} IS NULL OR ${t.costCentsSnapshot} >= 0`,
+    ),
     index("sale_items_sale_idx").on(t.saleId),
     index("sale_items_tenant_idx").on(t.tenantId),
   ],

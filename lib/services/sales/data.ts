@@ -16,6 +16,8 @@ export type SaleItemRow = {
   unitPriceCents: number;
   quantity: number;
   subtotalCents: number;
+  /** Snapshot do custo unitário na venda; null = produto sem custo (RN03/RN04). */
+  costCentsSnapshot: number | null;
 };
 
 function toSaleItemDto(row: typeof saleItems.$inferSelect): SaleItemDto {
@@ -79,6 +81,7 @@ export async function insertSaleItems(
         unitPriceCents: i.unitPriceCents,
         quantity: i.quantity.toString(),
         subtotalCents: i.subtotalCents,
+        costCentsSnapshot: i.costCentsSnapshot,
       })),
     )
     .returning();

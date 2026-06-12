@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   cashMovements,
+  cashSessions,
   customers,
   payables,
   products,
@@ -69,6 +70,7 @@ export async function seedProduct(
     stockQuantity?: number;
     minStock?: number | null;
     barcode?: string | null;
+    costCents?: number | null;
   } = {},
 ): Promise<string> {
   const [product] = await db
@@ -82,6 +84,7 @@ export async function seedProduct(
       minStock: opts.minStock != null ? opts.minStock.toString() : null,
       priceIsManual: false,
       barcode: opts.barcode ?? null,
+      costCents: opts.costCents ?? null,
     })
     .returning({ id: products.id });
   return product.id;
@@ -183,4 +186,33 @@ export async function seedCashMovement(
     })
     .returning({ id: cashMovements.id });
   return movement.id;
+}
+
+// ---------------------------------------------------------------------------
+// Lucro/fechamento seed helpers (0005F). Inserts use the owner `db` connection —
+// bypasses RLS intentionally (correct for seeding test data across tenants).
+// ---------------------------------------------------------------------------
+
+/**
+ * Inserts a cash session for the given tenant/user; returns the session id.
+ * Uses owner `db` to bypass RLS — correct for seeding test data.
+ */
+export async function seedCashSession(
+  tenantId: string,
+  userId: string,
+  opts: {
+    openingBalanceCents: number;
+    status?: "aberta" | "fechada";
+  },
+): Promise<string> {
+  const [session] = await db
+    .insert(cashSessions)
+    .values({
+      tenantId,
+      openingBalanceCents: opts.openingBalanceCents,
+      openedBy: userId,
+      status: opts.status ?? "aberta",
+    })
+    .returning({ id: cashSessions.id });
+  return session.id;
 }

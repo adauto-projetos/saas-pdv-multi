@@ -3,6 +3,7 @@ import { insertCashMovement } from "@/lib/services/finance/cash-data";
 import { recordSaleReceivable } from "@/lib/services/finance/receivable-service";
 import { ValidationError } from "@/lib/services/errors";
 import { selectProductById } from "@/lib/services/products/data";
+import { selectOpenSessionId } from "@/lib/services/profit/cash-session-data";
 import { recordSaleExit } from "@/lib/services/stock/data";
 import type { FinalizeSaleInput } from "@/lib/validation/sale";
 import type { AuthContext } from "@/types/product";
@@ -57,6 +58,9 @@ export async function finalizeSale(
         unitPriceCents: product.salePriceCents,
         quantity,
         subtotalCents,
+        // Snapshot do custo na MESMA tx da venda (RF01/RN03/RNF02); null = produto
+        // sem custo cadastrado (RN04), conta 0 no lucro e dispara itemsWithoutCost.
+        costCentsSnapshot: product.costCents,
       });
     }
 
@@ -93,12 +97,16 @@ export async function finalizeSale(
         saleId: sale.id,
       });
     } else if (input.paymentMethod === "dinheiro") {
+      // RF05: vincula a entrada ao turno aberto (se houver) — entra no esperado
+      // da gaveta no fechamento. Sem turno → sessionId null.
+      const sessionId = await selectOpenSessionId(tx, ctx.tenantId);
       await insertCashMovement(tx, ctx.tenantId, {
         amountCents: totalCents,
         type: "entrada",
         origin: "venda",
         userId: ctx.userId,
         saleId: sale.id,
+        sessionId,
       });
     }
 

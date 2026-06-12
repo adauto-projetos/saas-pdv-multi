@@ -35,6 +35,9 @@ export default async function AppLayout({
             <Link href="/financeiro/caixa" className="hover:text-primary">
               Financeiro
             </Link>
+            <Link href="/lucro" className="hover:text-primary">
+              Lucro
+            </Link>
             <Link href="/settings" className="hover:text-primary">
               Configurações
             </Link>

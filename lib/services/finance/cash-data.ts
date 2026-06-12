@@ -16,6 +16,8 @@ type CashMovementInsert = {
   saleId?: string | null;
   receivablePaymentId?: string | null;
   payablePaymentId?: string | null;
+  /** Vínculo ao turno de caixa aberto no momento da movimentação (RF05). */
+  sessionId?: string | null;
 };
 
 function toCashMovementDto(
@@ -59,6 +61,7 @@ export async function insertCashMovement(
       saleId: data.saleId ?? null,
       receivablePaymentId: data.receivablePaymentId ?? null,
       payablePaymentId: data.payablePaymentId ?? null,
+      sessionId: data.sessionId ?? null,
     })
     .returning();
   return toCashMovementDto(row);

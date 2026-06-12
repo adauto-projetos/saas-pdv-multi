@@ -1,4 +1,5 @@
 import { withUserRls } from "@/db/rls";
+import { selectOpenSessionId } from "@/lib/services/profit/cash-session-data";
 import type {
   CashFilterInput,
   CashMovementInput,
@@ -22,15 +23,18 @@ export async function registerCashMovement(
   ctx: AuthContext,
   input: CashMovementInput & { type: CashMovementType },
 ): Promise<CashMovementDto> {
-  return withUserRls(ctx.userId, (tx) =>
-    data.insertCashMovement(tx, ctx.tenantId, {
+  return withUserRls(ctx.userId, async (tx) => {
+    // RF05/RN06: suprimento/sangria do turno aberto entram no esperado da gaveta.
+    const sessionId = await selectOpenSessionId(tx, ctx.tenantId);
+    return data.insertCashMovement(tx, ctx.tenantId, {
       amountCents: input.amountCents,
       type: input.type,
       origin: "manual",
       description: input.description,
       userId: ctx.userId,
-    }),
-  );
+      sessionId,
+    });
+  });
 }
 
 /** RF03/RN05 — saldo corrente do caixa (Σ ledger). */
