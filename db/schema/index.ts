@@ -12,3 +12,5 @@ export * from "./receivable-payments";
 export * from "./payables";
 export * from "./payable-payments";
 export * from "./cash-sessions";
+export * from "./comandas";
+export * from "./comanda-items";

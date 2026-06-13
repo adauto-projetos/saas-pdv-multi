@@ -55,10 +55,12 @@ export async function insertSale(
   paymentMethod: PaymentMethod,
   totalCents: number,
   customerId: string | null,
+  /** Back-link para a comanda de origem (RF06/0006F). UUID sem FK declarada. */
+  comandaId?: string | null,
 ): Promise<{ id: string; createdAt: Date }> {
   const [row] = await tx
     .insert(sales)
-    .values({ tenantId, userId, paymentMethod, totalCents, customerId })
+    .values({ tenantId, userId, paymentMethod, totalCents, customerId, comandaId: comandaId ?? null })
     .returning({ id: sales.id, createdAt: sales.createdAt });
   return { id: row.id, createdAt: row.createdAt };
 }

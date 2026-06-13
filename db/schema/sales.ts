@@ -38,6 +38,11 @@ export const sales = pgTable(
     customerId: uuid("customer_id").references(() => customers.id, {
       onDelete: "restrict",
     }),
+    // UUID sem FK declarada — audit back-link: qual venda veio de um fechamento
+    // de comanda (RF06). Sem .references() para evitar ciclo TypeScript entre
+    // comandas↔sales (mirror do padrão cash_movements.receivable_payment_id).
+    // O vínculo canônico é comandas.sale_id (com FK declarada para sales).
+    comandaId: uuid("comanda_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
