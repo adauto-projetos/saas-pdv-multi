@@ -14,6 +14,8 @@ type MovementInput = {
   quantity: number; // delta assinado
   reason?: string | null;
   saleId?: string | null;
+  /** UUID da comanda origem (lançamento/estorno de comanda — 0006F). Sem FK declarada. */
+  comandaId?: string | null;
   userId: string;
 };
 
@@ -44,6 +46,7 @@ export async function insertMovement(
       quantity: data.quantity.toString(),
       reason: data.reason ?? null,
       saleId: data.saleId ?? null,
+      comandaId: data.comandaId ?? null,
       userId: data.userId,
     })
     .returning();
@@ -100,4 +103,51 @@ export async function recordSaleExit(
     userId,
   });
   await adjustProductStock(tx, tenantId, productId, -quantity);
+}
+
+/**
+ * Saída gerada pelo lançamento de item de comanda (RF02/RN03): grava o movimento
+ * `saida` (delta −qty, com `comanda_id`) e baixa o estoque. Carimbado com
+ * `comanda_id` (não `sale_id` — a venda ainda não existe no lançamento).
+ * Pode resultar em estoque negativo — não bloqueia (RN03).
+ */
+export async function recordComandaExit(
+  tx: Executor,
+  tenantId: string,
+  userId: string,
+  productId: string,
+  quantity: number,
+  comandaId: string,
+): Promise<void> {
+  await insertMovement(tx, tenantId, {
+    productId,
+    type: "saida",
+    quantity: -quantity,
+    comandaId,
+    userId,
+  });
+  await adjustProductStock(tx, tenantId, productId, -quantity);
+}
+
+/**
+ * Estorno de item de comanda (RF03/RF04/RN03): grava o movimento `entrada`
+ * (delta +qty, com `comanda_id`) e devolve o estoque. Chamado ao remover item
+ * ou cancelar a comanda. `comanda_id` é o mesmo do lançamento original.
+ */
+export async function recordComandaEstorno(
+  tx: Executor,
+  tenantId: string,
+  userId: string,
+  productId: string,
+  quantity: number,
+  comandaId: string,
+): Promise<void> {
+  await insertMovement(tx, tenantId, {
+    productId,
+    type: "entrada",
+    quantity: quantity, // positivo — devolução ao estoque
+    comandaId,
+    userId,
+  });
+  await adjustProductStock(tx, tenantId, productId, quantity);
 }

@@ -4,6 +4,8 @@ import { db } from "@/db";
 import {
   cashMovements,
   cashSessions,
+  comandaItems,
+  comandas,
   customers,
   payables,
   products,
@@ -215,4 +217,90 @@ export async function seedCashSession(
     })
     .returning({ id: cashSessions.id });
   return session.id;
+}
+
+// ---------------------------------------------------------------------------
+// Comanda/mesa seed helpers (0006F). All inserts use the owner `db` connection —
+// bypasses RLS intentionally (correct for seeding test data across tenants).
+// Cascade via tenant_id removes all comanda rows when cleanupTenant() is called.
+// ---------------------------------------------------------------------------
+
+/**
+ * Inserts a comanda for the given tenant/user; returns the full inserted row.
+ * Uses owner `db` to bypass RLS — correct for seeding test data.
+ */
+export async function seedComanda(
+  tenantId: string,
+  userId: string,
+  opts: {
+    label?: string;
+    status?: "aberta" | "fechada" | "cancelada";
+    saleId?: string | null;
+  } = {},
+): Promise<typeof comandas.$inferSelect> {
+  const [row] = await db
+    .insert(comandas)
+    .values({
+      tenantId,
+      openedBy: userId,
+      label: opts.label ?? "Mesa Teste",
+      status: opts.status ?? "aberta",
+      saleId: opts.saleId ?? null,
+    })
+    .returning();
+  return row;
+}
+
+/**
+ * Inserts a comanda item for the given tenant/comanda/product; returns the full row.
+ * Uses owner `db` to bypass RLS — correct for seeding test data.
+ */
+export async function seedComandaItem(
+  tenantId: string,
+  comandaId: string,
+  productId: string,
+  opts: {
+    quantity?: number;
+    observation?: string | null;
+  } = {},
+): Promise<typeof comandaItems.$inferSelect> {
+  const [row] = await db
+    .insert(comandaItems)
+    .values({
+      tenantId,
+      comandaId,
+      productId,
+      quantity: (opts.quantity ?? 1).toString(),
+      observation: opts.observation ?? null,
+    })
+    .returning();
+  return row;
+}
+
+/**
+ * Updates sale_price_cents on an existing product (admin db, bypasses RLS).
+ * Useful for price-change tests (RN05 — partial total reflects current price).
+ */
+export async function setProductPrice(
+  productId: string,
+  salePriceCents: number,
+): Promise<void> {
+  await db
+    .update(products)
+    .set({ salePriceCents })
+    .where(eq(products.id, productId));
+}
+
+/**
+ * Returns the current stock_quantity for a product (admin db, bypasses RLS).
+ * The value is stored as a numeric string in Postgres — returned as a string
+ * to match Drizzle's numeric inference. Parse with parseFloat() when comparing.
+ */
+export async function getProductStock(productId: string): Promise<string> {
+  const [row] = await db
+    .select({ stockQuantity: products.stockQuantity })
+    .from(products)
+    .where(eq(products.id, productId));
+  if (!row) throw new Error(`Product ${productId} not found`);
+  return row.stockQuantity;
 }

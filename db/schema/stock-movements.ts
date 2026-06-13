@@ -36,6 +36,11 @@ export const stockMovements = pgTable(
     quantity: numeric("quantity", { precision: 10, scale: 3 }).notNull(),
     reason: text("reason"),
     saleId: uuid("sale_id").references(() => sales.id, { onDelete: "set null" }),
+    // UUID sem FK declarada — no lançamento de item de comanda ainda não existe
+    // uma venda; o vínculo é carimbado aqui para rastrear exit/estorno.
+    // Mirror de cash_movements.receivable_payment_id (mesma razão: FK circular
+    // seria inviável, e comandas referencia sales, não o inverso).
+    comandaId: uuid("comanda_id"),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
