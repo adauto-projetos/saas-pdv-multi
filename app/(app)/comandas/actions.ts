@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -15,6 +16,8 @@ import {
   openComanda,
   removeComandaItem,
 } from "@/lib/services/comanda/comanda-service";
+import { selectTenantName } from "@/lib/services/print/print-data";
+import { tryKitchenPrint, tryReceiptPrint } from "@/lib/services/print/print-service";
 import {
   addComandaItemSchema,
   closeComandaSchema,
@@ -58,9 +61,18 @@ export async function addComandaItemAction(
   }
   try {
     const ctx = await requireAuthContext();
-    const comanda = await addComandaItem(ctx, parsed.data);
+    // Serviço retorna comanda + item inserido (0007F/RF01).
+    const { comanda, item } = await addComandaItem(ctx, parsed.data);
     revalidatePath("/comandas");
-    return { ok: true, data: comanda };
+    // Impressão de cozinha pós-tx (RN04 — side-effect; falha não reverte venda).
+    const printResult = await tryKitchenPrint(ctx, item, comanda);
+    return {
+      ok: true,
+      data: comanda,
+      printWarning: printResult.success
+        ? undefined
+        : "Impressora offline — reimprima manualmente",
+    };
   } catch (error) {
     return toActionError(error);
   }
@@ -117,7 +129,27 @@ export async function closeComandaAction(
     const ctx = await requireAuthContext();
     const sale = await closeComanda(ctx, parsed.data);
     revalidatePath("/comandas");
-    return { ok: true, data: sale };
+    // Seção pós-commit: tenantName + print são side-effects (RN04).
+    // Falha aqui NUNCA deve retornar ok:false — a venda já foi gravada.
+    try {
+      const tenantName = await withUserRls(ctx.userId, (tx) =>
+        selectTenantName(tx, ctx.tenantId),
+      );
+      const printResult = await tryReceiptPrint(ctx, sale, tenantName);
+      return {
+        ok: true,
+        data: sale,
+        printWarning: printResult.success
+          ? undefined
+          : "Impressora offline — reimprima manualmente",
+      };
+    } catch {
+      return {
+        ok: true,
+        data: sale,
+        printWarning: "Impressora offline — reimprima manualmente",
+      };
+    }
   } catch (error) {
     return toActionError(error);
   }

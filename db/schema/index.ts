@@ -14,3 +14,5 @@ export * from "./payable-payments";
 export * from "./cash-sessions";
 export * from "./comandas";
 export * from "./comanda-items";
+export * from "./print-logs";
+export * from "./kitchen-order-seqs";

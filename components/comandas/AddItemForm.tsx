@@ -78,6 +78,7 @@ export function AddItemForm({ comandaId }: { comandaId: string }) {
       return;
     }
     toast.success(`${product.name} adicionado à comanda`);
+    if (res.printWarning) toast.warning(res.printWarning);
     setProduct(null);
     setQuantity(1);
     setObservation("");
