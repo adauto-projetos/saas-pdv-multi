@@ -18,7 +18,7 @@ import type {
   OpenComandaInput,
   RemoveComandaItemInput,
 } from "@/lib/validation/comanda";
-import type { ComandaDto, ComandaSummaryDto } from "@/types/comanda";
+import type { AddComandaItemResult, ComandaDto, ComandaSummaryDto } from "@/types/comanda";
 import type { AuthContext } from "@/types/product";
 import type { SaleDto } from "@/types/sale";
 
@@ -53,11 +53,14 @@ export async function openComanda(
 /**
  * RF02/RN03 — lança item e baixa estoque na mesma tx (RNF02).
  * Status 'aberta' é validado; produto existe; estoque pode ficar negativo (RN03).
+ *
+ * Retorna `AddComandaItemResult` com a comanda atualizada E o item inserido.
+ * O caller (action) usa o item para acionar `tryKitchenPrint` pós-tx (RF01/RN04).
  */
 export async function addComandaItem(
   ctx: AuthContext,
   input: AddComandaItemInput,
-): Promise<ComandaDto> {
+): Promise<AddComandaItemResult> {
   return withUserRls(ctx.userId, async (tx) => {
     // 1. Comanda deve existir e estar 'aberta'.
     const comanda = await data.selectComandaById(tx, ctx.tenantId, input.comandaId);
@@ -71,7 +74,7 @@ export async function addComandaItem(
     if (!product) throw new NotFoundError("Produto não encontrado");
 
     // 3. Insere o item (sem preço — snapshot só no fechamento, RN05).
-    await data.insertComandaItem(
+    const insertedRow = await data.insertComandaItem(
       tx,
       ctx.tenantId,
       input.comandaId,
@@ -93,7 +96,21 @@ export async function addComandaItem(
 
     // 5. Recarrega com itens atualizados e preço corrente.
     const dto = await data.selectComandaById(tx, ctx.tenantId, input.comandaId);
-    return dto!;
+
+    // 6. Monta ComandaItemDto a partir da linha inserida + produto (0007F/RF01).
+    // Usado pelo caller para acionar tryKitchenPrint sem nova query ao banco.
+    const newItem = {
+      id: insertedRow.id,
+      productId: insertedRow.productId ?? null,
+      name: product.name,
+      unit: product.unit,
+      unitPriceCents: product.salePriceCents,
+      quantity: Number(insertedRow.quantity),
+      subtotalCents: Math.round(product.salePriceCents * Number(insertedRow.quantity)),
+      observation: insertedRow.observation ?? null,
+    };
+
+    return { comanda: dto!, item: newItem };
   });
 }
 

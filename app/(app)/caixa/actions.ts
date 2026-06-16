@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 
+import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
+import { selectTenantName } from "@/lib/services/print/print-data";
+import { tryReceiptPrint } from "@/lib/services/print/print-service";
 import {
   lookupProductByBarcode,
   searchProducts,
@@ -51,7 +54,27 @@ export async function finalizeSaleAction(
     const sale = await finalizeSale(ctx, parsed.data);
     revalidatePath("/caixa");
     revalidatePath("/vendas");
-    return { ok: true, data: sale };
+    // Seção pós-commit: tenantName + print são side-effects (RN04).
+    // Falha aqui NUNCA deve retornar ok:false — a venda já foi gravada.
+    try {
+      const tenantName = await withUserRls(ctx.userId, (tx) =>
+        selectTenantName(tx, ctx.tenantId),
+      );
+      const printResult = await tryReceiptPrint(ctx, sale, tenantName);
+      return {
+        ok: true,
+        data: sale,
+        printWarning: printResult.success
+          ? undefined
+          : "Impressora offline — reimprima manualmente",
+      };
+    } catch {
+      return {
+        ok: true,
+        data: sale,
+        printWarning: "Impressora offline — reimprima manualmente",
+      };
+    }
   } catch (error) {
     return toActionError(error);
   }

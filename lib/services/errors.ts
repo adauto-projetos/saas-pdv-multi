@@ -51,7 +51,7 @@ export class UnauthorizedError extends AppError {
 
 /** Resultado seguro de uma Server Action. */
 export type ActionResult<T> =
-  | { ok: true; data: T }
+  | { ok: true; data: T; printWarning?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 /** Código de erro do Postgres para violação de unique constraint. */

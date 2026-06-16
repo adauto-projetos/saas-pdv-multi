@@ -67,6 +67,7 @@ export function CloseComandaDialog({
       return;
     }
     toast.success(`Comanda "${comanda.label}" fechada`);
+    if (res.printWarning) toast.warning(res.printWarning);
     setCustomer(null);
     onOpenChange(false);
     router.refresh();

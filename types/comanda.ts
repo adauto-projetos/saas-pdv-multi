@@ -38,6 +38,16 @@ export type ComandaDto = {
 };
 
 /**
+ * Resultado de `addComandaItem` (0007F): comanda atualizada + item inserido.
+ * O item é retornado para que o caller possa acionar `tryKitchenPrint` sem
+ * precisar buscá-lo novamente no banco (RF01/RN04).
+ */
+export type AddComandaItemResult = {
+  comanda: ComandaDto;
+  item: ComandaItemDto;
+};
+
+/**
  * Linha de histórico de comanda (RF08). Sem itens — só metadados para a lista.
  */
 export type ComandaSummaryDto = {

@@ -166,9 +166,9 @@ suite("comanda-service (integração)", () => {
   it("comanda-RF02-add-item — lançar item adiciona à comanda", async () => {
     const c = await open("Add Item");
     const updated = await addItem(c.id, productId, 2);
-    expect(updated.items).toHaveLength(1);
-    expect(updated.items[0].quantity).toBe(2);
-    expect(updated.items[0].productId).toBe(productId);
+    expect(updated.comanda.items).toHaveLength(1);
+    expect(updated.comanda.items[0].quantity).toBe(2);
+    expect(updated.comanda.items[0].productId).toBe(productId);
   });
 
   // ---- comanda-RN03-add-decrements-stock -----------------------------------
@@ -222,7 +222,7 @@ suite("comanda-service (integração)", () => {
   it("comanda-RN11-observation — observação gravada, não afeta cálculo", async () => {
     const c = await open("Observação");
     const updated = await addItem(c.id, productId, 1, "sem cebola");
-    const item = updated.items[0];
+    const item = updated.comanda.items[0];
     expect(item.observation).toBe("sem cebola");
     // subtotal independe da observação
     expect(item.subtotalCents).toBe(1000);
@@ -231,7 +231,7 @@ suite("comanda-service (integração)", () => {
   it("comanda-RN11-observation-null — sem observation → null", async () => {
     const c = await open("Obs Null");
     const updated = await addItem(c.id, productId, 1);
-    expect(updated.items[0].observation).toBeNull();
+    expect(updated.comanda.items[0].observation).toBeNull();
   });
 
   // ---- comanda-RN03-add-stock-negative ------------------------------------
@@ -246,7 +246,7 @@ suite("comanda-service (integração)", () => {
     const c = await open("Negativo");
     // Não deve lançar erro mesmo com qty > stock
     const updated = await addItem(c.id, pid, 5);
-    expect(updated.items[0].quantity).toBe(5);
+    expect(updated.comanda.items[0].quantity).toBe(5);
     const stock = parseFloat(await getProductStock(pid));
     expect(stock).toBe(-4);
   });
@@ -256,7 +256,7 @@ suite("comanda-service (integração)", () => {
   it("comanda-RF03-remove-item — remove item de comanda aberta", async () => {
     const c = await open("Remover");
     const withItem = await addItem(c.id, productId, 2);
-    const itemId = withItem.items[0].id;
+    const itemId = withItem.comanda.items[0].id;
     const afterRemove = await removeItem(c.id, itemId);
     expect(afterRemove.items).toHaveLength(0);
     expect(afterRemove.status).toBe("aberta");
@@ -273,7 +273,7 @@ suite("comanda-service (integração)", () => {
     });
     const c = await open("Estorno");
     const withItem = await addItem(c.id, pid, 3); // stock → 7
-    const itemId = withItem.items[0].id;
+    const itemId = withItem.comanda.items[0].id;
 
     await removeItem(c.id, itemId); // estorna → stock 10
 
@@ -911,7 +911,7 @@ suite("comanda-service (integração)", () => {
     });
     const c = await open("Atomic Remove");
     const withItem = await addItem(c.id, pid, 3); // stock → 7
-    const itemId = withItem.items[0].id;
+    const itemId = withItem.comanda.items[0].id;
 
     await removeItem(c.id, itemId);
 

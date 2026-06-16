@@ -29,6 +29,7 @@ import { centsToBRL } from "@/lib/format/money";
 import type { ComandaDto } from "@/types/comanda";
 
 import { AddItemForm } from "./AddItemForm";
+import { ReprintButton } from "./ReprintButton";
 
 /**
  * RF02/RF03/RF05 — painel de itens da comanda aberta. Lista itens com
@@ -84,7 +85,7 @@ export function ComandaItemPanel({ comanda }: { comanda: ComandaDto }) {
                 <TableHead>Qtd</TableHead>
                 <TableHead>Observação</TableHead>
                 <TableHead>Subtotal</TableHead>
-                <TableHead className="w-10" />
+                <TableHead className="w-28" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -104,39 +105,42 @@ export function ComandaItemPanel({ comanda }: { comanda: ComandaDto }) {
                     {centsToBRL(item.subtotalCents)}
                   </TableCell>
                   <TableCell>
-                    <AlertDialog>
-                      <AlertDialogTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Remover ${item.name}`}
-                            disabled={removingId === item.id}
-                          />
-                        }
-                      >
-                        Remover
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover item?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Remover{" "}
-                            <span className="font-medium">{item.name}</span>{" "}
-                            da comanda e estornar o estoque. Esta ação não pode
-                            ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleRemove(item.id, item.name)}
-                          >
-                            Remover
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex items-center gap-1">
+                      <ReprintButton type="cozinha" id={item.id} />
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={`Remover ${item.name}`}
+                              disabled={removingId === item.id}
+                            />
+                          }
+                        >
+                          Remover
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover item?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Remover{" "}
+                              <span className="font-medium">{item.name}</span>{" "}
+                              da comanda e estornar o estoque. Esta ação não pode
+                              ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleRemove(item.id, item.name)}
+                            >
+                              Remover
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

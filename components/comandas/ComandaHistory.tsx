@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import type { ComandaSummaryDto, ComandaStatus } from "@/types/comanda";
 
+import { ReprintButton } from "./ReprintButton";
+
 function formatDate(value: Date | string | null): string {
   if (!value) return "—";
   return new Date(value).toLocaleString("pt-BR", {
@@ -128,7 +130,10 @@ export function ComandaHistory() {
                 <TableCell>{formatDate(c.closedAt)}</TableCell>
                 <TableCell className="text-muted-foreground">
                   {c.saleId ? (
-                    <span className="font-mono text-xs">{c.saleId.slice(0, 8)}…</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs">{c.saleId.slice(0, 8)}…</span>
+                      <ReprintButton type="cupom" id={c.saleId} />
+                    </div>
                   ) : (
                     "—"
                   )}
