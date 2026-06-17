@@ -2,13 +2,7 @@
 
 import { CloseSessionDialog } from "@/components/financeiro/CloseSessionDialog";
 import { OpenSessionDialog } from "@/components/financeiro/OpenSessionDialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { PageCard } from "@/components/ui/PageCard";
 import { centsToBRL } from "@/lib/format/money";
 import type { CashSessionDto } from "@/types/profit";
 
@@ -23,46 +17,44 @@ export function CashSessionPanel({
 }) {
   if (!session) {
     return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardDescription>Turno</CardDescription>
-          <CardTitle>Nenhum caixa aberto</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <p className="text-sm text-muted-foreground">
-            Abra o caixa informando o saldo inicial para começar o turno.
-          </p>
-          <OpenSessionDialog />
-        </CardContent>
-      </Card>
+      <PageCard className="p-5">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.7px] text-gray-400">
+          Turno
+        </div>
+        <div className="mb-1.5 text-[14px] font-semibold text-gray-900">
+          Nenhum caixa aberto
+        </div>
+        <p className="mb-4 text-[12px] leading-relaxed text-gray-500">
+          Abra o caixa informando o saldo inicial para começar o turno.
+        </p>
+        <OpenSessionDialog />
+      </PageCard>
     );
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardDescription>Turno aberto</CardDescription>
-        <CardTitle className="font-mono">
-          {centsToBRL(session.openingBalanceCents)}
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
-            saldo inicial
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Aberto em</span>
-          <span>
-            {new Date(session.openedAt).toLocaleString("pt-BR", {
-              day: "2-digit",
-              month: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
-        <CloseSessionDialog />
-      </CardContent>
-    </Card>
+    <PageCard className="p-5">
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.7px] text-gray-400">
+        Turno aberto
+      </div>
+      <div className="mb-1.5 text-[24px] font-bold text-gray-900">
+        {centsToBRL(session.openingBalanceCents)}
+        <span className="ml-2 text-[12px] font-normal text-gray-400">
+          saldo inicial
+        </span>
+      </div>
+      <div className="mb-4 flex items-center justify-between text-[12px] text-gray-500">
+        <span>Aberto em</span>
+        <span>
+          {new Date(session.openedAt).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+      </div>
+      <CloseSessionDialog />
+    </PageCard>
   );
 }

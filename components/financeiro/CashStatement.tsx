@@ -3,13 +3,11 @@
 import * as React from "react";
 
 import { listCashMovementsAction } from "@/app/(app)/financeiro/caixa/actions";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PageCard } from "@/components/ui/PageCard";
+import { PdvTableCell, PdvTableHead } from "@/components/ui/PdvTable";
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -56,24 +54,20 @@ export function CashStatement() {
   }, [from, to]);
 
   return (
-    <div className="grid gap-3">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1">
-          <Label htmlFor="statement-from">De</Label>
-          <Input
-            id="statement-from"
+    <PageCard>
+      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-[14px]">
+        <span className="text-sm font-semibold text-gray-900">Extrato</span>
+        <div className="flex items-center gap-2">
+          <input
             type="date"
-            className="w-40 text-base"
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[12px] outline-none focus:border-gray-400"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
-        </div>
-        <div className="grid gap-1">
-          <Label htmlFor="statement-to">Até</Label>
-          <Input
-            id="statement-to"
+          <span className="text-[12px] text-gray-400">até</span>
+          <input
             type="date"
-            className="w-40 text-base"
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[12px] outline-none focus:border-gray-400"
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />
@@ -81,60 +75,61 @@ export function CashStatement() {
       </div>
 
       {loading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
+        <p className="px-5 py-6 text-center text-sm text-gray-400">
           Carregando...
         </p>
       ) : error ? (
-        <p className="py-6 text-center text-sm text-destructive">{error}</p>
+        <p className="px-5 py-6 text-center text-sm text-destructive">{error}</p>
       ) : movements.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
+        <p className="px-5 py-6 text-center text-sm text-gray-400">
           Nenhuma movimentação no período.
         </p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Origem</TableHead>
+              <PdvTableHead>Data</PdvTableHead>
+              <PdvTableHead>Tipo</PdvTableHead>
+              <PdvTableHead className="text-right">Valor</PdvTableHead>
+              <PdvTableHead>Descrição</PdvTableHead>
+              <PdvTableHead>Origem</PdvTableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {movements.map((m) => (
               <TableRow key={m.id}>
-                <TableCell>
+                <PdvTableCell>
                   {new Date(m.createdAt).toLocaleString("pt-BR", {
                     day: "2-digit",
                     month: "2-digit",
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
-                </TableCell>
-                <TableCell>{m.type === "entrada" ? "Entrada" : "Saída"}</TableCell>
-                <TableCell
-                  className={
-                    m.amountCents < 0
-                      ? "font-mono text-destructive"
-                      : "font-mono text-primary"
-                  }
+                </PdvTableCell>
+                <PdvTableCell>
+                  {m.type === "entrada" ? "Entrada" : "Saída"}
+                </PdvTableCell>
+                <PdvTableCell
+                  className={[
+                    "text-right font-semibold",
+                    m.amountCents < 0 ? "text-red-500" : "text-green-600",
+                  ].join(" ")}
                 >
                   {m.amountCents > 0
                     ? `+${centsToBRL(m.amountCents)}`
                     : centsToBRL(m.amountCents)}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
+                </PdvTableCell>
+                <PdvTableCell className="text-gray-500">
                   {m.description ?? "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
+                </PdvTableCell>
+                <PdvTableCell className="text-gray-500">
                   {ORIGIN_LABELS[m.origin]}
-                </TableCell>
+                </PdvTableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
-    </div>
+    </PageCard>
   );
 }

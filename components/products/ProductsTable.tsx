@@ -1,11 +1,9 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
+import { PdvTableCell, PdvTableHead } from "@/components/ui/PdvTable";
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -21,41 +19,44 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Produto</TableHead>
-          <TableHead>Preço de venda</TableHead>
-          <TableHead>Unidade</TableHead>
-          <TableHead>Estoque</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
+          <PdvTableHead>Produto</PdvTableHead>
+          <PdvTableHead className="text-right">Preço de venda</PdvTableHead>
+          <PdvTableHead className="text-center">Un.</PdvTableHead>
+          <PdvTableHead className="text-right">Estoque</PdvTableHead>
+          <PdvTableHead className="text-center">Ações</PdvTableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {products.map((product) => (
           <TableRow key={product.id}>
-            <TableCell className="font-medium">{product.name}</TableCell>
-            <TableCell className="font-mono">
+            <PdvTableCell className="font-medium">{product.name}</PdvTableCell>
+            <PdvTableCell className="text-right font-semibold text-green-600">
               {centsToBRL(product.salePriceCents)}
-            </TableCell>
-            <TableCell>
-              <Badge variant="outline">{product.unit}</Badge>
-            </TableCell>
-            <TableCell
+            </PdvTableCell>
+            <PdvTableCell className="text-center text-gray-500">
+              {product.unit}
+            </PdvTableCell>
+            <PdvTableCell
               data-testid="stock-cell"
-              className={
+              className={[
+                "text-right font-medium",
                 product.stockQuantity < 0
-                  ? "font-medium text-destructive"
-                  : undefined
-              }
+                  ? "text-destructive"
+                  : product.stockQuantity === 0
+                    ? "text-red-500"
+                    : "",
+              ].join(" ")}
             >
               {product.stockQuantity}
-            </TableCell>
-            <TableCell className="text-right">
+            </PdvTableCell>
+            <PdvTableCell className="text-center">
               <Link
                 href={`/products/${product.id}/edit`}
-                className="text-sm text-primary hover:underline"
+                className="text-[12px] font-medium text-green-600 hover:underline"
               >
                 Editar
               </Link>
-            </TableCell>
+            </PdvTableCell>
           </TableRow>
         ))}
       </TableBody>

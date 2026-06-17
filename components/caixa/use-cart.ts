@@ -20,6 +20,7 @@ export function itemSubtotal(item: CartItem): number {
 type State = { items: CartItem[] };
 type Action =
   | { type: "add"; product: ProductDto }
+  | { type: "addWithQty"; product: ProductDto; quantity: number }
   | { type: "setQuantity"; productId: string; quantity: number }
   | { type: "remove"; productId: string }
   | { type: "clear" };
@@ -56,6 +57,33 @@ function reducer(state: State, action: Action): State {
         ],
       };
     }
+    case "addWithQty": {
+      const qty = Math.max(0.001, action.quantity);
+      const idx = state.items.findIndex(
+        (i) => i.productId === action.product.id,
+      );
+      if (idx >= 0) {
+        return {
+          items: state.items.map((i) =>
+            i.productId === action.product.id
+              ? { ...i, quantity: i.quantity + qty }
+              : i,
+          ),
+        };
+      }
+      return {
+        items: [
+          ...state.items,
+          {
+            productId: action.product.id,
+            name: action.product.name,
+            unit: action.product.unit,
+            unitPriceCents: action.product.salePriceCents,
+            quantity: qty,
+          },
+        ],
+      };
+    }
     case "setQuantity":
       return {
         items: state.items.map((i) =>
@@ -82,6 +110,8 @@ export function useCart() {
     items: state.items,
     totalCents,
     addProduct: (product: ProductDto) => dispatch({ type: "add", product }),
+    addProductWithQty: (product: ProductDto, quantity: number) =>
+      dispatch({ type: "addWithQty", product, quantity }),
     setQuantity: (productId: string, quantity: number) =>
       dispatch({ type: "setQuantity", productId, quantity }),
     removeItem: (productId: string) => dispatch({ type: "remove", productId }),

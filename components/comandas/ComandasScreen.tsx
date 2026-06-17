@@ -2,15 +2,17 @@
 
 import * as React from "react";
 
+import { PageCard } from "@/components/ui/PageCard";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { ComandaDto } from "@/types/comanda";
 
 import { ComandaCard } from "./ComandaCard";
 import { ComandaHistory } from "./ComandaHistory";
-import { OpenComandaDialog } from "./OpenComandaDialog";
 
 /**
  * RF08 — tela principal de comandas: grade de abertas + histórico.
  * selectedId controla qual card está expandido (mostra item panel inline).
+ * O botão "Abrir comanda" foi movido para AppTopBar (OD-1).
  */
 export function ComandasScreen({
   openComandas,
@@ -24,20 +26,20 @@ export function ComandasScreen({
   }
 
   return (
-    <div className="grid gap-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Comandas</h1>
-        <OpenComandaDialog />
-      </div>
-
-      <section className="grid gap-3">
-        <h2 className="font-medium">Abertas</h2>
+    <div className="flex flex-col gap-5 px-7 py-6">
+      <div>
+        <SectionLabel className="mb-3">Abertas</SectionLabel>
         {openComandas.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            Nenhuma comanda aberta.
-          </p>
+          <PageCard>
+            <p className="px-5 py-10 text-center text-sm text-gray-400">
+              Nenhuma comanda aberta. Use o botão acima para abrir uma.
+            </p>
+          </PageCard>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))" }}
+          >
             {openComandas.map((comanda) => (
               <ComandaCard
                 key={comanda.id}
@@ -48,12 +50,16 @@ export function ComandasScreen({
             ))}
           </div>
         )}
-      </section>
+      </div>
 
-      <section className="grid gap-3">
-        <h2 className="font-medium">Histórico</h2>
-        <ComandaHistory />
-      </section>
+      <div>
+        <SectionLabel className="mb-3">Histórico</SectionLabel>
+        <PageCard>
+          <div className="p-5">
+            <ComandaHistory />
+          </div>
+        </PageCard>
+      </div>
     </div>
   );
 }

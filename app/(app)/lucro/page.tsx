@@ -7,18 +7,14 @@ export default async function LucroPage() {
   const result = await getProfitAction();
 
   return (
-    <div className="grid gap-8">
-      <h1 className="text-xl font-semibold">Lucro</h1>
-
-      <section className="grid gap-3">
-        {result.ok ? (
-          <ProfitFilter initial={result.data} />
-        ) : (
-          <p className="text-destructive">
-            Não foi possível carregar o lucro do período.
-          </p>
-        )}
-      </section>
+    <div className="flex flex-col gap-5 px-7 py-6 max-w-[680px]">
+      {result.ok ? (
+        <ProfitFilter initial={result.data} />
+      ) : (
+        <p className="text-sm text-destructive">
+          Não foi possível carregar o lucro do período.
+        </p>
+      )}
     </div>
   );
 }
