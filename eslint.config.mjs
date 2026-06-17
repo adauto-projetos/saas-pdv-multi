@@ -15,6 +15,11 @@ const eslintConfig = defineConfig([
     // ADD tooling (gitignored, não é código da aplicação):
     ".claude/**",
     ".codeadd/**",
+    // Design reference files — não são código da aplicação:
+    "Design funcional e moderno/**",
+    "docs/design/**",
+    "components/PDVApp.jsx",
+    "components/PDVApp.css",
   ]),
 ]);
 

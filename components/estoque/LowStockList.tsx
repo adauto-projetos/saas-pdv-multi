@@ -3,19 +3,18 @@ import Link from "next/link";
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PdvTableCell, PdvTableHead } from "@/components/ui/PdvTable";
 import type { ProductDto } from "@/types/product";
 
 /** RF07 — produtos com estoque baixo (≤ mínimo). */
 export function LowStockList({ products }: { products: ProductDto[] }) {
   if (products.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        Nenhum produto com estoque baixo. 🎉
+      <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+        Nenhum produto com estoque baixo.
       </p>
     );
   }
@@ -24,32 +23,35 @@ export function LowStockList({ products }: { products: ProductDto[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Produto</TableHead>
-          <TableHead>Estoque</TableHead>
-          <TableHead>Mínimo</TableHead>
-          <TableHead className="text-right">Movimentações</TableHead>
+          <PdvTableHead>Produto</PdvTableHead>
+          <PdvTableHead className="text-right">Estoque</PdvTableHead>
+          <PdvTableHead className="text-right">Mínimo</PdvTableHead>
+          <PdvTableHead className="text-right">Movimentações</PdvTableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {products.map((product) => (
           <TableRow key={product.id} data-testid="low-row">
-            <TableCell className="font-medium">{product.name}</TableCell>
-            <TableCell
-              className={
-                product.stockQuantity < 0 ? "text-destructive" : undefined
-              }
+            <PdvTableCell className="font-medium">{product.name}</PdvTableCell>
+            <PdvTableCell
+              className={[
+                "text-right font-bold",
+                product.stockQuantity < 0 ? "text-red-500" : "text-red-500",
+              ].join(" ")}
             >
               {product.stockQuantity}
-            </TableCell>
-            <TableCell>{product.minStock ?? "—"}</TableCell>
-            <TableCell className="text-right">
+            </PdvTableCell>
+            <PdvTableCell className="text-right text-gray-500">
+              {product.minStock ?? "—"}
+            </PdvTableCell>
+            <PdvTableCell className="text-right">
               <Link
                 href={`/estoque/${product.id}`}
-                className="text-sm text-primary hover:underline"
+                className="text-[12px] font-medium text-green-600 hover:underline"
               >
                 Histórico
               </Link>
-            </TableCell>
+            </PdvTableCell>
           </TableRow>
         ))}
       </TableBody>

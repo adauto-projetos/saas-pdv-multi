@@ -3,12 +3,11 @@
 import { XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PdvTableCell, PdvTableHead } from "@/components/ui/PdvTable";
 import { QuantityInput } from "@/components/ui/QuantityInput";
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
@@ -37,22 +36,22 @@ export function Cart({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Produto</TableHead>
-          <TableHead>Qtd</TableHead>
-          <TableHead>Subtotal</TableHead>
-          <TableHead className="w-10" />
+          <PdvTableHead>Produto</PdvTableHead>
+          <PdvTableHead>Qtd</PdvTableHead>
+          <PdvTableHead className="text-right">Subtotal</PdvTableHead>
+          <PdvTableHead className="w-10" />
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.productId} data-testid="cart-row">
-            <TableCell className="font-medium">
+            <PdvTableCell className="font-medium">
               {item.name}
-              <span className="ml-1 text-xs text-muted-foreground">
+              <span className="ml-1 text-xs text-gray-400">
                 ({item.unit})
               </span>
-            </TableCell>
-            <TableCell className="w-28">
+            </PdvTableCell>
+            <PdvTableCell className="w-28">
               <QuantityInput
                 aria-label={`Quantidade de ${item.name}`}
                 value={item.quantity}
@@ -64,11 +63,11 @@ export function Cart({
                     : onSetQuantity(item.productId, q)
                 }
               />
-            </TableCell>
-            <TableCell className="font-mono">
+            </PdvTableCell>
+            <PdvTableCell className="text-right font-bold text-green-600">
               {centsToBRL(itemSubtotal(item))}
-            </TableCell>
-            <TableCell>
+            </PdvTableCell>
+            <PdvTableCell>
               <Button
                 variant="ghost"
                 size="sm"
@@ -77,7 +76,7 @@ export function Cart({
               >
                 <XIcon className="size-4" />
               </Button>
-            </TableCell>
+            </PdvTableCell>
           </TableRow>
         ))}
       </TableBody>

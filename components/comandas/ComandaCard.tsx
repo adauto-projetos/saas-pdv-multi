@@ -16,15 +16,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { PageCard } from "@/components/ui/PageCard";
 import { centsToBRL } from "@/lib/format/money";
 import type { ComandaDto, ComandaStatus } from "@/types/comanda";
 
@@ -33,12 +26,24 @@ import { ComandaItemPanel } from "./ComandaItemPanel";
 
 function StatusBadge({ status }: { status: ComandaStatus }) {
   if (status === "aberta") {
-    return <Badge variant="default">Aberta</Badge>;
+    return (
+      <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-semibold text-green-700">
+        Aberta
+      </span>
+    );
   }
   if (status === "fechada") {
-    return <Badge variant="secondary">Fechada</Badge>;
+    return (
+      <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+        Fechada
+      </span>
+    );
   }
-  return <Badge variant="destructive">Cancelada</Badge>;
+  return (
+    <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-600">
+      Cancelada
+    </span>
+  );
 }
 
 /**
@@ -75,59 +80,66 @@ export function ComandaCard({
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="grid gap-1">
-            <CardDescription>Comanda</CardDescription>
-            <CardTitle className="text-lg">{comanda.label}</CardTitle>
+    <PageCard>
+      <div className="p-[18px]">
+        {/* Header */}
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.5px] text-gray-400">
+              Comanda
+            </div>
+            <div className="text-[16px] font-bold text-gray-900">
+              {comanda.label}
+            </div>
           </div>
           <StatusBadge status={comanda.status} />
         </div>
-      </CardHeader>
 
-      <CardContent className="grid gap-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Aberta em</span>
-          <span>
-            {new Date(comanda.openedAt).toLocaleString("pt-BR", {
-              day: "2-digit",
-              month: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+        {/* Stats row */}
+        <div className="mb-4 grid grid-cols-2 gap-2.5 border-y border-gray-100 py-3">
+          <div>
+            <div className="mb-0.5 text-[10px] font-medium text-gray-400">
+              Aberta em
+            </div>
+            <div className="text-[12px] font-medium text-gray-700">
+              {new Date(comanda.openedAt).toLocaleString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="mb-0.5 text-[10px] font-medium text-gray-400">
+              Total parcial
+            </div>
+            <div className="text-[15px] font-bold text-green-600">
+              {centsToBRL(comanda.partialTotalCents)}
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            Itens: {comanda.items.length}
-          </span>
-          <span className="font-mono font-semibold">
-            {centsToBRL(comanda.partialTotalCents)}
-            <span className="ml-1 text-xs font-normal text-muted-foreground">
-              parcial
-            </span>
-          </span>
+        <div className="mb-3 text-[11px] text-gray-500">
+          {comanda.items.length}{" "}
+          {comanda.items.length === 1 ? "item" : "itens"}
         </div>
 
         {isAberta ? (
           <div className="grid gap-2">
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={onToggleExpand}
+                className="flex-1 rounded-lg border border-gray-200 bg-white py-1.5 text-[12px] font-medium text-gray-500 hover:bg-gray-50"
               >
                 {expanded ? "Ocultar itens" : "Lançar item"}
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
+              </button>
+              <button
                 onClick={() => setCloseOpen(true)}
+                className="flex-1 rounded-lg bg-green-600 py-1.5 text-[12px] font-semibold text-white hover:bg-green-700"
               >
                 Fechar
-              </Button>
+              </button>
               <AlertDialog>
                 <AlertDialogTrigger
                   render={
@@ -135,6 +147,7 @@ export function ComandaCard({
                       variant="destructive"
                       size="sm"
                       disabled={cancelling}
+                      className="rounded-lg px-3 py-1.5 text-[12px]"
                     />
                   }
                 >
@@ -165,8 +178,8 @@ export function ComandaCard({
         ) : null}
 
         {comanda.closedAt ? (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
+          <div className="mt-2 flex items-center justify-between text-[12px] text-gray-400">
+            <span>
               {comanda.status === "fechada" ? "Fechada em" : "Cancelada em"}
             </span>
             <span>
@@ -179,7 +192,7 @@ export function ComandaCard({
             </span>
           </div>
         ) : null}
-      </CardContent>
+      </div>
 
       {isAberta ? (
         <CloseComandaDialog
@@ -188,6 +201,6 @@ export function ComandaCard({
           onOpenChange={setCloseOpen}
         />
       ) : null}
-    </Card>
+    </PageCard>
   );
 }

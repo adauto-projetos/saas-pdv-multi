@@ -4,8 +4,7 @@ import * as React from "react";
 
 import { getProfitAction } from "@/app/(app)/lucro/actions";
 import { ProfitSummaryCard } from "@/components/lucro/ProfitSummaryCard";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PageCard, PageCardHeader } from "@/components/ui/PageCard";
 import type { ProfitDto } from "@/types/profit";
 
 /**
@@ -51,29 +50,36 @@ export function ProfitFilter({ initial }: { initial: ProfitDto }) {
   }, [from, to]);
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1">
-          <Label htmlFor="profit-from">De</Label>
-          <Input
-            id="profit-from"
-            type="date"
-            className="w-40 text-base"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
+    <div className="flex flex-col gap-5">
+      <PageCard>
+        <PageCardHeader>Período de análise</PageCardHeader>
+        <div className="flex flex-wrap items-end gap-3 p-5">
+          {(["De", "Até"] as const).map((label) => (
+            <div key={label} className="grid gap-1">
+              <label className="text-[11px] font-semibold text-gray-400">
+                {label}
+              </label>
+              <input
+                type="date"
+                className="rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-gray-400"
+                value={label === "De" ? from : to}
+                onChange={(e) =>
+                  label === "De" ? setFrom(e.target.value) : setTo(e.target.value)
+                }
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => {
+              setFrom(from);
+              setTo(to);
+            }}
+            className="rounded-lg bg-green-600 px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-green-700"
+          >
+            Filtrar
+          </button>
         </div>
-        <div className="grid gap-1">
-          <Label htmlFor="profit-to">Até</Label>
-          <Input
-            id="profit-to"
-            type="date"
-            className="w-40 text-base"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
-        </div>
-      </div>
+      </PageCard>
 
       {error ? (
         <p className="text-sm text-destructive">{error}</p>

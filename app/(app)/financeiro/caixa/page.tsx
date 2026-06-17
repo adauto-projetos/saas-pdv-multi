@@ -5,6 +5,7 @@ import { CashMovementDialog } from "@/components/financeiro/CashMovementDialog";
 import { CashSessionPanel } from "@/components/financeiro/CashSessionPanel";
 import { CashStatement } from "@/components/financeiro/CashStatement";
 import { SessionHistory } from "@/components/financeiro/SessionHistory";
+import { PageCard, PageCardHeader } from "@/components/ui/PageCard";
 
 export const dynamic = "force-dynamic";
 
@@ -13,44 +14,47 @@ export default async function CaixaPage() {
   const sessionResult = await getOpenSessionAction();
 
   return (
-    <div className="grid gap-8">
-      <h1 className="text-xl font-semibold">Caixa</h1>
-
-      <section className="grid gap-3">
-        <h2 className="font-medium">Turno</h2>
+    <div className="flex flex-col gap-5 px-7 py-6 max-w-[820px]">
+      {/* Turno + Saldo em grid 2-col */}
+      <div className="grid grid-cols-2 gap-4">
         {sessionResult.ok ? (
           <CashSessionPanel session={sessionResult.data} />
         ) : (
-          <p className="text-destructive">
-            Não foi possível carregar o turno de caixa.
-          </p>
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-destructive">
+              Não foi possível carregar o turno de caixa.
+            </p>
+          </div>
         )}
-      </section>
-
-      <section className="grid gap-3">
         {result.ok ? (
           <CashBalanceCard balanceCents={result.data.balanceCents} />
         ) : (
-          <p className="text-destructive">
-            Não foi possível carregar o saldo do caixa.
-          </p>
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-destructive">
+              Não foi possível carregar o saldo do caixa.
+            </p>
+          </div>
         )}
-      </section>
+      </div>
 
-      <section className="grid gap-3">
-        <h2 className="font-medium">Nova movimentação</h2>
-        <CashMovementDialog />
-      </section>
+      {/* Nova movimentação */}
+      <PageCard>
+        <PageCardHeader>Nova movimentação</PageCardHeader>
+        <div className="p-5">
+          <CashMovementDialog />
+        </div>
+      </PageCard>
 
-      <section className="grid gap-3">
-        <h2 className="font-medium">Extrato</h2>
-        <CashStatement />
-      </section>
+      {/* Extrato */}
+      <CashStatement />
 
-      <section className="grid gap-3">
-        <h2 className="font-medium">Histórico de turnos</h2>
-        <SessionHistory />
-      </section>
+      {/* Histórico de turnos */}
+      <PageCard>
+        <PageCardHeader>Histórico de turnos</PageCardHeader>
+        <div className="p-5">
+          <SessionHistory />
+        </div>
+      </PageCard>
     </div>
   );
 }

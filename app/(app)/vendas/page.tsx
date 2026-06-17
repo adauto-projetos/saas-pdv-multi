@@ -7,12 +7,11 @@ export default async function VendasPage() {
   const result = await listTodaySalesAction();
 
   return (
-    <div className="grid gap-6">
-      <h1 className="text-xl font-semibold">Vendas de hoje</h1>
+    <div className="flex flex-col gap-5 px-7 py-6">
       {result.ok ? (
         <TodaySalesList sales={result.data} />
       ) : (
-        <p className="text-destructive">Não foi possível carregar as vendas.</p>
+        <p className="text-sm text-destructive">Não foi possível carregar as vendas.</p>
       )}
     </div>
   );
