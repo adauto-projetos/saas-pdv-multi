@@ -36,6 +36,8 @@ const product: ProductDto = {
   priceIsManual: false,
   stockQuantity: 5,
   minStock: null,
+  emoji: null,
+  category: null,
   createdAt: "",
   updatedAt: "",
 };

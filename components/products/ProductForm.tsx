@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { QuantityInput } from "@/components/ui/QuantityInput";
 import { calculateSalePrice } from "@/lib/services/products/markup";
 import type { ActionResult } from "@/lib/services/errors";
-import { createProductSchema } from "@/lib/validation/product";
+import { createProductSchema, PRODUCT_CATEGORIES } from "@/lib/validation/product";
 import type { CreateProductInput } from "@/lib/validation/product";
 import type { ProductDto, ProductUnit } from "@/types/product";
 
@@ -61,6 +61,8 @@ export function ProductForm({
   const [minStock, setMinStock] = React.useState<number | null>(
     defaultValues?.minStock ?? null,
   );
+  const [emoji, setEmoji] = React.useState(defaultValues?.emoji ?? "");
+  const [category, setCategory] = React.useState(defaultValues?.category ?? "");
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
     {},
   );
@@ -87,6 +89,8 @@ export function ProductForm({
       markupPercent: markupPercent ?? undefined,
       // Só envia salePrice quando é override manual (RF03/RF04); senão o backend calcula.
       salePriceCents: priceIsManual ? (manualPrice ?? undefined) : undefined,
+      emoji: emoji.trim() || undefined,
+      category: category || undefined,
     };
 
     const parsed = createProductSchema.safeParse(input);
@@ -118,6 +122,34 @@ export function ProductForm({
         {fieldErrors.name ? (
           <p className="text-sm text-destructive">{fieldErrors.name}</p>
         ) : null}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="emoji">Emoji do produto</Label>
+          <Input
+            id="emoji"
+            className="text-base"
+            value={emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            placeholder="Ex.: 🍺 🥤 🍔"
+            maxLength={10}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="category">Categoria</Label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <option value="">Sem categoria</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -40,6 +40,8 @@ export async function createProduct(
         priceIsManual,
         stockQuantity: input.stockQuantity,
         minStock: input.minStock ?? null,
+        emoji: input.emoji ?? null,
+        category: input.category ?? null,
       }),
     );
   } catch (error) {
@@ -61,6 +63,8 @@ export async function updateProduct(
   if (input.unit !== undefined) patch.unit = input.unit;
   if (input.stockQuantity !== undefined) patch.stockQuantity = input.stockQuantity;
   if (input.minStock !== undefined) patch.minStock = input.minStock ?? null;
+  if (input.emoji !== undefined) patch.emoji = input.emoji ?? null;
+  if (input.category !== undefined) patch.category = input.category ?? null;
   if (input.costCents !== undefined) patch.costCents = input.costCents ?? null;
   if (input.markupPercent !== undefined)
     patch.markupPercent = input.markupPercent ?? null;

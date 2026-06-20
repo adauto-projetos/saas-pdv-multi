@@ -12,18 +12,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { CustomerPicker } from "@/components/financeiro/CustomerPicker";
 import { centsToBRL } from "@/lib/format/money";
 import type { CustomerDto } from "@/types/finance";
 import type { PaymentMethod } from "@/types/sale";
-
-const METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: "dinheiro", label: "Dinheiro" },
-  { value: "pix", label: "Pix" },
-  { value: "cartao", label: "Cartão" },
-  { value: "fiado", label: "Fiado" },
-];
 
 type Step = "select" | "cash" | "success";
 
@@ -32,6 +24,19 @@ export interface ConfirmResult {
   error?: string;
   saleId?: string;
   printWarning?: string;
+}
+
+const METHOD_CARDS: { value: PaymentMethod; emoji: string; label: string }[] = [
+  { value: "dinheiro", emoji: "💵", label: "Dinheiro" },
+  { value: "cartao",   emoji: "💳", label: "Cartão" },
+  { value: "pix",      emoji: "⚡", label: "Pix" },
+];
+
+function quickAmounts(totalCents: number): number[] {
+  const totalBRL = totalCents / 100;
+  const roundUp = Math.ceil(totalBRL / 5) * 5;
+  const bills = [5, 10, 20, 50, 100].filter((v) => v > roundUp);
+  return [roundUp, ...bills].slice(0, 4);
 }
 
 export function PaymentDialog({
@@ -110,49 +115,110 @@ export function PaymentDialog({
     );
   }
 
+  const amounts = quickAmounts(totalCents);
+
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
+        {/* ── STEP: select ── */}
         {step === "select" && (
           <>
             <AlertDialogHeader>
               <AlertDialogTitle>Finalizar venda</AlertDialogTitle>
               <AlertDialogDescription>
-                Total{" "}
-                <span className="font-mono font-bold text-foreground">
+                <span
+                  style={{
+                    fontFamily: "var(--font-jakarta)",
+                    fontWeight: 800,
+                    fontSize: 28,
+                    color: "#0f172a",
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: -1,
+                    display: "block",
+                  }}
+                >
                   {centsToBRL(totalCents)}
                 </span>
-                . Escolha a forma de pagamento.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
-            <div className="grid gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="checkout-customer">
-                  Cliente (obrigatório para fiado)
-                </Label>
-                <CustomerPicker
-                  inputId="checkout-customer"
-                  value={customer}
-                  onSelect={setCustomer}
-                />
-              </div>
+            {/* 3 main method cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 10,
+                marginBottom: 12,
+              }}
+            >
+              {METHOD_CARDS.map((m) => (
+                <button
+                  key={m.value}
+                  aria-label={m.label}
+                  disabled={isSubmitting}
+                  onClick={() => handleMethod(m.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "18px 8px",
+                    border: "1px solid #eef1f5",
+                    borderRadius: 16,
+                    background: "#fff",
+                    cursor: isSubmitting ? "default" : "pointer",
+                    transition: "border-color .12s, box-shadow .12s",
+                    boxShadow: "0 1px 2px rgba(16,24,40,.04)",
+                  }}
+                >
+                  <span style={{ fontSize: 32 }}>{m.emoji}</span>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 14,
+                      color: "#0f172a",
+                    }}
+                  >
+                    {m.label}
+                  </span>
+                </button>
+              ))}
+            </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {METHODS.map((m) => {
-                  const blocked = m.value === "fiado" && !customer;
-                  return (
-                    <Button
-                      key={m.value}
-                      variant="outline"
-                      disabled={isSubmitting || blocked}
-                      onClick={() => handleMethod(m.value)}
-                    >
-                      {m.label}
-                    </Button>
-                  );
-                })}
-              </div>
+            {/* Fiado section */}
+            <div
+              style={{
+                borderTop: "1px solid #f1f3f7",
+                paddingTop: 12,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <CustomerPicker
+                inputId="checkout-customer"
+                value={customer}
+                onSelect={setCustomer}
+              />
+              <button
+                disabled={!customer || isSubmitting}
+                onClick={() => handleMethod("fiado")}
+                style={{
+                  width: "100%",
+                  height: 44,
+                  border: "none",
+                  borderRadius: 12,
+                  background: customer ? "#0f172a" : "#f1f5f9",
+                  color: customer ? "#fff" : "#94a3b8",
+                  font: "inherit",
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: customer && !isSubmitting ? "pointer" : "default",
+                }}
+              >
+                💰 Fiado (selecione o cliente acima)
+              </button>
             </div>
 
             <AlertDialogFooter>
@@ -161,29 +227,60 @@ export function PaymentDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={isSubmitting}
               >
-                Voltar
+                Cancelar
               </Button>
             </AlertDialogFooter>
           </>
         )}
 
+        {/* ── STEP: cash ── */}
         {step === "cash" && (
           <>
             <AlertDialogHeader>
-              <AlertDialogTitle>Pagamento em dinheiro</AlertDialogTitle>
+              <AlertDialogTitle>💵 Pagamento em dinheiro</AlertDialogTitle>
               <AlertDialogDescription>
-                Total a pagar:{" "}
-                <span className="font-mono font-bold text-foreground">
+                Total:{" "}
+                <span
+                  style={{
+                    fontFamily: "var(--font-jakarta)",
+                    fontWeight: 800,
+                    fontSize: 20,
+                    color: "#0f172a",
+                  }}
+                >
                   {centsToBRL(totalCents)}
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
 
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="valor-recebido">Valor recebido</Label>
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Valor recebido input */}
+              <div>
+                <label
+                  htmlFor="valor-recebido"
+                  style={{
+                    display: "block",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#475569",
+                    marginBottom: 7,
+                  }}
+                >
+                  Valor recebido
+                </label>
+                <div style={{ position: "relative" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 12,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#94a3b8",
+                      pointerEvents: "none",
+                    }}
+                  >
                     R$
                   </span>
                   <input
@@ -197,14 +294,75 @@ export function PaymentDialog({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && canConfirm) handleCashConfirm();
                     }}
-                    className="w-full rounded-md border border-input bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ring"
+                    style={{
+                      width: "100%",
+                      height: 52,
+                      border: "1px solid #e8ebf1",
+                      borderRadius: 12,
+                      paddingLeft: 40,
+                      paddingRight: 14,
+                      fontSize: 20,
+                      fontWeight: 700,
+                      outline: "none",
+                      color: "#0f172a",
+                      fontFamily: "inherit",
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg bg-green-50 px-4 py-3">
-                <span className="text-sm font-medium text-gray-700">Troco</span>
-                <span className="text-lg font-bold text-green-700">
+              {/* Quick amounts */}
+              {amounts.length > 0 && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  {amounts.map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setValorInput(String(amt))}
+                      style={{
+                        flex: 1,
+                        height: 40,
+                        border: "1px solid #e8ebf1",
+                        borderRadius: 10,
+                        background: "#f8fafc",
+                        color: "#475569",
+                        font: "inherit",
+                        fontSize: 14,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      R${amt}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Troco */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: trocoCents > 0 ? "#f0fdf4" : "#f8fafc",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  border: `1px solid ${trocoCents > 0 ? "#bbf7d0" : "#f1f5f9"}`,
+                }}
+              >
+                <span
+                  style={{ fontSize: 14, fontWeight: 700, color: "#475569" }}
+                >
+                  Troco
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-jakarta)",
+                    fontWeight: 800,
+                    fontSize: 22,
+                    color: trocoCents > 0 ? "#16a34a" : "#cbd5e1",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {centsToBRL(trocoCents)}
                 </span>
               </div>
@@ -228,38 +386,55 @@ export function PaymentDialog({
           </>
         )}
 
+        {/* ── STEP: success ── */}
         {step === "success" && successData && (
           <>
             <AlertDialogHeader>
-              <AlertDialogTitle>Venda registrada!</AlertDialogTitle>
+              <AlertDialogTitle>✅ Venda registrada!</AlertDialogTitle>
               <AlertDialogDescription>
                 {successData.trocoCents > 0 ? (
                   <>
                     Troco:{" "}
-                    <span className="font-mono font-bold text-foreground">
+                    <span
+                      style={{
+                        fontFamily: "var(--font-jakarta)",
+                        fontWeight: 800,
+                        fontSize: 22,
+                        color: "#16a34a",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       {centsToBRL(successData.trocoCents)}
                     </span>
                   </>
                 ) : (
-                  "Pagamento exato."
+                  "Pagamento exato — sem troco."
                 )}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
-            <div className="grid gap-2">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {successData.printWarning && (
-                <p className="text-sm text-amber-600">
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "#b45309",
+                    background: "#fef3c7",
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    margin: 0,
+                  }}
+                >
                   {successData.printWarning}
                 </p>
               )}
               {reprintMsg && (
                 <p
-                  className={[
-                    "text-sm",
-                    reprintMsg === "Cupom impresso!"
-                      ? "text-green-600"
-                      : "text-destructive",
-                  ].join(" ")}
+                  style={{
+                    fontSize: 13,
+                    color: reprintMsg === "Cupom impresso!" ? "#16a34a" : "#dc2626",
+                    margin: 0,
+                  }}
                 >
                   {reprintMsg}
                 </p>

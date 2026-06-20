@@ -10,6 +10,9 @@ export default async function EstoquePage() {
 
   return (
     <div className="flex flex-col gap-5 px-7 py-6 max-w-[680px]">
+      <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
+        Estoque
+      </h1>
       <PageCard>
         <PageCardHeader>Nova movimentação</PageCardHeader>
         <div className="p-5">

@@ -4,6 +4,17 @@ import { z } from "zod";
 export const productUnitSchema = z.enum(["un", "kg"]);
 export type ProductUnit = z.infer<typeof productUnitSchema>;
 
+export const PRODUCT_CATEGORIES = [
+  "Bebidas",
+  "Hortifruti",
+  "Mercearia",
+  "Lanches",
+  "Doces",
+  "Limpeza",
+  "Outros",
+] as const;
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+
 // Campos vazios de formulário ("") chegam como undefined (opcionais).
 const emptyToUndefined = (v: unknown) =>
   v === "" || v === null ? undefined : v;
@@ -28,6 +39,8 @@ export const createProductObject = z.object({
     emptyToUndefined,
     z.number().finite().min(0, "Mínimo não pode ser negativo").optional(),
   ),
+  emoji: z.preprocess(emptyToUndefined, z.string().max(10).optional()),
+  category: z.preprocess(emptyToUndefined, z.string().max(50).optional()),
   // RN02: custo não negativo. Inteiro em centavos.
   costCents: z.preprocess(
     emptyToUndefined,

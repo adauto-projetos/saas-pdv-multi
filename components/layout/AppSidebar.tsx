@@ -48,77 +48,163 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
 
   return (
     <aside
-      className="flex h-screen w-[220px] flex-shrink-0 flex-col overflow-hidden"
-      style={{ background: "var(--pdv-sidebar)" }}
+      style={{
+        width: 248,
+        flexShrink: 0,
+        background: "#ffffff",
+        borderRight: "1px solid #edf0f4",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+      }}
     >
       {/* Logo */}
-      <div
-        className="px-[18px] pb-4 pt-[22px]"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="text-[19px] font-bold leading-none tracking-tight text-white">
-          PDV<span className="font-light text-blue-400">.multi</span>
+      <div style={{ padding: "24px 22px 18px" }}>
+        <div
+          style={{
+            fontFamily: "var(--font-jakarta)",
+            fontWeight: 800,
+            fontSize: 21,
+            letterSpacing: "-0.5px",
+            color: "#0f172a",
+          }}
+        >
+          PDV<span style={{ color: "#4f46e5" }}>.multi</span>
         </div>
-        <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.9px] text-slate-400 opacity-70">
-          Ponto de Venda
+        <div
+          style={{
+            fontSize: 10.5,
+            letterSpacing: "2px",
+            color: "#aab2c0",
+            fontWeight: 700,
+            marginTop: 3,
+          }}
+        >
+          PONTO DE VENDA
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-px overflow-y-auto px-2 py-[10px]">
-        {NAV_PRIMARY.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={[
-              "flex items-center gap-[10px] rounded-[7px] px-3 py-[9px] text-[13px] transition-colors",
-              isActive(href)
-                ? "bg-indigo-600/[.18] font-semibold text-indigo-200"
-                : "font-normal text-slate-400/70 hover:text-slate-300",
-            ].join(" ")}
-          >
-            <Icon size={15} strokeWidth={1.8} />
-            <span>{label}</span>
-          </Link>
-        ))}
+      <nav
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+          padding: "6px 14px",
+          flex: 1,
+          overflowY: "auto",
+        }}
+      >
+        {NAV_PRIMARY.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 13,
+                width: "100%",
+                padding: "11px 13px",
+                borderRadius: 12,
+                fontSize: 14.5,
+                fontWeight: 700,
+                textDecoration: "none",
+                background: active ? "#eef2ff" : "transparent",
+                color: active ? "#4f46e5" : "#475569",
+                transition: "background 0.1s",
+              }}
+            >
+              <Icon size={18} strokeWidth={1.8} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
 
         <div
-          className="mx-1 my-2 h-px"
-          style={{ background: "rgba(255,255,255,0.05)" }}
+          style={{
+            height: 1,
+            background: "#eef1f5",
+            margin: "8px 6px",
+          }}
         />
 
-        {NAV_SECONDARY.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={[
-              "flex items-center gap-[10px] rounded-[7px] px-3 py-[9px] text-[13px] transition-colors",
-              isActive(href)
-                ? "bg-indigo-600/[.18] font-semibold text-indigo-200"
-                : "font-normal text-slate-400/70 hover:text-slate-300",
-            ].join(" ")}
-          >
-            <Icon size={15} strokeWidth={1.8} />
-            <span>{label}</span>
-          </Link>
-        ))}
+        {NAV_SECONDARY.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 13,
+                width: "100%",
+                padding: "11px 13px",
+                borderRadius: 12,
+                fontSize: 14.5,
+                fontWeight: 700,
+                textDecoration: "none",
+                background: active ? "#eef2ff" : "transparent",
+                color: active ? "#4f46e5" : "#475569",
+                transition: "background 0.1s",
+              }}
+            >
+              <Icon size={18} strokeWidth={1.8} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* User footer */}
       <div
-        className="flex items-center gap-[10px] px-[14px] py-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        style={{
+          padding: "14px",
+          borderTop: "1px solid #eef1f5",
+          display: "flex",
+          alignItems: "center",
+          gap: 11,
+        }}
       >
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-400 text-[13px] font-bold text-white">
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 11,
+            background: "#4f46e5",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 800,
+            fontSize: 15,
+            flexShrink: 0,
+          }}
+        >
           {initial}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[12px] font-medium text-slate-200">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              color: "#0f172a",
+            }}
+          >
             {userEmail}
           </div>
-          <div className="text-[10px] text-slate-400">Admin</div>
+          <div style={{ fontSize: 11, color: "#9aa3b2", fontWeight: 600 }}>
+            Admin
+          </div>
         </div>
-        <div className="text-slate-400">
+        <div style={{ color: "#9aa3b2" }}>
           <SignOutButton />
         </div>
       </div>
