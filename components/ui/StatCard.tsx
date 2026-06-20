@@ -12,13 +12,34 @@ interface StatCardProps {
 export function StatCard({ label, value, sub, className }: StatCardProps) {
   return (
     <PageCard className={cn("p-5", className)}>
-      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.7px] text-gray-400">
+      <div
+        style={{
+          fontSize: 11,
+          letterSpacing: "1.4px",
+          fontWeight: 800,
+          color: "#aab2c0",
+          marginBottom: 10,
+          textTransform: "uppercase",
+        }}
+      >
         {label}
       </div>
-      <div className="text-[28px] font-bold leading-tight tracking-tight text-gray-900">
+      <div
+        style={{
+          fontFamily: "var(--font-jakarta)",
+          fontSize: 30,
+          fontWeight: 800,
+          color: "#0f172a",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
         {value}
       </div>
-      {sub && <div className="mt-1 text-[12px] text-gray-500">{sub}</div>}
+      {sub && (
+        <div style={{ fontSize: 12.5, color: "#9aa3b2", fontWeight: 600, marginTop: 4 }}>
+          {sub}
+        </div>
+      )}
     </PageCard>
   );
 }

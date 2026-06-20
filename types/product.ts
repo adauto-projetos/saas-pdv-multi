@@ -19,6 +19,8 @@ export type ProductDto = {
   priceIsManual: boolean;
   stockQuantity: number;
   minStock: number | null;
+  emoji: string | null;
+  category: string | null;
   createdAt: string;
   updatedAt: string;
 };

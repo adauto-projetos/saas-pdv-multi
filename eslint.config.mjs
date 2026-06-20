@@ -17,6 +17,7 @@ const eslintConfig = defineConfig([
     ".codeadd/**",
     // Design reference files — não são código da aplicação:
     "Design funcional e moderno/**",
+    "Redesign do PDV/**",
     "docs/design/**",
     "components/PDVApp.jsx",
     "components/PDVApp.css",

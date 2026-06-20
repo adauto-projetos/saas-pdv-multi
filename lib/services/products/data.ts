@@ -28,6 +28,8 @@ function toProductDto(row: ProductRow): ProductDto {
     priceIsManual: row.priceIsManual,
     stockQuantity: Number(row.stockQuantity),
     minStock: row.minStock != null ? Number(row.minStock) : null,
+    emoji: row.emoji ?? null,
+    category: row.category ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -43,6 +45,8 @@ export type CreateProductData = {
   priceIsManual: boolean;
   stockQuantity: number;
   minStock?: number | null;
+  emoji?: string | null;
+  category?: string | null;
 };
 
 export type UpdateProductData = Partial<{
@@ -55,6 +59,8 @@ export type UpdateProductData = Partial<{
   priceIsManual: boolean;
   stockQuantity: number;
   minStock: number | null;
+  emoji: string | null;
+  category: string | null;
 }>;
 
 export async function insertProduct(
@@ -77,6 +83,8 @@ export async function insertProduct(
       priceIsManual: data.priceIsManual,
       stockQuantity: data.stockQuantity.toString(),
       minStock: data.minStock != null ? data.minStock.toString() : null,
+      emoji: data.emoji ?? null,
+      category: data.category ?? null,
     })
     .returning();
   return toProductDto(row);
@@ -102,6 +110,8 @@ export async function updateProductRow(
     set.stockQuantity = data.stockQuantity.toString();
   if (data.minStock !== undefined)
     set.minStock = data.minStock === null ? null : data.minStock.toString();
+  if (data.emoji !== undefined) set.emoji = data.emoji;
+  if (data.category !== undefined) set.category = data.category;
 
   const [row] = await tx
     .update(products)

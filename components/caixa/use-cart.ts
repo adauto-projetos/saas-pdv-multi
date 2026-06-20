@@ -10,6 +10,8 @@ export type CartItem = {
   unit: ProductUnit;
   unitPriceCents: number;
   quantity: number;
+  emoji: string | null;
+  category: string | null;
 };
 
 /** Subtotal em centavos = round(preço × quantidade) — espelha o servidor (RN06). */
@@ -53,6 +55,8 @@ function reducer(state: State, action: Action): State {
             unit: action.product.unit,
             unitPriceCents: action.product.salePriceCents,
             quantity: 1,
+            emoji: action.product.emoji,
+            category: action.product.category,
           },
         ],
       };
@@ -80,6 +84,8 @@ function reducer(state: State, action: Action): State {
             unit: action.product.unit,
             unitPriceCents: action.product.salePriceCents,
             quantity: qty,
+            emoji: action.product.emoji,
+            category: action.product.category,
           },
         ],
       };

@@ -8,6 +8,7 @@ import type { ComandaDto } from "@/types/comanda";
 
 import { ComandaCard } from "./ComandaCard";
 import { ComandaHistory } from "./ComandaHistory";
+import { OpenComandaDialog } from "./OpenComandaDialog";
 
 /**
  * RF08 — tela principal de comandas: grade de abertas + histórico.
@@ -27,6 +28,21 @@ export function ComandasScreen({
 
   return (
     <div className="flex flex-col gap-5 px-7 py-6">
+      <div className="flex items-center justify-between">
+        <h1
+          style={{
+            fontFamily: "var(--font-jakarta)",
+            fontWeight: 800,
+            fontSize: 24,
+            margin: 0,
+            color: "#0f172a",
+          }}
+        >
+          Comandas
+        </h1>
+        <OpenComandaDialog />
+      </div>
+
       <div>
         <SectionLabel className="mb-3">Abertas</SectionLabel>
         {openComandas.length === 0 ? (

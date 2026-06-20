@@ -8,6 +8,9 @@ export default async function VendasPage() {
 
   return (
     <div className="flex flex-col gap-5 px-7 py-6">
+      <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
+        Vendas de hoje
+      </h1>
       {result.ok ? (
         <TodaySalesList sales={result.data} />
       ) : (

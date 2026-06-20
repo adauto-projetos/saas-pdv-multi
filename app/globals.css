@@ -73,10 +73,16 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --pdv-sidebar: #0d1526;
+  /* PDV design tokens */
+  --pdv-bg: #f6f7f9;
+  --pdv-indigo: #4f46e5;
+  --pdv-indigo-dark: #4338ca;
   --pdv-green: #16a34a;
   --pdv-green-dark: #15803d;
-  --pdv-border: #e5e7eb;
+  --pdv-border: #edf0f4;
+  --pdv-card-radius: 18px;
+  --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-manrope: var(--font-manrope), system-ui, sans-serif;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -127,6 +133,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-manrope), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   html {
     @apply font-sans;

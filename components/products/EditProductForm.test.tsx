@@ -40,6 +40,8 @@ const product: ProductDto = {
   priceIsManual: false,
   stockQuantity: 0,
   minStock: null,
+  emoji: null,
+  category: null,
   createdAt: "2026-06-09T00:00:00.000Z",
   updatedAt: "2026-06-09T00:00:00.000Z",
 };
