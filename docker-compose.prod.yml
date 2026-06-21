@@ -1,0 +1,38 @@
+services:
+
+  # ── Banco de dados ─────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: pdv_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pdv
+    volumes:
+      - pdv_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pdv"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ── App Next.js ────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdv_app
+    restart: unless-stopped
+    ports:
+      - "80:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/pdv
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pdv_pgdata:
