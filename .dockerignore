@@ -1,0 +1,29 @@
+# Artefatos de build local — o Docker gera os próprios
+.next
+node_modules
+
+# Variáveis de ambiente locais — NÃO entram na imagem; usa-se as do Coolify
+.env.local
+.env*.local
+
+# Arquivos de design / referência
+"Design funcional e moderno"
+"Design funcional e moderno.zip"
+"Redesign do PDV"
+docs/
+components/PDVApp.jsx
+components/PDVApp.css
+
+# Git / logs / testes de ponta-a-ponta
+.git
+.gitignore
+npm-debug.log*
+scripts/visual-test.mjs
+scripts/full-test.mjs
+scripts/seed-testfull.ts
+
+# IDE / OS
+.vscode
+.claude
+.codeadd
+*.zip

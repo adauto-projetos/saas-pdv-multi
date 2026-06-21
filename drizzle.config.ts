@@ -1,8 +1,10 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-// Carrega variáveis do .env.local (Supabase URL/keys, DATABASE_URL).
-config({ path: ".env.local" });
+// Em dev local carrega do .env.local; em produção (Docker) as vars já estão no process.env.
+if (process.env.NODE_ENV !== "production") {
+  config({ path: ".env.local" });
+}
 
 export default defineConfig({
   schema: "./db/schema/index.ts",
