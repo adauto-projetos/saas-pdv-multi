@@ -1,9 +1,3 @@
-networks:
-  pdv-net:
-    driver: bridge
-  proxy-net:
-    external: true
-
 services:
 
   # ── Banco de dados ─────────────────────────────
@@ -17,8 +11,6 @@ services:
       POSTGRES_DB: pdv
     volumes:
       - pdv_pgdata:/var/lib/postgresql/data
-    networks:
-      - pdv-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d pdv"]
       interval: 5s
@@ -32,13 +24,12 @@ services:
       dockerfile: Dockerfile
     container_name: pdv_app
     restart: unless-stopped
+    ports:
+      - "80:3000"
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/pdv
       SESSION_SECRET: ${SESSION_SECRET}
-    networks:
-      - pdv-net
-      - proxy-net
     depends_on:
       db:
         condition: service_healthy
