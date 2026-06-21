@@ -12,7 +12,7 @@ export default async function ClientesPage() {
   ]);
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-8 px-4 md:px-7 py-6">
       <h1 className="text-xl font-semibold">Clientes</h1>
 
       <section className="grid gap-3">

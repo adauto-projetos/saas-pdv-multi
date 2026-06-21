@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -12,6 +12,12 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "SAAS PDV.multi",
   description: "PDV SaaS multi-tenant para comércios híbridos.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

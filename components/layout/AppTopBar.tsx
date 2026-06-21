@@ -28,7 +28,13 @@ export function AppTopBar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-[52px] flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <div
+      className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6"
+      style={{
+        height: "calc(52px + env(safe-area-inset-top))",
+        paddingTop: "env(safe-area-inset-top)",
+      }}
+    >
       <span className="text-[15px] font-semibold tracking-tight text-gray-900">
         {getTitle(pathname)}
       </span>

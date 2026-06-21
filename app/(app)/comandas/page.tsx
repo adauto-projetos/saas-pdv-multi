@@ -8,7 +8,7 @@ export default async function ComandasPage() {
 
   if (!result.ok) {
     return (
-      <div className="grid gap-8">
+      <div className="grid gap-8 px-4 md:px-7 py-6">
         <h1 className="text-xl font-semibold">Comandas</h1>
         <p className="text-destructive">
           Não foi possível carregar as comandas.

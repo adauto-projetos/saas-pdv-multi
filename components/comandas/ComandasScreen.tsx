@@ -27,7 +27,7 @@ export function ComandasScreen({
   }
 
   return (
-    <div className="flex flex-col gap-5 px-7 py-6">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6">
       <div className="flex items-center justify-between">
         <h1
           style={{

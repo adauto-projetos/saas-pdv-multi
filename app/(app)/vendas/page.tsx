@@ -7,7 +7,7 @@ export default async function VendasPage() {
   const result = await listTodaySalesAction();
 
   return (
-    <div className="flex flex-col gap-5 px-7 py-6">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6">
       <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
         Vendas de hoje
       </h1>

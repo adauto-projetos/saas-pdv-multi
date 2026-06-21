@@ -8,7 +8,7 @@ export default async function NewProductPage() {
   const defaultMarkupPercent = result.ok ? result.data.defaultMarkupPercent : 30;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 px-4 md:px-7 py-6">
       <h1 className="text-xl font-semibold">Novo produto</h1>
       <NewProductForm defaultMarkupPercent={defaultMarkupPercent} />
     </div>

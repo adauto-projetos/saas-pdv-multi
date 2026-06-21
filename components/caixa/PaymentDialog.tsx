@@ -2,7 +2,8 @@
 
 import * as React from "react";
 
-import { reprintReceiptAction } from "@/app/(app)/comandas/print-actions";
+import { getSaleReceiptAction } from "@/app/(app)/caixa/receipt-actions";
+import type { ReceiptDto } from "@/app/(app)/caixa/receipt-actions";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -32,11 +33,66 @@ const METHOD_CARDS: { value: PaymentMethod; emoji: string; label: string }[] = [
   { value: "pix",      emoji: "⚡", label: "Pix" },
 ];
 
+const METHOD_LABELS: Record<string, string> = {
+  dinheiro: "Dinheiro",
+  cartao: "Cartão",
+  pix: "Pix",
+  fiado: "Fiado",
+};
+
 function quickAmounts(totalCents: number): number[] {
   const totalBRL = totalCents / 100;
   const roundUp = Math.ceil(totalBRL / 5) * 5;
   const bills = [5, 10, 20, 50, 100].filter((v) => v > roundUp);
   return [roundUp, ...bills].slice(0, 4);
+}
+
+function printInBrowser(receipt: ReceiptDto): void {
+  const fmt = (cents: number) =>
+    (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const date = new Date(receipt.createdAt).toLocaleString("pt-BR");
+  const method = METHOD_LABELS[receipt.paymentMethod] ?? receipt.paymentMethod;
+
+  const itemRows = receipt.items
+    .map(
+      (item) =>
+        `<div class="row"><span>${item.quantity % 1 === 0 ? item.quantity.toFixed(0) : item.quantity.toFixed(3)} ${item.unit} ${item.name}</span><span>${fmt(item.subtotalCents)}</span></div>`,
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: monospace; font-size: 12px; width: 280px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 14px; margin: 8px 0 4px; }
+  .divider { border-top: 1px dashed #000; margin: 6px 0; }
+  .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
+  .total { font-size: 16px; font-weight: bold; margin-top: 4px; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+  <h1>PDV.multi</h1>
+  <p style="text-align:center;margin:2px 0">${date}</p>
+  <div class="divider"></div>
+  ${itemRows}
+  <div class="divider"></div>
+  <div class="row total"><span>TOTAL</span><span>${fmt(receipt.totalCents)}</span></div>
+  <div class="row"><span>Pgto</span><span>${method}</span></div>
+  <div class="divider"></div>
+  <p style="text-align:center">Obrigado!</p>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank", "width=340,height=600");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
 }
 
 export function PaymentDialog({
@@ -60,8 +116,8 @@ export function PaymentDialog({
     trocoCents: number;
     printWarning?: string;
   } | null>(null);
-  const [reprinting, setReprinting] = React.useState(false);
-  const [reprintMsg, setReprintMsg] = React.useState<string | null>(null);
+  const [printing, setPrinting] = React.useState(false);
+  const [printMsg, setPrintMsg] = React.useState<string | null>(null);
 
   const parsedCents =
     Math.round(parseFloat(valorInput.replace(",", ".")) * 100) || 0;
@@ -73,8 +129,8 @@ export function PaymentDialog({
     setStep("select");
     setValorInput("");
     setSuccessData(null);
-    setReprinting(false);
-    setReprintMsg(null);
+    setPrinting(false);
+    setPrintMsg(null);
   }
 
   function handleOpenChange(next: boolean) {
@@ -90,7 +146,8 @@ export function PaymentDialog({
     const customerId = method === "fiado" ? customer?.id : undefined;
     const res = await onConfirm(method, customerId);
     if (!res.ok) return;
-    handleOpenChange(false);
+    setSuccessData({ saleId: res.saleId ?? "", trocoCents: 0, printWarning: res.printWarning });
+    setStep("success");
   }
 
   async function handleCashConfirm() {
@@ -104,15 +161,17 @@ export function PaymentDialog({
     setStep("success");
   }
 
-  async function handleReprint() {
+  async function handlePrint() {
     if (!successData?.saleId) return;
-    setReprinting(true);
-    setReprintMsg(null);
-    const res = await reprintReceiptAction({ saleId: successData.saleId });
-    setReprinting(false);
-    setReprintMsg(
-      res.ok ? "Cupom impresso!" : (res.error ?? "Falha ao imprimir"),
-    );
+    setPrinting(true);
+    setPrintMsg(null);
+    const res = await getSaleReceiptAction(successData.saleId);
+    setPrinting(false);
+    if (!res.ok) {
+      setPrintMsg(res.error ?? "Falha ao carregar cupom");
+      return;
+    }
+    printInBrowser(res.data);
   }
 
   const amounts = quickAmounts(totalCents);
@@ -217,7 +276,7 @@ export function PaymentDialog({
                   cursor: customer && !isSubmitting ? "pointer" : "default",
                 }}
               >
-                💰 Fiado (selecione o cliente acima)
+                {customer ? `Confirmar — ${customer.name}` : "Selecione o cliente acima"}
               </button>
             </div>
 
@@ -390,7 +449,7 @@ export function PaymentDialog({
         {step === "success" && successData && (
           <>
             <AlertDialogHeader>
-              <AlertDialogTitle>✅ Venda registrada!</AlertDialogTitle>
+              <AlertDialogTitle>Venda registrada!</AlertDialogTitle>
               <AlertDialogDescription>
                 {successData.trocoCents > 0 ? (
                   <>
@@ -408,7 +467,7 @@ export function PaymentDialog({
                     </span>
                   </>
                 ) : (
-                  "Pagamento exato — sem troco."
+                  "Pagamento confirmado."
                 )}
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -428,15 +487,15 @@ export function PaymentDialog({
                   {successData.printWarning}
                 </p>
               )}
-              {reprintMsg && (
+              {printMsg && (
                 <p
                   style={{
                     fontSize: 13,
-                    color: reprintMsg === "Cupom impresso!" ? "#16a34a" : "#dc2626",
+                    color: "#dc2626",
                     margin: 0,
                   }}
                 >
-                  {reprintMsg}
+                  {printMsg}
                 </p>
               )}
             </div>
@@ -444,10 +503,10 @@ export function PaymentDialog({
             <AlertDialogFooter>
               <Button
                 variant="outline"
-                onClick={handleReprint}
-                disabled={reprinting || !successData.saleId}
+                onClick={handlePrint}
+                disabled={printing || !successData.saleId}
               >
-                {reprinting ? "Imprimindo..." : "Reimprimir cupom"}
+                {printing ? "Carregando..." : "Imprimir cupom"}
               </Button>
               <Button onClick={() => handleOpenChange(false)}>Fechar</Button>
             </AlertDialogFooter>

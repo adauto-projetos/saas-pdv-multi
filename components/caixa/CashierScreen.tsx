@@ -47,7 +47,20 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
   const [submitting, setSubmitting] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [activeCategory, setActiveCategory] = React.useState("Todos");
+  const [mobileTab, setMobileTab] = React.useState<"products" | "cart">(
+    "products",
+  );
   const searchRef = React.useRef<HTMLInputElement>(null);
+
+  // Quantidade pré-definida (digitada antes de clicar no produto)
+  const [preQty, setPreQty] = React.useState("1");
+
+  function addWithPreQty(p: ProductDto) {
+    const qty = Math.max(0.001, parseFloat(preQty.replace(",", ".")) || 1);
+    cart.addProductWithQty(p, qty);
+    setPreQty("1");
+    searchRef.current?.focus();
+  }
 
   const availableCategories = React.useMemo(() => {
     const cats = new Set(products.map((p) => p.category ?? "Outros"));
@@ -110,9 +123,6 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
       toast.error(res.error);
       return { ok: false, error: res.error };
     }
-    if (method !== "dinheiro") {
-      toast.success(`Venda registrada — ${centsToBRL(res.data.totalCents)}`);
-    }
     cart.clear();
     return { ok: true, saleId: res.data.id, printWarning: res.printWarning };
   }
@@ -120,21 +130,82 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
   const empty = cart.items.length === 0;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        minWidth: 0,
-        overflow: "hidden",
-      }}
-    >
+    <div className="flex h-full min-w-0 flex-col overflow-hidden lg:flex-row">
+      {/* Tab bar — mobile only, always in DOM (CSS-hide on desktop for RN04) */}
+      <div
+        className="flex flex-shrink-0 lg:hidden"
+        style={{ borderBottom: "1px solid #f1f3f7" }}
+      >
+        <button
+          onClick={() => setMobileTab("products")}
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 0",
+            background: "none",
+            border: "none",
+            borderBottom:
+              mobileTab === "products"
+                ? "2px solid #4f46e5"
+                : "2px solid transparent",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            fontSize: 14,
+            fontWeight: 700,
+            color: mobileTab === "products" ? "#4f46e5" : "#94a3b8",
+          }}
+        >
+          Produtos
+        </button>
+        <button
+          onClick={() => setMobileTab("cart")}
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            padding: "12px 0",
+            background: "none",
+            border: "none",
+            borderBottom:
+              mobileTab === "cart"
+                ? "2px solid #4f46e5"
+                : "2px solid transparent",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            fontSize: 14,
+            fontWeight: 700,
+            color: mobileTab === "cart" ? "#4f46e5" : "#94a3b8",
+          }}
+        >
+          Carrinho
+          {cart.items.length > 0 && (
+            <span
+              style={{
+                background: "#4f46e5",
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 800,
+                borderRadius: 9999,
+                padding: "1px 6px",
+                lineHeight: 1.6,
+              }}
+            >
+              {cart.items.length}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* LEFT: product grid */}
       <div
+        className={`flex-col lg:flex ${mobileTab === "products" ? "flex" : "hidden"}`}
         style={{
           flex: 1,
           minWidth: 0,
-          display: "flex",
-          flexDirection: "column",
           padding: "22px 24px 0",
         }}
       >
@@ -195,6 +266,52 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
               }}
             />
           </div>
+          {/* Quantity widget */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "#fff", border: "1.5px solid #c7d2fe",
+            borderRadius: 14, height: 52, padding: "0 10px",
+            boxShadow: "0 1px 2px rgba(79,70,229,.06)",
+          }}>
+            <span style={{ fontSize: 10, letterSpacing: "1.2px", fontWeight: 800, color: "#818cf8" }}>
+              QTD
+            </span>
+            <button
+              onClick={() => {
+                const cur = parseFloat(preQty.replace(",", ".")) || 1;
+                setPreQty(String(Math.max(1, Math.round(cur - 1))));
+              }}
+              style={{
+                width: 28, height: 28, borderRadius: 8, border: "1px solid #e0e7ff",
+                background: "#f5f3ff", fontSize: 16, fontWeight: 700, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5",
+              }}
+            >−</button>
+            <input
+              inputMode="decimal"
+              value={preQty}
+              onChange={(e) => setPreQty(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              style={{
+                width: 40, border: "none", outline: "none", textAlign: "center",
+                fontSize: 17, fontWeight: 800, color: "#0f172a", background: "transparent",
+                fontFamily: "inherit",
+              }}
+            />
+            <button
+              onClick={() => {
+                const cur = parseFloat(preQty.replace(",", ".")) || 0;
+                setPreQty(String(Math.round(cur + 1)));
+              }}
+              style={{
+                width: 28, height: 28, borderRadius: 8, border: "1px solid #e0e7ff",
+                background: "#f5f3ff", fontSize: 16, fontWeight: 700, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5",
+              }}
+            >+</button>
+          </div>
+
+          {/* ITENS counter */}
           <div
             style={{
               display: "flex",
@@ -313,7 +430,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                 return (
                   <button
                     key={p.id}
-                    onClick={() => cart.addProduct(p)}
+                    onClick={() => addWithPreQty(p)}
                     style={{
                       position: "relative",
                       display: "flex",
@@ -398,14 +515,10 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
 
       {/* RIGHT: cart panel */}
       <div
+        className={`flex-col lg:flex ${mobileTab === "cart" ? "flex" : "hidden"} w-full lg:w-[392px] lg:flex-shrink-0`}
         style={{
-          width: 392,
-          flexShrink: 0,
           background: "#fff",
           borderLeft: "1px solid #edf0f4",
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
         }}
       >
         {/* Cart header */}
@@ -547,12 +660,13 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
           )}
         </div>
 
-        {/* Cart footer */}
+        {/* Cart footer — flex-shrink-0 ensures Cobrar stays visible when virtual keyboard opens (RNF03) */}
         <div
           style={{
             borderTop: "1px solid #f1f3f7",
             padding: "16px 18px 18px",
             background: "#fcfcfd",
+            flexShrink: 0,
           }}
         >
           <div

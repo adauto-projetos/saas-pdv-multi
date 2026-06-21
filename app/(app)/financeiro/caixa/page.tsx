@@ -14,12 +14,12 @@ export default async function CaixaPage() {
   const sessionResult = await getOpenSessionAction();
 
   return (
-    <div className="flex flex-col gap-5 px-7 py-6 max-w-[820px]">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6 max-w-[820px]">
       <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
         Financeiro
       </h1>
       {/* Turno + Saldo em grid 2-col */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {sessionResult.ok ? (
           <CashSessionPanel session={sessionResult.data} />
         ) : (

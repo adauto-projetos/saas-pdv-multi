@@ -9,7 +9,7 @@ export default async function SettingsPage() {
   const defaultMarginPercent = result.ok ? result.data.defaultMarkupPercent : 30;
 
   return (
-    <div className="flex flex-col gap-5 px-7 py-6 max-w-[520px]">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6 max-w-[520px]">
       <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
         Configurações
       </h1>

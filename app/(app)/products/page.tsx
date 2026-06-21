@@ -10,8 +10,8 @@ export default async function ProductsPage() {
   const result = await listProductsAction();
 
   return (
-    <div className="flex flex-col gap-5 px-7 py-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1
           style={{
             fontFamily: "var(--font-jakarta)",
@@ -64,7 +64,9 @@ export default async function ProductsPage() {
         </div>
       ) : (
         <PageCard>
-          <ProductsTable products={result.data} />
+          <div className="overflow-x-auto">
+            <ProductsTable products={result.data} />
+          </div>
         </PageCard>
       )}
     </div>

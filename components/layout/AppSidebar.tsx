@@ -10,6 +10,7 @@ import {
   Package,
   Settings,
   TrendingUp,
+  Users,
   Wallet,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ const NAV_PRIMARY = [
 
 const NAV_SECONDARY = [
   { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet },
+  { href: "/financeiro/clientes", label: "Clientes", icon: Users },
   { href: "/lucro", label: "Lucro", icon: TrendingUp },
   { href: "/settings", label: "Configurações", icon: Settings },
 ] as const;
@@ -37,7 +39,8 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
   const pathname = usePathname();
 
   function isActive(href: string): boolean {
-    if (href === "/financeiro/caixa") return pathname.startsWith("/financeiro");
+    if (href === "/financeiro/caixa") return pathname === "/financeiro/caixa";
+    if (href === "/financeiro/clientes") return pathname.startsWith("/financeiro/clientes");
     if (href === "/products") return pathname.startsWith("/products");
     if (href === "/estoque") return pathname.startsWith("/estoque");
     if (href === "/settings") return pathname.startsWith("/settings");
@@ -47,6 +50,7 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
   const initial = userEmail.charAt(0).toUpperCase() || "U";
 
   return (
+    <div className="hidden lg:flex">
     <aside
       style={{
         width: 248,
@@ -209,5 +213,6 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
         </div>
       </div>
     </aside>
+    </div>
   );
 }
