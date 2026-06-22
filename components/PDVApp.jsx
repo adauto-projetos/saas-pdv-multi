@@ -688,7 +688,7 @@ export default function PDVApp() {
   };
 
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#f1f5f9', fontSize:14, color:'#111827', fontFamily:"'Inter', system-ui, sans-serif" }}>
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#f1f5f9', fontSize:14, color:'#111827', fontFamily:"'Roboto', system-ui, sans-serif" }}>
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
       <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minWidth:0 }}>
         {/* Top bar */}
