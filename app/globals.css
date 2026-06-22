@@ -81,8 +81,8 @@
   --pdv-green-dark: #15803d;
   --pdv-border: #edf0f4;
   --pdv-card-radius: 18px;
-  --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-manrope: var(--font-manrope), system-ui, sans-serif;
+  --font-jakarta: var(--font-roboto), system-ui, sans-serif;
+  --font-manrope: var(--font-roboto), system-ui, sans-serif;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -137,7 +137,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-manrope), system-ui, sans-serif;
+    font-family: var(--font-roboto), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   html {
