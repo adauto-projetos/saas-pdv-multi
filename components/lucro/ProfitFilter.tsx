@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { getProfitAction } from "@/app/(app)/lucro/actions";
 import { ProfitSummaryCard } from "@/components/lucro/ProfitSummaryCard";
+import { InfoButton } from "@/components/ui/help-tip";
 import { PageCard, PageCardHeader } from "@/components/ui/PageCard";
 import type { ProfitDto } from "@/types/profit";
 
@@ -52,7 +53,13 @@ export function ProfitFilter({ initial }: { initial: ProfitDto }) {
   return (
     <div className="flex flex-col gap-5">
       <PageCard>
-        <PageCardHeader>Período de análise</PageCardHeader>
+        <PageCardHeader>
+          Período de análise
+          <InfoButton
+            title="Filtro de período"
+            detail={"Selecione o período que você quer analisar. O sistema vai mostrar o lucro apenas das vendas realizadas nesse intervalo de datas.\n\nDica: compare semanas ou meses para ver se o negócio está crescendo."}
+          />
+        </PageCardHeader>
         <div className="flex flex-wrap items-end gap-3 p-5">
           {(["De", "Até"] as const).map((label) => (
             <div key={label} className="grid gap-1">

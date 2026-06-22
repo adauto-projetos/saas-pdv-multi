@@ -9,6 +9,7 @@ import {
   recordEntryAction,
 } from "@/app/(app)/estoque/actions";
 import { Button } from "@/components/ui/button";
+import { InfoButton, HelpTip } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ProductDto } from "@/types/product";
@@ -79,7 +80,7 @@ export function StockMovementDialog({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border p-4">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <Button
           type="button"
           variant={mode === "entrada" ? "default" : "outline"}
@@ -102,16 +103,30 @@ export function StockMovementDialog({
         >
           Ajuste (inventário)
         </Button>
+        <InfoButton
+          title="Entrada ou Ajuste de estoque?"
+          detail={"Entrada: Use quando chegou mercadoria nova do fornecedor. O sistema vai SOMAR a quantidade informada ao estoque atual.\n\nAjuste (inventário): Use quando você contou o estoque físico e ele está diferente do que o sistema mostra. O sistema vai SUBSTITUIR a quantidade pelo valor que você digitar."}
+        />
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="product-search">Produto</Label>
+        <Label htmlFor="product-search">
+          Produto
+          <InfoButton
+            title="Como buscar o produto"
+            detail="Comece a digitar o nome do produto no campo. Uma lista vai aparecer com os produtos encontrados. Clique no produto correto para selecioná-lo."
+          />
+        </Label>
         <ProductPicker value={product} onSelect={setProduct} />
       </div>
 
       <div className="grid gap-2">
         <Label htmlFor="amount">
           {mode === "entrada" ? "Quantidade a adicionar" : "Contagem real"}
+          <InfoButton
+            title="Quantidade a adicionar"
+            detail={"Digite quantas unidades chegaram. Por exemplo: se você recebeu 12 caixas de leite, escreva 12.\n\nSe você estiver fazendo um Ajuste (inventário), escreva o total que está no estoque agora — o sistema vai corrigir automaticamente."}
+          />
         </Label>
         <Input
           id="amount"
@@ -126,7 +141,13 @@ export function StockMovementDialog({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="reason">Motivo (opcional)</Label>
+        <Label htmlFor="reason">
+          Motivo (opcional)
+          <InfoButton
+            title="Para que serve o motivo?"
+            detail={"Anote de onde vieram as mercadorias para ter um histórico organizado. Exemplos:\n• Compra no Atacadão\n• Devolução de cliente\n• Acerto de inventário\n\nEsse campo é opcional, mas ajuda a entender os lançamentos depois."}
+          />
+        </Label>
         <Input
           id="reason"
           className="text-base"
@@ -136,9 +157,16 @@ export function StockMovementDialog({
         />
       </div>
 
-      <Button type="submit" disabled={submitting} className="w-fit">
-        {submitting ? "Salvando..." : "Registrar movimentação"}
-      </Button>
+      <HelpTip
+        text="Salva a movimentação e atualiza o estoque"
+        detail="Ao clicar aqui, o sistema registra a entrada e atualiza o estoque do produto automaticamente. A movimentação fica salva no histórico."
+        dialogTitle="Registrar movimentação"
+        style={{ width: "fit-content" }}
+      >
+        <Button type="submit" disabled={submitting} className="w-fit">
+          {submitting ? "Salvando..." : "Registrar movimentação"}
+        </Button>
+      </HelpTip>
     </form>
   );
 }

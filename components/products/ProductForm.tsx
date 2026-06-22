@@ -7,6 +7,7 @@ import type { z } from "zod";
 
 import { MarkupCalculatorFields } from "@/components/products/MarkupCalculatorFields";
 import { Button } from "@/components/ui/button";
+import { InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QuantityInput } from "@/components/ui/QuantityInput";
@@ -112,7 +113,13 @@ export function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 pb-24">
       <div className="grid gap-2">
-        <Label htmlFor="name">Nome</Label>
+        <Label htmlFor="name">
+          Nome
+          <InfoButton
+            title="Nome do produto"
+            detail="Nome que vai aparecer no caixa e nos relatórios. Use um nome claro que qualquer funcionário reconheça. Ex: 'Leite Integral 1L' é melhor que só 'Leite'."
+          />
+        </Label>
         <Input
           id="name"
           className="text-base"
@@ -137,7 +144,13 @@ export function ProductForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="category">Categoria</Label>
+          <Label htmlFor="category">
+            Categoria
+            <InfoButton
+              title="Categoria"
+              detail="Organiza os produtos em grupos para facilitar a busca no caixa. Ex: Bebidas, Lanches, Mercearia. Você pode filtrar por categoria na tela do caixa."
+            />
+          </Label>
           <select
             id="category"
             value={category}
@@ -154,7 +167,13 @@ export function ProductForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="barcode">Código de barras</Label>
+          <Label htmlFor="barcode">
+            Código de barras
+            <InfoButton
+              title="Código de barras"
+              detail="O número impresso no código de barras do produto. Com ele, você pode bipe o produto no caixa para adicionar rapidamente. Se não tiver leitor, pode digitar o nome também."
+            />
+          </Label>
           <Input
             id="barcode"
             className="text-base"
@@ -167,7 +186,13 @@ export function ProductForm({
           ) : null}
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="unit">Unidade</Label>
+          <Label htmlFor="unit">
+            Unidade
+            <InfoButton
+              title="Unidade de medida"
+              detail={"Como você vende este produto:\n• un = unidade (peças, caixas, latas)\n• kg = quilograma (para produtos a granel vendidos no peso)\n• L = litro"}
+            />
+          </Label>
           <select
             id="unit"
             value={unit}
@@ -191,7 +216,13 @@ export function ProductForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="minStock">Estoque mínimo (alerta)</Label>
+          <Label htmlFor="minStock">
+            Estoque mínimo (alerta)
+            <InfoButton
+              title="Estoque mínimo"
+              detail="Quando o estoque do produto cair abaixo deste número, o produto aparece na lista de 'Estoque baixo' para te avisar que está na hora de repor."
+            />
+          </Label>
           <Input
             id="minStock"
             type="number"

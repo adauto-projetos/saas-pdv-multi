@@ -12,6 +12,8 @@ import { PRODUCT_CATEGORIES } from "@/lib/validation/product";
 import type { ProductDto } from "@/types/product";
 import type { PaymentMethod } from "@/types/sale";
 
+import { HelpTip } from "@/components/ui/help-tip";
+
 import { Cart } from "./Cart";
 import { type ConfirmResult, PaymentDialog } from "./PaymentDialog";
 import { useCart } from "./use-cart";
@@ -50,7 +52,15 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
   const [mobileTab, setMobileTab] = React.useState<"products" | "cart">(
     "products",
   );
+  const [showGrid, setShowGrid] = React.useState(true);
   const searchRef = React.useRef<HTMLInputElement>(null);
+
+  function toggleGrid() {
+    setShowGrid((prev) => {
+      if (prev && mobileTab === "products") setMobileTab("cart");
+      return !prev;
+    });
+  }
 
   // Quantidade pré-definida (digitada antes de clicar no produto)
   const [preQty, setPreQty] = React.useState("1");
@@ -130,10 +140,10 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
   const empty = cart.items.length === 0;
 
   return (
-    <div className="flex h-full min-w-0 flex-col overflow-hidden lg:flex-row">
+    <div className={`flex h-full min-w-0 overflow-hidden flex-col ${showGrid ? "lg:flex-row" : ""}`}>
       {/* Tab bar — mobile only, always in DOM (CSS-hide on desktop for RN04) */}
       <div
-        className="flex flex-shrink-0 lg:hidden"
+        className={`flex flex-shrink-0 lg:hidden ${!showGrid ? "hidden" : ""}`}
         style={{ borderBottom: "1px solid #f1f3f7" }}
       >
         <button
@@ -202,12 +212,11 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
 
       {/* LEFT: product grid */}
       <div
-        className={`flex-col lg:flex ${mobileTab === "products" ? "flex" : "hidden"}`}
-        style={{
-          flex: 1,
-          minWidth: 0,
-          padding: "22px 24px 0",
-        }}
+        className={`flex-col ${showGrid ? `lg:flex ${mobileTab === "products" ? "flex" : "hidden"}` : "flex"}`}
+        style={showGrid
+          ? { flex: 1, minWidth: 0, padding: "22px 24px 0" }
+          : { flexShrink: 0, padding: "14px 24px", borderBottom: "1px solid #edf0f4" }
+        }
       >
         {/* Search row */}
         <div
@@ -215,13 +224,13 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
             display: "flex",
             alignItems: "center",
             gap: 14,
-            marginBottom: 16,
+            marginBottom: showGrid ? 16 : 0,
             flexShrink: 0,
           }}
         >
+          <HelpTip text="Bipe o código de barras ou busque pelo nome — pressione Enter para adicionar ao carrinho" style={{ flex: 1 }}>
           <div
             style={{
-              flex: 1,
               display: "flex",
               alignItems: "center",
               gap: 11,
@@ -266,7 +275,9 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
               }}
             />
           </div>
+          </HelpTip>
           {/* Quantity widget */}
+          <HelpTip text="Define a quantidade a adicionar antes de clicar no produto" style={{ flexShrink: 0 }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "#fff", border: "1.5px solid #c7d2fe",
@@ -310,6 +321,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
               }}
             >+</button>
           </div>
+          </HelpTip>
 
           {/* ITENS counter */}
           <div
@@ -350,6 +362,56 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
           </div>
         </div>
 
+        {/* Compact mode: search results list */}
+        {!showGrid && query.trim() !== "" && (
+          <div style={{ maxHeight: 280, overflowY: "auto", borderTop: "1px solid #f1f3f7", marginTop: 8 }}>
+            {filteredProducts.length === 0 ? (
+              <div style={{ padding: "14px 0", textAlign: "center", color: "#aab2c0", fontSize: 13, fontWeight: 600 }}>
+                Nenhum produto encontrado
+              </div>
+            ) : (
+              filteredProducts.map((p) => {
+                const catStyle = getCategoryStyle(p.category);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => addWithPreQty(p)}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 0",
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid #f1f3f7",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 9,
+                      background: catStyle.bg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 22, flexShrink: 0,
+                    }}>
+                      {p.emoji ?? "📦"}
+                    </div>
+                    <span style={{ flex: 1, fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                      {p.name}
+                    </span>
+                    <span style={{ fontWeight: 800, color: "#4f46e5", fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
+                      {centsToBRL(p.salePriceCents)}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {showGrid && <>
         {/* Category pills */}
         <div
           style={{
@@ -511,14 +573,15 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
             </div>
           )}
         </div>
+        </>}
       </div>
 
       {/* RIGHT: cart panel */}
       <div
-        className={`flex-col lg:flex ${mobileTab === "cart" ? "flex" : "hidden"} w-full lg:w-[392px] lg:flex-shrink-0`}
+        className={`flex-col min-h-0 ${showGrid ? `lg:flex ${mobileTab === "cart" ? "flex" : "hidden"} w-full lg:w-[392px] lg:flex-shrink-0` : "flex flex-1"}`}
         style={{
           background: "#fff",
-          borderLeft: "1px solid #edf0f4",
+          ...(showGrid ? { borderLeft: "1px solid #edf0f4" } : {}),
         }}
       >
         {/* Cart header */}
@@ -575,26 +638,51 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={cart.clear}
-            disabled={empty}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#b6bdc9",
-              font: "inherit",
-              fontSize: 12.5,
-              fontWeight: 700,
-              cursor: empty ? "default" : "pointer",
-              opacity: empty ? 0.5 : 1,
-            }}
-          >
-            Limpar
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={toggleGrid}
+              title={showGrid ? "Ocultar grade de produtos" : "Mostrar grade de produtos"}
+              style={{
+                background: showGrid ? "#eef2ff" : "#f1f5f9",
+                border: "none",
+                borderRadius: 9,
+                width: 32,
+                height: 32,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: showGrid ? "#4f46e5" : "#94a3b8",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+              </svg>
+            </button>
+            <button
+              onClick={cart.clear}
+              disabled={empty}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#b6bdc9",
+                font: "inherit",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: empty ? "default" : "pointer",
+                opacity: empty ? 0.5 : 1,
+              }}
+            >
+              Limpar
+            </button>
+          </div>
         </div>
 
         {/* Cart items */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 14 }}>
           {empty ? (
             <div
               style={{
@@ -648,7 +736,9 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                   lineHeight: 1.5,
                 }}
               >
-                Bipe um código ou toque num produto ao lado para começar
+                {showGrid
+                  ? "Bipe um código ou toque num produto ao lado para começar"
+                  : "Bipe um código para começar"}
               </div>
             </div>
           ) : (
@@ -706,6 +796,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
               {centsToBRL(cart.totalCents)}
             </span>
           </div>
+          <HelpTip text="Abre as opções de pagamento para fechar a venda (dinheiro, cartão, fiado…)" placement="top">
           <button
             onClick={() => {
               if (!empty) setDialogOpen(true);
@@ -743,6 +834,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
             </svg>
             Finalizar venda
           </button>
+          </HelpTip>
         </div>
       </div>
 

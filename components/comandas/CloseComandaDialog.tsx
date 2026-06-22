@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { InfoButton, HelpTip } from "@/components/ui/help-tip";
 import { Label } from "@/components/ui/label";
 import { CustomerPicker } from "@/components/financeiro/CustomerPicker";
 import { centsToBRL } from "@/lib/format/money";
@@ -91,7 +92,7 @@ export function CloseComandaDialog({
 
         <div className="grid gap-3">
           <div className="grid gap-2">
-            <Label htmlFor="close-comanda-customer">
+            <Label htmlFor="close-comanda-customer" className="flex items-center">
               Cliente (obrigatório para fiado)
             </Label>
             <CustomerPicker
@@ -101,20 +102,36 @@ export function CloseComandaDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {METHODS.map((m) => {
-              const blocked = m.value === "fiado" && !customer;
-              return (
-                <Button
-                  key={m.value}
-                  variant="outline"
-                  disabled={submitting || blocked}
-                  onClick={() => handleConfirm(m.value)}
-                >
-                  {m.label}
-                </Button>
-              );
-            })}
+          <div className="grid gap-2">
+            <Label className="flex items-center">
+              Forma de pagamento
+              <InfoButton
+                title="Forma de pagamento"
+                detail={"Como o cliente vai pagar a conta:\n• Dinheiro: cliente paga em espécie\n• Cartão: débito ou crédito\n• Fiado: cliente vai pagar depois (precisa estar cadastrado)"}
+              />
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {METHODS.map((m) => {
+                const blocked = m.value === "fiado" && !customer;
+                return (
+                  <HelpTip
+                    key={m.value}
+                    text="Finaliza a comanda e registra o pagamento"
+                    detail="Ao fechar a comanda, o sistema registra a venda, atualiza o estoque dos produtos e lança no caixa. A comanda sai da lista de abertas."
+                    dialogTitle="Fechar comanda"
+                  >
+                    <Button
+                      variant="outline"
+                      disabled={submitting || blocked}
+                      onClick={() => handleConfirm(m.value)}
+                      className="w-full"
+                    >
+                      {m.label}
+                    </Button>
+                  </HelpTip>
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react";
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -84,7 +85,13 @@ export function MarkupCalculatorFields({
     <div className="grid gap-4 rounded-lg border bg-muted/30 p-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="cost">Custo</Label>
+          <Label htmlFor="cost">
+            Custo
+            <InfoButton
+              title="Preço de custo"
+              detail="Quanto você pagou para comprar este produto do fornecedor. Com esse valor, o sistema calcula seu lucro automaticamente na tela de Lucro."
+            />
+          </Label>
           <MoneyInput
             id="cost"
             value={costCents}
@@ -105,7 +112,13 @@ export function MarkupCalculatorFields({
 
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="salePrice">Preço de venda</Label>
+          <Label htmlFor="salePrice">
+            Preço de venda
+            <InfoButton
+              title="Preço de venda"
+              detail="Quanto o cliente vai pagar por este produto. O sistema salva o valor em centavos internamente para evitar erros de arredondamento."
+            />
+          </Label>
           {priceIsManual ? (
             <Badge
               data-testid="price-manual"

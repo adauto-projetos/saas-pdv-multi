@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   ClipboardList,
+  HelpCircle,
   Layers,
   LayoutDashboard,
   Package,
@@ -15,20 +16,22 @@ import {
 } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { HelpTip } from "@/components/ui/help-tip";
+import { useHelp } from "@/lib/help/help-context";
 
 const NAV_PRIMARY = [
-  { href: "/caixa", label: "Caixa", icon: LayoutDashboard },
-  { href: "/vendas", label: "Vendas", icon: BarChart3 },
-  { href: "/products", label: "Produtos", icon: Package },
-  { href: "/estoque", label: "Estoque", icon: Layers },
-  { href: "/comandas", label: "Comandas", icon: ClipboardList },
+  { href: "/caixa",    label: "Caixa",         icon: LayoutDashboard, tip: "PDV — registre vendas, bipe produtos e feche o caixa" },
+  { href: "/vendas",   label: "Vendas",         icon: BarChart3,       tip: "Histórico de todas as vendas realizadas" },
+  { href: "/products", label: "Produtos",       icon: Package,         tip: "Cadastre e edite o catálogo de produtos" },
+  { href: "/estoque",  label: "Estoque",        icon: Layers,          tip: "Movimentações e controle de estoque" },
+  { href: "/comandas", label: "Comandas",       icon: ClipboardList,   tip: "Mesas e pedidos em aberto" },
 ] as const;
 
 const NAV_SECONDARY = [
-  { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet },
-  { href: "/financeiro/clientes", label: "Clientes", icon: Users },
-  { href: "/lucro", label: "Lucro", icon: TrendingUp },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/financeiro/caixa",    label: "Financeiro",   icon: Wallet,     tip: "Fluxo de caixa e resumo financeiro" },
+  { href: "/financeiro/clientes", label: "Clientes",     icon: Users,      tip: "Cadastro de clientes e controle de fiado" },
+  { href: "/lucro",               label: "Lucro",        icon: TrendingUp, tip: "Análise de lucro e margem por produto" },
+  { href: "/settings",            label: "Configurações",icon: Settings,   tip: "Configurações da loja e do sistema" },
 ] as const;
 
 interface AppSidebarProps {
@@ -37,6 +40,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userEmail }: AppSidebarProps) {
   const pathname = usePathname();
+  const { helpActive, toggleHelp } = useHelp();
 
   function isActive(href: string): boolean {
     if (href === "/financeiro/caixa") return pathname === "/financeiro/caixa";
@@ -101,30 +105,31 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
           overflowY: "auto",
         }}
       >
-        {NAV_PRIMARY.map(({ href, label, icon: Icon }) => {
+        {NAV_PRIMARY.map(({ href, label, icon: Icon, tip }) => {
           const active = isActive(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 13,
-                width: "100%",
-                padding: "11px 13px",
-                borderRadius: 12,
-                fontSize: 14.5,
-                fontWeight: 700,
-                textDecoration: "none",
-                background: active ? "#eef2ff" : "transparent",
-                color: active ? "#4f46e5" : "#475569",
-                transition: "background 0.1s",
-              }}
-            >
-              <Icon size={18} strokeWidth={1.8} />
-              <span>{label}</span>
-            </Link>
+            <HelpTip key={href} text={tip} placement="bottom">
+              <Link
+                href={href}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 13,
+                  width: "100%",
+                  padding: "11px 13px",
+                  borderRadius: 12,
+                  fontSize: 14.5,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: active ? "#eef2ff" : "transparent",
+                  color: active ? "#4f46e5" : "#475569",
+                  transition: "background 0.1s",
+                }}
+              >
+                <Icon size={18} strokeWidth={1.8} />
+                <span>{label}</span>
+              </Link>
+            </HelpTip>
           );
         })}
 
@@ -136,33 +141,65 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
           }}
         />
 
-        {NAV_SECONDARY.map(({ href, label, icon: Icon }) => {
+        {NAV_SECONDARY.map(({ href, label, icon: Icon, tip }) => {
           const active = isActive(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 13,
-                width: "100%",
-                padding: "11px 13px",
-                borderRadius: 12,
-                fontSize: 14.5,
-                fontWeight: 700,
-                textDecoration: "none",
-                background: active ? "#eef2ff" : "transparent",
-                color: active ? "#4f46e5" : "#475569",
-                transition: "background 0.1s",
-              }}
-            >
-              <Icon size={18} strokeWidth={1.8} />
-              <span>{label}</span>
-            </Link>
+            <HelpTip key={href} text={tip} placement="bottom">
+              <Link
+                href={href}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 13,
+                  width: "100%",
+                  padding: "11px 13px",
+                  borderRadius: 12,
+                  fontSize: 14.5,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  background: active ? "#eef2ff" : "transparent",
+                  color: active ? "#4f46e5" : "#475569",
+                  transition: "background 0.1s",
+                }}
+              >
+                <Icon size={18} strokeWidth={1.8} />
+                <span>{label}</span>
+              </Link>
+            </HelpTip>
           );
         })}
       </nav>
+
+      {/* Help button */}
+      <div style={{ padding: "8px 14px 4px" }}>
+        <HelpTip
+          text={helpActive ? "Modo ajuda ativo — passe o mouse sobre qualquer elemento para ver sua função. Clique para desativar." : "Ativar modo ajuda — passe o mouse sobre os elementos para aprender suas funções"}
+          placement="top"
+        >
+          <button
+            onClick={toggleHelp}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 13px",
+              borderRadius: 12,
+              border: helpActive ? "1.5px solid #c7d2fe" : "1.5px solid #eef1f5",
+              background: helpActive ? "#eef2ff" : "transparent",
+              color: helpActive ? "#4f46e5" : "#94a3b8",
+              font: "inherit",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            <HelpCircle size={17} strokeWidth={1.8} />
+            <span>{helpActive ? "Ajuda ativa" : "Manual / Ajuda"}</span>
+          </button>
+        </HelpTip>
+      </div>
 
       {/* User footer */}
       <div

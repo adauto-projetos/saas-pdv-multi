@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PdvTableCell, PdvTableHead } from "@/components/ui/PdvTable";
+import { InfoButton } from "@/components/ui/help-tip";
 import type { ProductDto } from "@/types/product";
 
 /** RF07 — produtos com estoque baixo (≤ mínimo). */
@@ -23,7 +24,15 @@ export function LowStockList({ products }: { products: ProductDto[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <PdvTableHead>Produto</PdvTableHead>
+          <PdvTableHead>
+            <span className="inline-flex items-center gap-1">
+              Estoque baixo
+              <InfoButton
+                title="O que é estoque baixo?"
+                detail={"São os produtos que estão com quantidade menor ou igual ao estoque mínimo que você configurou.\n\nQuando um produto aparece aqui, é hora de pedir mais para o fornecedor antes que acabe.\n\nVocê configura o estoque mínimo de cada produto na tela de Produtos (botão Editar)."}
+              />
+            </span>
+          </PdvTableHead>
           <PdvTableHead className="text-right">Estoque</PdvTableHead>
           <PdvTableHead className="text-right">Mínimo</PdvTableHead>
           <PdvTableHead className="text-right">Movimentações</PdvTableHead>

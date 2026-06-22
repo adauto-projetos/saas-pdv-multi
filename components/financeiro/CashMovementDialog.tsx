@@ -9,6 +9,7 @@ import {
   registerCashOutflowAction,
 } from "@/app/(app)/financeiro/caixa/actions";
 import { Button } from "@/components/ui/button";
+import { InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -53,27 +54,42 @@ export function CashMovementDialog() {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border p-4">
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant={mode === "entrada" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setMode("entrada")}
-        >
-          Suprimento (entrada)
-        </Button>
-        <Button
-          type="button"
-          variant={mode === "saida" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setMode("saida")}
-        >
-          Sangria (saída)
-        </Button>
+      <div className="grid gap-2">
+        <div className="flex items-center">
+          <span className="text-sm font-medium leading-none">Tipo</span>
+          <InfoButton
+            title="Suprimento ou Sangria?"
+            detail={"Suprimento: Dinheiro que você COLOCA no caixa. Geralmente feito no começo do dia para ter troco disponível. Ex: você coloca R$ 100 em notas pequenas.\n\nSangria: Dinheiro que você RETIRA do caixa. Feito quando o caixa está muito cheio e você quer guardar parte no cofre por segurança."}
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={mode === "entrada" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMode("entrada")}
+          >
+            Suprimento (entrada)
+          </Button>
+          <Button
+            type="button"
+            variant={mode === "saida" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMode("saida")}
+          >
+            Sangria (saída)
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="cash-amount">Valor</Label>
+        <div className="flex items-center">
+          <Label htmlFor="cash-amount">Valor</Label>
+          <InfoButton
+            title="Valor"
+            detail="Digite o valor em reais. Use vírgula para centavos, ex: 150,00. Esse valor vai ser somado (suprimento) ou subtraído (sangria) do saldo atual do caixa."
+          />
+        </div>
         <MoneyInput
           id="cash-amount"
           value={amountCents}
@@ -83,7 +99,13 @@ export function CashMovementDialog() {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="cash-description">Descrição</Label>
+        <div className="flex items-center">
+          <Label htmlFor="cash-description">Descrição</Label>
+          <InfoButton
+            title="Descrição da movimentação"
+            detail="Escreva o motivo da movimentação. Isso ajuda a entender o histórico do caixa depois. Ex: 'troco inicial', 'retirada para banco', 'pagamento de fornecedor'."
+          />
+        </div>
         <Input
           id="cash-description"
           className="text-base"

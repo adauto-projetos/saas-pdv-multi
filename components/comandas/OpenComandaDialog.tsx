@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { InfoButton, HelpTip } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -64,8 +65,12 @@ export function OpenComandaDialog() {
 
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="comanda-label">
+            <Label htmlFor="comanda-label" className="flex items-center">
               Identificação (ex: Mesa 3, João)
+              <InfoButton
+                title="Nome ou número da comanda"
+                detail="Identifica a mesa ou o cliente. Pode ser o número da mesa (ex: Mesa 3), o nome do cliente (ex: João) ou qualquer código que faça sentido para você (ex: Balcão, Viagem)."
+              />
             </Label>
             <Input
               id="comanda-label"
@@ -77,9 +82,16 @@ export function OpenComandaDialog() {
             />
           </div>
 
-          <Button type="submit" disabled={submitting} className="w-fit">
-            {submitting ? "Abrindo..." : "Abrir comanda"}
-          </Button>
+          <HelpTip
+            text="Abre uma nova comanda para registrar pedidos"
+            detail={"Uma comanda funciona como uma 'conta aberta'. Você vai adicionando os produtos conforme o cliente pede, e fecha a comanda quando ele for pagar.\n\nVocê pode ter várias comandas abertas ao mesmo tempo (uma por mesa, por exemplo)."}
+            dialogTitle="Abrir comanda"
+            style={{ width: "fit-content" }}
+          >
+            <Button type="submit" disabled={submitting} className="w-fit">
+              {submitting ? "Abrindo..." : "Abrir comanda"}
+            </Button>
+          </HelpTip>
         </form>
       </DialogContent>
     </Dialog>

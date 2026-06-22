@@ -31,7 +31,7 @@ export function Cart({
   if (items.length === 0) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
       {items.map((item) => (
         <div
           key={item.productId}
@@ -39,33 +39,35 @@ export function Cart({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 11,
-            padding: 10,
-            borderRadius: 14,
+            gap: 8,
+            padding: "6px 8px",
+            borderRadius: 10,
             border: "1px solid #f1f3f7",
           }}
         >
+          {/* Emoji tile */}
           <div
             style={{
-              width: 46,
-              height: 46,
+              width: 32,
+              height: 32,
               flexShrink: 0,
-              borderRadius: 12,
+              borderRadius: 8,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 24,
+              fontSize: 18,
               background: tileBg(item.category),
             }}
           >
             {item.emoji ?? "📦"}
           </div>
 
+          {/* Name + unit price */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 fontWeight: 700,
-                fontSize: 13.5,
+                fontSize: 12.5,
                 color: "#0f172a",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -74,19 +76,20 @@ export function Cart({
             >
               {item.name}
             </div>
-            <div style={{ fontSize: 12, color: "#9aa3b2", fontWeight: 600 }}>
+            <div style={{ fontSize: 11, color: "#9aa3b2", fontWeight: 600 }}>
               {centsToBRL(item.unitPriceCents)}
             </div>
           </div>
 
+          {/* Qty controls */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 2,
               background: "#f4f5f8",
-              borderRadius: 10,
-              padding: 3,
+              borderRadius: 8,
+              padding: 2,
             }}
           >
             <button
@@ -97,13 +100,13 @@ export function Cart({
                   : onSetQuantity(item.productId, item.quantity - 1)
               }
               style={{
-                width: 26,
-                height: 26,
+                width: 22,
+                height: 22,
                 border: "none",
-                borderRadius: 8,
+                borderRadius: 6,
                 background: "#fff",
                 color: "#475569",
-                fontSize: 17,
+                fontSize: 15,
                 fontWeight: 700,
                 cursor: "pointer",
                 display: "flex",
@@ -116,10 +119,10 @@ export function Cart({
             </button>
             <span
               style={{
-                minWidth: 24,
+                minWidth: 20,
                 textAlign: "center",
                 fontWeight: 800,
-                fontSize: 14,
+                fontSize: 13,
               }}
             >
               {item.quantity % 1 === 0
@@ -130,13 +133,13 @@ export function Cart({
               aria-label={`Aumentar quantidade de ${item.name}`}
               onClick={() => onSetQuantity(item.productId, item.quantity + 1)}
               style={{
-                width: 26,
-                height: 26,
+                width: 22,
+                height: 22,
                 border: "none",
-                borderRadius: 8,
+                borderRadius: 6,
                 background: "#fff",
                 color: "#4f46e5",
-                fontSize: 17,
+                fontSize: 15,
                 fontWeight: 700,
                 cursor: "pointer",
                 display: "flex",
@@ -149,12 +152,13 @@ export function Cart({
             </button>
           </div>
 
+          {/* Subtotal */}
           <div
             style={{
-              width: 72,
+              width: 60,
               textAlign: "right",
               fontWeight: 800,
-              fontSize: 14,
+              fontSize: 13,
               color: "#0f172a",
               fontVariantNumeric: "tabular-nums",
             }}

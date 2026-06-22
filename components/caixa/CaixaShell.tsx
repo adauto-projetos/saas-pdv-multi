@@ -4,6 +4,7 @@ import * as React from "react";
 import { FileText, ShoppingCart } from "lucide-react";
 
 import type { ProductDto } from "@/types/product";
+import { HelpTip } from "@/components/ui/help-tip";
 import { CashierScreen } from "./CashierScreen";
 import { ReceivableList } from "@/components/financeiro/ReceivableList";
 
@@ -32,29 +33,69 @@ export function CaixaShell({ products }: { products: ProductDto[] }) {
       >
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tab === id;
+
+          if (id === "caixa") {
+            return (
+              <HelpTip
+                key={id}
+                text="Tela principal de vendas — bipe produtos e finalize vendas"
+                placement="bottom"
+              >
+                <button
+                  onClick={() => setTab(id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "14px 18px 12px",
+                    border: "none",
+                    borderBottom: active ? "2px solid #4f46e5" : "2px solid transparent",
+                    background: "none",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: active ? "#4f46e5" : "#94a3b8",
+                    transition: "color .12s",
+                  }}
+                >
+                  <Icon size={15} strokeWidth={2} />
+                  {label}
+                </button>
+              </HelpTip>
+            );
+          }
+
           return (
-            <button
+            <HelpTip
               key={id}
-              onClick={() => setTab(id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "14px 18px 12px",
-                border: "none",
-                borderBottom: active ? "2px solid #4f46e5" : "2px solid transparent",
-                background: "none",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 14,
-                fontWeight: 700,
-                color: active ? "#4f46e5" : "#94a3b8",
-                transition: "color .12s",
-              }}
+              text="Vendas no fiado aguardando recebimento"
+              detail={"Aqui ficam as vendas que foram feitas no fiado (crédito). O cliente comprou mas ainda não pagou. Quando o cliente vier pagar, você registra o recebimento aqui.\n\nO valor aparece no saldo devedor do cliente."}
+              dialogTitle="Notas a Receber"
+              placement="bottom"
             >
-              <Icon size={15} strokeWidth={2} />
-              {label}
-            </button>
+              <button
+                onClick={() => setTab(id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "14px 18px 12px",
+                  border: "none",
+                  borderBottom: active ? "2px solid #4f46e5" : "2px solid transparent",
+                  background: "none",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: active ? "#4f46e5" : "#94a3b8",
+                  transition: "color .12s",
+                }}
+              >
+                <Icon size={15} strokeWidth={2} />
+                {label}
+              </button>
+            </HelpTip>
           );
         })}
       </div>

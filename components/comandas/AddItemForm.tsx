@@ -9,6 +9,7 @@ import { lookupProductByBarcodeAction } from "@/app/(app)/caixa/actions";
 import { BarcodeInput } from "@/components/caixa/BarcodeInput";
 import { ProductSearch } from "@/components/caixa/ProductSearch";
 import { Button } from "@/components/ui/button";
+import { InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QuantityInput } from "@/components/ui/QuantityInput";
@@ -88,12 +89,24 @@ export function AddItemForm({ comandaId }: { comandaId: string }) {
   return (
     <form onSubmit={handleSubmit} className="grid gap-3">
       <div className="grid gap-2">
-        <Label>Código de barras</Label>
+        <Label className="flex items-center">
+          Código de barras
+          <InfoButton
+            title="Adicionar produto à comanda"
+            detail="Busque o produto pelo nome. Ao adicionar, ele entra na conta da comanda. Você pode adicionar o mesmo produto várias vezes ou ajustar a quantidade."
+          />
+        </Label>
         <BarcodeInput onSubmit={handleBarcode} disabled={lookingUp} />
       </div>
 
       <div className="grid gap-2">
-        <Label>Busca por nome</Label>
+        <Label className="flex items-center">
+          Busca por nome
+          <InfoButton
+            title="Adicionar produto à comanda"
+            detail="Busque o produto pelo nome. Ao adicionar, ele entra na conta da comanda. Você pode adicionar o mesmo produto várias vezes ou ajustar a quantidade."
+          />
+        </Label>
         <ProductSearch onSelect={handleProductSelect} />
       </div>
 
@@ -114,7 +127,13 @@ export function AddItemForm({ comandaId }: { comandaId: string }) {
       ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor="item-quantity">Quantidade</Label>
+        <Label htmlFor="item-quantity" className="flex items-center">
+          Quantidade
+          <InfoButton
+            title="Quantidade"
+            detail="Quantas unidades desse produto o cliente pediu. Para produtos a granel (kg), você pode usar decimais ex: 0,5 para meio quilo."
+          />
+        </Label>
         <QuantityInput
           id="item-quantity"
           aria-label="Quantidade"
