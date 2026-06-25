@@ -7,7 +7,10 @@ import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { requireFounder } from "@/lib/auth/admin";
 import type { SubscriptionLogEntry } from "@/lib/services/admin/tenant-admin-service";
-import { getTenantSubscriptionHistory } from "@/lib/services/admin/tenant-admin-service";
+import {
+  deleteTenantById,
+  getTenantSubscriptionHistory,
+} from "@/lib/services/admin/tenant-admin-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import { insertSubscriptionLog, selectTenantById } from "@/lib/services/subscriptions/repository";
@@ -107,6 +110,35 @@ export async function releaseFromSuspensionAction(
 
     revalidatePath("/superadmin");
     return { ok: true, data: undefined };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function deleteTenantAction(
+  tenantId: string,
+  confirmationName: string,
+): Promise<ActionResult<{ deletedUsers: number }>> {
+  try {
+    await requireFounder();
+
+    const [tenant] = await db
+      .select({ name: tenants.name })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId))
+      .limit(1);
+    if (!tenant) return { ok: false, error: "Loja não encontrada" };
+
+    // Confirmação: o nome digitado precisa bater exatamente com o da loja.
+    // Defesa contra exclusão acidental (e contra chamada da action sem o diálogo).
+    if (confirmationName.trim() !== tenant.name) {
+      return { ok: false, error: "O nome digitado não confere com o da loja." };
+    }
+
+    const { deletedUserIds } = await deleteTenantById(tenantId);
+
+    revalidatePath("/superadmin");
+    return { ok: true, data: { deletedUsers: deletedUserIds.length } };
   } catch (error) {
     return toActionError(error);
   }

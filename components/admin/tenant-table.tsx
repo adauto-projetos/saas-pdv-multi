@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 
 import type { AdminTenantRow } from "@/lib/services/admin/tenant-admin-service";
 import {
+  deleteTenantAction,
   releaseFromSuspensionAction,
   releaseSubscriptionAction,
   suspendTenantAction,
 } from "@/app/(admin)/superadmin/actions";
 import { enterStoreAction } from "@/app/(admin)/superadmin/impersonation-actions";
+import { DeleteStoreDialog } from "./delete-store-dialog";
 import { ReleaseDialog } from "./release-dialog";
 import { SuspendDialog } from "./suspend-dialog";
 import { SubscriptionHistoryModal } from "./subscription-history-modal";
@@ -41,6 +43,7 @@ type DialogState =
   | { type: "release"; tenantId: string }
   | { type: "suspend"; tenantId: string }
   | { type: "history"; tenantId: string }
+  | { type: "delete"; tenantId: string }
   | null;
 
 export function TenantTable({ tenants }: TenantTableProps) {
@@ -85,6 +88,15 @@ export function TenantTable({ tenants }: TenantTableProps) {
     setPendingId(tenantId);
     startTransition(async () => {
       await enterStoreAction(tenantId);
+    });
+  }
+
+  function handleDelete(tenantId: string, confirmationName: string) {
+    setPendingId(tenantId);
+    startTransition(async () => {
+      await deleteTenantAction(tenantId, confirmationName);
+      setPendingId(null);
+      setDialog(null);
     });
   }
 
@@ -213,6 +225,16 @@ export function TenantTable({ tenants }: TenantTableProps) {
                     >
                       Histórico
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDialog({ type: "delete", tenantId: tenant.id })}
+                      disabled={isPending && pendingId === tenant.id}
+                      aria-label={`Excluir loja ${tenant.name}`}
+                      style={actionButtonStyle("#fff", "#dc2626")}
+                    >
+                      Excluir
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -247,6 +269,16 @@ export function TenantTable({ tenants }: TenantTableProps) {
           tenantName={activeTenant.name}
           open={true}
           onOpenChange={(o) => !o && setDialog(null)}
+        />
+      )}
+
+      {dialog?.type === "delete" && activeTenant && (
+        <DeleteStoreDialog
+          tenant={activeTenant}
+          open={true}
+          onOpenChange={(o) => !o && setDialog(null)}
+          onConfirm={(confirmationName) => handleDelete(activeTenant.id, confirmationName)}
+          isPending={isPending && pendingId === activeTenant.id}
         />
       )}
     </>
