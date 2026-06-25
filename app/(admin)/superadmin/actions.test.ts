@@ -236,4 +236,108 @@ suite("admin billing actions (integração)", () => {
     expect(released).toBeDefined();
     expect(released?.byUserId).toBe(userId);
   });
+
+  it("T44 — deleteTenantAction rejeita nome que não confere (confirmação)", async () => {
+    const { userId: founderId } = await makeFounder();
+    created.push({ userId: founderId, tenantId: "" });
+    const { userId: ownerId } = await createTestUser();
+    const tenantId = await seedTenant(ownerId, "Loja Excluir A");
+    created.push({ userId: ownerId, tenantId });
+
+    const { deleteTenantAction } = await import("./actions");
+    const result = await deleteTenantAction(tenantId, "nome errado");
+    expect(result.ok).toBe(false);
+
+    const [row] = await db
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId))
+      .limit(1);
+    expect(row).toBeDefined(); // loja preservada
+  });
+
+  it("T45 — deleteTenantAction apaga loja + dono órfão, preserva founder", async () => {
+    const { userId: founderId } = await makeFounder();
+    created.push({ userId: founderId, tenantId: "" });
+    const { userId: ownerId } = await createTestUser();
+    const tenantId = await seedTenant(ownerId, "Loja Excluir B");
+    created.push({ userId: ownerId, tenantId });
+
+    const { deleteTenantAction } = await import("./actions");
+    const result = await deleteTenantAction(tenantId, "Loja Excluir B");
+    if (!result.ok) throw new Error(result.error);
+    expect(result.data.deletedUsers).toBe(1);
+
+    const [tenantRow] = await db
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId))
+      .limit(1);
+    expect(tenantRow).toBeUndefined(); // loja apagada
+
+    const [ownerRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, ownerId))
+      .limit(1);
+    expect(ownerRow).toBeUndefined(); // dono órfão apagado
+
+    const [founderRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, founderId))
+      .limit(1);
+    expect(founderRow).toBeDefined(); // founder preservado
+  });
+
+  it("T46 — deleteTenantAction rejeita não-founder", async () => {
+    const { userId } = await createTestUser();
+    created.push({ userId, tenantId: "" });
+    await db.update(users).set({ isFounder: false }).where(eq(users.id, userId));
+    mockedGetAuthUser.mockResolvedValue({ id: userId });
+
+    const { deleteTenantAction } = await import("./actions");
+    const result = await deleteTenantAction("any", "any");
+    expect(result.ok).toBe(false);
+  });
+
+  it("T47 — deleteTenantAction não apaga dono vinculado a outra loja", async () => {
+    const { userId: founderId } = await makeFounder();
+    created.push({ userId: founderId, tenantId: "" });
+    const { userId: ownerId } = await createTestUser();
+    const tenantA = await seedTenant(ownerId, "Loja Multi A");
+    const tenantB = await seedTenant(ownerId, "Loja Multi B");
+    created.push({ userId: ownerId, tenantId: tenantA });
+    created.push({ userId: "", tenantId: tenantB });
+
+    const { deleteTenantAction } = await import("./actions");
+    const result = await deleteTenantAction(tenantA, "Loja Multi A");
+    if (!result.ok) throw new Error(result.error);
+    expect(result.data.deletedUsers).toBe(0); // ainda pertence à Loja B
+
+    const [ownerRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, ownerId))
+      .limit(1);
+    expect(ownerRow).toBeDefined();
+  });
+
+  it("T48 — deleteTenantAction nunca apaga o founder, mesmo dono da loja", async () => {
+    const { userId: founderId } = await makeFounder();
+    const tenantId = await seedTenant(founderId, "Loja do Founder");
+    created.push({ userId: founderId, tenantId });
+
+    const { deleteTenantAction } = await import("./actions");
+    const result = await deleteTenantAction(tenantId, "Loja do Founder");
+    if (!result.ok) throw new Error(result.error);
+    expect(result.data.deletedUsers).toBe(0);
+
+    const [founderRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, founderId))
+      .limit(1);
+    expect(founderRow).toBeDefined(); // founder preservado mesmo sendo dono
+  });
 });

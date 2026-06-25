@@ -1,7 +1,7 @@
 import { and, asc, between, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { subscriptionLog, tenants } from "@/db/schema";
+import { subscriptionLog, tenantMembers, tenants, users } from "@/db/schema";
 import type { TenantStatus } from "@/lib/services/subscriptions/subscription-status";
 import { getTenantStatus } from "@/lib/services/subscriptions/subscription-status";
 
@@ -108,6 +108,56 @@ export async function getExpiringTenants(
   return rows
     .filter((r): r is { id: string; name: string; validUntil: Date } => r.validUntil !== null)
     .map((r) => ({ id: r.id, name: r.name, validUntil: r.validUntil }));
+}
+
+/**
+ * Apaga a loja fisicamente (hard-delete). O `ON DELETE CASCADE` em todos os
+ * FKs `tenant_id` remove produtos, vendas, estoque, comandas, caixa, financeiro,
+ * `subscription_log` e os vínculos `tenant_members` automaticamente.
+ *
+ * A conta `users` NÃO tem `tenant_id` (só o vínculo em tenant_members), então
+ * não cascateia. Após apagar a loja, removemos os usuários que ficaram órfãos
+ * (sem nenhum outro vínculo) — exceto o founder, que nunca é apagado.
+ *
+ * Tudo numa transação: ou a loja inteira some, ou nada muda.
+ */
+export async function deleteTenantById(
+  tenantId: string,
+): Promise<{ deletedUserIds: string[] }> {
+  return db.transaction(async (tx) => {
+    // 1. Capturar membros ANTES do cascade (depois o vínculo já não existe).
+    const members = await tx
+      .select({ userId: tenantMembers.userId })
+      .from(tenantMembers)
+      .where(eq(tenantMembers.tenantId, tenantId));
+    const memberIds = members.map((m) => m.userId);
+
+    // 2. Apagar a loja — cascade remove todos os dados de negócio + vínculos.
+    await tx.delete(tenants).where(eq(tenants.id, tenantId));
+
+    // 3. Apagar usuários órfãos (sem outro vínculo) e não-founder.
+    const deletedUserIds: string[] = [];
+    for (const userId of memberIds) {
+      const remaining = await tx
+        .select({ id: tenantMembers.id })
+        .from(tenantMembers)
+        .where(eq(tenantMembers.userId, userId))
+        .limit(1);
+      if (remaining.length > 0) continue; // ainda pertence a outra loja
+
+      const [u] = await tx
+        .select({ isFounder: users.isFounder })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      if (!u || u.isFounder) continue; // nunca apagar o founder
+
+      await tx.delete(users).where(eq(users.id, userId));
+      deletedUserIds.push(userId);
+    }
+
+    return { deletedUserIds };
+  });
 }
 
 export async function getTenantSubscriptionHistory(
