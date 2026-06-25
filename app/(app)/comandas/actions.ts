@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
+import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -43,6 +44,7 @@ export async function openComandaAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const comanda = await openComanda(ctx, parsed.data);
     revalidatePath("/comandas");
     return { ok: true, data: comanda };
@@ -61,6 +63,7 @@ export async function addComandaItemAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     // Serviço retorna comanda + item inserido (0007F/RF01).
     const { comanda, item } = await addComandaItem(ctx, parsed.data);
     revalidatePath("/comandas");
@@ -88,6 +91,7 @@ export async function removeComandaItemAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const comanda = await removeComandaItem(ctx, parsed.data);
     revalidatePath("/comandas");
     return { ok: true, data: comanda };
@@ -106,6 +110,7 @@ export async function cancelComandaAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const comanda = await cancelComanda(ctx, parsed.data);
     revalidatePath("/comandas");
     return { ok: true, data: comanda };
@@ -127,6 +132,7 @@ export async function closeComandaAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const sale = await closeComanda(ctx, parsed.data);
     revalidatePath("/comandas");
     // Seção pós-commit: tenantName + print são side-effects (RN04).

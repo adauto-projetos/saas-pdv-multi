@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
+import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import { selectTenantName } from "@/lib/services/print/print-data";
@@ -51,6 +52,7 @@ export async function finalizeSaleAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const sale = await finalizeSale(ctx, parsed.data);
     revalidatePath("/caixa");
     revalidatePath("/vendas");

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -49,6 +50,7 @@ export async function openCashSessionAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const session = await openCashSession(ctx, parsed.data);
     revalidatePath("/lucro");
     revalidatePath("/financeiro/caixa");
@@ -68,6 +70,7 @@ export async function closeCashSessionAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const session = await closeCashSession(ctx, parsed.data);
     revalidatePath("/lucro");
     revalidatePath("/financeiro/caixa");

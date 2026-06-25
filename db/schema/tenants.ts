@@ -24,6 +24,13 @@ export const tenants = pgTable("tenants", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Ciclo de vida de assinatura (feature 0011F SF01):
+  // valid_until: data até quando a loja está paga/em trial. Nullable — lojas
+  // legadas e seeds de teste não têm valid_until até o primeiro trial ser criado.
+  validUntil: timestamp("valid_until", { withTimezone: true }),
+  // suspended_at: preenchido manualmente pelo founder para forçar status 'travada'
+  // independente de valid_until (RN03). Null = não suspensa manualmente.
+  suspendedAt: timestamp("suspended_at", { withTimezone: true }),
 });
 
 export type Tenant = typeof tenants.$inferSelect;

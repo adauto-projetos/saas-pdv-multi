@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   BarChart3,
   ClipboardList,
   Layers,
   LayoutDashboard,
+  LogOut,
   MoreHorizontal,
   Package,
   Settings,
+  Shield,
   TrendingUp,
   Wallet,
 } from "lucide-react";
+
+import { logoutAction } from "@/app/(auth)/actions";
 
 const NAV_PRIMARY = [
   { href: "/caixa", label: "Caixa", icon: LayoutDashboard },
@@ -31,11 +35,20 @@ const NAV_DRAWER = [
 
 interface BottomNavProps {
   className?: string;
+  isFounder?: boolean;
 }
 
-export function BottomNav({ className }: BottomNavProps) {
+export function BottomNav({ className, isFounder = false }: BottomNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  async function handleSignOut() {
+    setDrawerOpen(false);
+    await logoutAction();
+    router.push("/login");
+    router.refresh();
+  }
 
   function isActive(href: string): boolean {
     if (href === "/financeiro/caixa") return pathname.startsWith("/financeiro");
@@ -86,6 +99,52 @@ export function BottomNav({ className }: BottomNavProps) {
               </Link>
             );
           })}
+
+          {isFounder && (
+            <Link
+              href="/superadmin"
+              role="menuitem"
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "14px 20px",
+                textDecoration: "none",
+                color: "#4f46e5",
+                fontWeight: 600,
+                fontSize: 15,
+                borderTop: "1px solid #f1f5f9",
+              }}
+            >
+              <Shield size={18} strokeWidth={1.8} />
+              Super Admin
+            </Link>
+          )}
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleSignOut}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              width: "100%",
+              padding: "14px 20px",
+              background: "none",
+              border: "none",
+              borderTop: "1px solid #f1f5f9",
+              color: "#dc2626",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: "pointer",
+              font: "inherit",
+            }}
+          >
+            <LogOut size={18} strokeWidth={1.8} />
+            Sair
+          </button>
         </div>
       )}
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -26,6 +27,7 @@ export async function registerCashInflowAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const movement = await registerCashMovement(ctx, {
       ...parsed.data,
       type: "entrada",
@@ -46,6 +48,7 @@ export async function registerCashOutflowAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requireActiveTenant(ctx.tenantId);
     const movement = await registerCashMovement(ctx, {
       ...parsed.data,
       type: "saida",

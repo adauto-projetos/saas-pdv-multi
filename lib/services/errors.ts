@@ -7,7 +7,8 @@ export type ErrorCode =
   | "VALIDATION"
   | "CONFLICT"
   | "NOT_FOUND"
-  | "UNAUTHORIZED";
+  | "UNAUTHORIZED"
+  | "TENANT_LOCKED";
 
 export class AppError extends Error {
   constructor(

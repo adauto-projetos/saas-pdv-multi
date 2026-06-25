@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Package,
   Settings,
+  Shield,
   TrendingUp,
   Users,
   Wallet,
@@ -36,9 +37,10 @@ const NAV_SECONDARY = [
 
 interface AppSidebarProps {
   userEmail: string;
+  isFounder?: boolean;
 }
 
-export function AppSidebar({ userEmail }: AppSidebarProps) {
+export function AppSidebar({ userEmail, isFounder = false }: AppSidebarProps) {
   const pathname = usePathname();
   const { helpActive, toggleHelp } = useHelp();
 
@@ -168,6 +170,32 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
             </HelpTip>
           );
         })}
+
+        {isFounder && (
+          <>
+            <div style={{ height: 1, background: "#eef1f5", margin: "8px 6px" }} />
+            <Link
+              href="/superadmin"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 13,
+                width: "100%",
+                padding: "11px 13px",
+                borderRadius: 12,
+                fontSize: 14.5,
+                fontWeight: 700,
+                textDecoration: "none",
+                background: pathname === "/superadmin" || pathname.startsWith("/superadmin/") ? "#eef2ff" : "transparent",
+                color: pathname === "/superadmin" || pathname.startsWith("/superadmin/") ? "#4f46e5" : "#475569",
+                transition: "background 0.1s",
+              }}
+            >
+              <Shield size={18} strokeWidth={1.8} />
+              <span>Super Admin</span>
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Help button */}

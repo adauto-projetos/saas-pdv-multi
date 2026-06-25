@@ -6,6 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 const mockPathname = vi.fn(() => "/caixa");
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname(),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
+// Mock server action (logout) — não importar código server-only no jsdom
+vi.mock("@/app/(auth)/actions", () => ({
+  logoutAction: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock next/link — renders as <a> in tests
@@ -132,6 +138,28 @@ describe("BottomNav (RF03–RF05, RN01, RN02)", () => {
     await user.click(screen.getByRole("button", { name: /mais opções/i }));
     await user.click(screen.getByRole("menuitem", { name: /vendas/i }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  // --- T16–T18: logout + super admin no drawer (0011F SF03 — fix mobile) ---
+  it("T16 — drawer sempre mostra a opção Sair (logout no mobile)", async () => {
+    render(<BottomNav />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /mais opções/i }));
+    expect(screen.getByRole("menuitem", { name: /sair/i })).toBeInTheDocument();
+  });
+
+  it("T17 — drawer mostra Super Admin quando isFounder=true", async () => {
+    render(<BottomNav isFounder={true} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /mais opções/i }));
+    expect(screen.getByRole("menuitem", { name: /super admin/i })).toBeInTheDocument();
+  });
+
+  it("T18 — drawer NÃO mostra Super Admin quando isFounder=false", async () => {
+    render(<BottomNav isFounder={false} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /mais opções/i }));
+    expect(screen.queryByRole("menuitem", { name: /super admin/i })).not.toBeInTheDocument();
   });
 
   // --- T25–T28: class assertions ---
