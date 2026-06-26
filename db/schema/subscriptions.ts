@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -45,6 +46,9 @@ export const subscriptionLog = pgTable(
     byUserId: uuid("by_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    // Quantos meses de calendário foram liberados nesta ação (0013F, RF05).
+    // Nullable: linhas legadas e actions não-renew (suspended/released/trial) não têm meses.
+    monthsReleased: integer("months_released"),
     at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

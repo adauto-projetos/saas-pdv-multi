@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { requireFounder } from "@/lib/auth/admin";
+import { addCalendarMonths } from "@/lib/format/calendar-month";
 import type { SubscriptionLogEntry } from "@/lib/services/admin/tenant-admin-service";
 import {
   deleteTenantById,
@@ -13,11 +14,20 @@ import {
 } from "@/lib/services/admin/tenant-admin-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
+import { setMonthlyPlanPriceCents } from "@/lib/services/platform/settings-repository";
 import { insertSubscriptionLog, selectTenantById } from "@/lib/services/subscriptions/repository";
+import { planPriceSchema } from "@/lib/validation/platform";
+import { releaseMonthsSchema } from "@/lib/validation/subscription";
 
 export async function releaseSubscriptionAction(
   tenantId: string,
+  months: number,
 ): Promise<ActionResult<{ newValidUntil: Date }>> {
+  // RN01 (defesa em profundidade): revalida no servidor antes de qualquer escrita.
+  const parsed = releaseMonthsSchema.safeParse({ months });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Quantidade de meses inválida" };
+  }
   try {
     const { userId } = await requireFounder();
 
@@ -25,9 +35,12 @@ export async function releaseSubscriptionAction(
     if (!tenant) return { ok: false, error: "Loja não encontrada" };
 
     const now = new Date();
+    // RN03: acumula a partir do maior entre a validade vigente e hoje (loja vencida
+    // não recupera tempo perdido).
     const base =
       tenant.validUntil && tenant.validUntil > now ? tenant.validUntil : now;
-    const newValidUntil = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000);
+    // RN02: meses de calendário (não blocos de 30 dias), com clamp de fim-de-mês.
+    const newValidUntil = addCalendarMonths(base, parsed.data.months);
     const validUntilBefore = tenant.validUntil;
 
     await db.transaction(async (tx) => {
@@ -41,6 +54,8 @@ export async function releaseSubscriptionAction(
         validUntilBefore,
         validUntilAfter: newValidUntil,
         byUserId: userId,
+        // RF05: registra quantos meses foram liberados nesta ação.
+        monthsReleased: parsed.data.months,
       });
     });
 
@@ -139,6 +154,24 @@ export async function deleteTenantAction(
 
     revalidatePath("/superadmin");
     return { ok: true, data: { deletedUsers: deletedUserIds.length } };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function updatePlanPriceAction(
+  priceCents: number,
+): Promise<ActionResult<{ priceCents: number }>> {
+  // RN: revalida no servidor (defesa em profundidade) além do MoneyInput.
+  const parsed = planPriceSchema.safeParse({ priceCents });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Preço inválido" };
+  }
+  try {
+    const { userId } = await requireFounder();
+    await setMonthlyPlanPriceCents(parsed.data.priceCents, userId);
+    revalidatePath("/superadmin");
+    return { ok: true, data: { priceCents: parsed.data.priceCents } };
   } catch (error) {
     return toActionError(error);
   }

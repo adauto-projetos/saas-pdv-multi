@@ -7,6 +7,11 @@ vi.mock("@/app/(admin)/superadmin/actions", () => ({
   releaseSubscriptionAction: vi.fn().mockResolvedValue({ ok: true, data: { newValidUntil: new Date() } }),
   suspendTenantAction: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
   releaseFromSuspensionAction: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+  deleteTenantAction: vi.fn().mockResolvedValue({ ok: true, data: { deletedUsers: 0 } }),
+}));
+
+vi.mock("@/app/(admin)/superadmin/impersonation-actions", () => ({
+  enterStoreAction: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock dialog components to keep tests simple
@@ -18,14 +23,14 @@ vi.mock("./release-dialog", () => ({
     tenant,
   }: {
     open: boolean;
-    onConfirm: () => void;
+    onConfirm: (months: number) => void;
     onOpenChange: (o: boolean) => void;
     tenant: { name: string };
   }) =>
     open ? (
       <div data-testid="release-dialog">
         <span>ReleaseDialog:{tenant.name}</span>
-        <button onClick={onConfirm}>confirm-release</button>
+        <button onClick={() => onConfirm(6)}>confirm-release</button>
         <button onClick={() => onOpenChange(false)}>close</button>
       </div>
     ) : null,
@@ -118,21 +123,22 @@ describe("TenantTable (RF10–RF12, RF16a, RF19)", () => {
     expect(rows[1]).toHaveTextContent("Loja Travada");
   });
 
-  it("T29 — ReleaseDialog abre ao clicar +30 dias; action não chamada ainda", async () => {
+  it("T29 — ReleaseDialog abre ao clicar Liberar meses; action não chamada ainda", async () => {
     render(<TenantTable tenants={TENANTS} />);
     const user = userEvent.setup();
-    const btns = screen.getAllByText("+30 dias");
+    const btns = screen.getAllByText("Liberar meses");
     await user.click(btns[0]);
     expect(screen.getByTestId("release-dialog")).toBeInTheDocument();
     expect(releaseSubscriptionAction).not.toHaveBeenCalled();
   });
 
-  it("T30 — confirmar ReleaseDialog chama releaseSubscriptionAction", async () => {
+  it("T30 — confirmar ReleaseDialog chama releaseSubscriptionAction com os meses", async () => {
     render(<TenantTable tenants={TENANTS} />);
     const user = userEvent.setup();
-    await user.click(screen.getAllByText("+30 dias")[0]);
+    // sort: travada (t2) vem primeiro, então [0] é a loja t2.
+    await user.click(screen.getAllByText("Liberar meses")[0]);
     await user.click(screen.getByText("confirm-release"));
-    expect(releaseSubscriptionAction).toHaveBeenCalled();
+    expect(releaseSubscriptionAction).toHaveBeenCalledWith("t2", 6);
   });
 
   it("T35 — SuspendDialog abre ao clicar Suspender; action não chamada ainda", async () => {

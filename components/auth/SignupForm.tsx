@@ -17,8 +17,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { centsToBRL } from "@/lib/format/money";
 
-export function SignupForm() {
+interface SignupFormProps {
+  /** Preço do plano mensal em centavos; 0 = não definido (não exibe valor). */
+  monthlyPriceCents?: number;
+}
+
+export function SignupForm({ monthlyPriceCents = 0 }: SignupFormProps) {
   const router = useRouter();
   const [tenantName, setTenantName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -47,6 +53,16 @@ export function SignupForm() {
         <CardDescription>
           Crie sua conta e sua loja para começar a cadastrar produtos.
         </CardDescription>
+        <p className="mt-2 rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
+          {monthlyPriceCents > 0 ? (
+            <>
+              7 dias grátis para testar. Depois,{" "}
+              <span className="font-semibold">{centsToBRL(monthlyPriceCents)}/mês</span>.
+            </>
+          ) : (
+            <>7 dias grátis para testar, sem precisar de cartão.</>
+          )}
+        </p>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="grid gap-4">

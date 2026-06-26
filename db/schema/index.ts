@@ -17,3 +17,4 @@ export * from "./comanda-items";
 export * from "./print-logs";
 export * from "./kitchen-order-seqs";
 export * from "./subscriptions";
+export * from "./platform-settings";

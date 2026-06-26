@@ -32,7 +32,12 @@ export async function insertSubscriptionLog(
   tx: Tx,
   data: Pick<
     NewSubscriptionLog,
-    "tenantId" | "action" | "validUntilBefore" | "validUntilAfter" | "byUserId"
+    | "tenantId"
+    | "action"
+    | "validUntilBefore"
+    | "validUntilAfter"
+    | "byUserId"
+    | "monthsReleased"
   >,
 ) {
   await tx.insert(subscriptionLog).values(data);

@@ -58,10 +58,10 @@ export function TenantTable({ tenants }: TenantTableProps) {
     ? tenants.find((t) => t.id === dialog.tenantId)
     : null;
 
-  function handleRelease(tenantId: string) {
+  function handleRelease(tenantId: string, months: number) {
     setPendingId(tenantId);
     startTransition(async () => {
-      await releaseSubscriptionAction(tenantId);
+      await releaseSubscriptionAction(tenantId, months);
       setPendingId(null);
       setDialog(null);
     });
@@ -188,10 +188,10 @@ export function TenantTable({ tenants }: TenantTableProps) {
                       type="button"
                       onClick={() => setDialog({ type: "release", tenantId: tenant.id })}
                       disabled={isPending && pendingId === tenant.id}
-                      aria-label={`Liberar 30 dias para ${tenant.name}`}
+                      aria-label={`Liberar meses para ${tenant.name}`}
                       style={actionButtonStyle("#15803d", "#f0fdf4")}
                     >
-                      +30 dias
+                      Liberar meses
                     </button>
 
                     {tenant.suspendedAt ? (
@@ -248,8 +248,8 @@ export function TenantTable({ tenants }: TenantTableProps) {
           tenant={activeTenant}
           open={true}
           onOpenChange={(o) => !o && setDialog(null)}
-          onConfirm={() => handleRelease(activeTenant.id)}
-          isPending={isPending}
+          onConfirm={(months) => handleRelease(activeTenant.id, months)}
+          isPending={isPending && pendingId === activeTenant.id}
         />
       )}
 
@@ -259,7 +259,7 @@ export function TenantTable({ tenants }: TenantTableProps) {
           open={true}
           onOpenChange={(o) => !o && setDialog(null)}
           onConfirm={() => handleSuspend(activeTenant.id)}
-          isPending={isPending}
+          isPending={isPending && pendingId === activeTenant.id}
         />
       )}
 

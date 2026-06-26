@@ -14,6 +14,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { ImpersonationBanner } from "@/components/layout/ImpersonationBanner";
 import { SubscriptionWarningBanner } from "@/components/layout/SubscriptionWarningBanner";
 import { SubscriptionLockedBanner } from "@/components/layout/SubscriptionLockedBanner";
+import { SubscriptionTrialBanner } from "@/components/layout/SubscriptionTrialBanner";
 import { HelpProvider } from "@/lib/help/help-context";
 
 export default async function AppLayout({
@@ -82,6 +83,10 @@ export default async function AppLayout({
   const showWarning =
     !impersonating && subscriptionStatus !== null && subscriptionStatus !== "travada" && daysLeft <= 3;
   const showLocked = !impersonating && subscriptionStatus === "travada";
+  // Em teste e ainda com folga (> 3 dias): banner informativo sempre visível com
+  // os dias restantes. Na reta final (≤ 3 dias) o aviso âmbar acima assume.
+  const showTrial =
+    !impersonating && subscriptionStatus === "testando" && !showWarning && daysLeft > 0;
 
   return (
     <HelpProvider>
@@ -94,6 +99,7 @@ export default async function AppLayout({
           {impersonating && <ImpersonationBanner storeName={storeName} />}
           {showLocked && <SubscriptionLockedBanner />}
           {showWarning && <SubscriptionWarningBanner daysLeft={daysLeft} />}
+          {showTrial && <SubscriptionTrialBanner daysLeft={daysLeft} />}
           <AppTopBar />
           {children}
         </main>

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
 import { HAS_DB, cleanupTenant, createTestUser, deleteTestUser, seedTenant } from "@/db/__tests__/seed";
 import { subscriptionLog, tenants, users } from "@/db/schema";
+import { addCalendarMonths } from "@/lib/format/calendar-month";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/session", () => ({ getAuthUser: vi.fn() }));
@@ -40,7 +41,7 @@ suite("admin billing actions (integração)", () => {
     created.length = 0;
   });
 
-  it("T24 — releaseSubscriptionAction acumula a partir de valid_until futuro (RN01)", async () => {
+  it("T24/T59 — releaseSubscriptionAction acumula a partir de valid_until futuro (RF03/RN03)", async () => {
     const { userId } = await makeFounder();
     created.push({ userId, tenantId: "" });
     const tenantId = await makeTenant(userId);
@@ -50,15 +51,15 @@ suite("admin billing actions (integração)", () => {
     await db.update(tenants).set({ validUntil: future }).where(eq(tenants.id, tenantId));
 
     const { releaseSubscriptionAction } = await import("./actions");
-    const result = await releaseSubscriptionAction(tenantId);
+    const result = await releaseSubscriptionAction(tenantId, 2);
     if (!result.ok) throw new Error(result.error);
 
-    const expected = new Date(future.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expected = addCalendarMonths(future, 2);
     const diff = Math.abs(result.data.newValidUntil.getTime() - expected.getTime());
     expect(diff).toBeLessThan(5000);
   });
 
-  it("T25 — releaseSubscriptionAction usa NOW quando valid_until é passado (RN01)", async () => {
+  it("T25/T60 — loja vencida acumula a partir de hoje (RF03/RN03)", async () => {
     const { userId } = await makeFounder();
     const tenantId = await makeTenant(userId);
 
@@ -66,15 +67,15 @@ suite("admin billing actions (integração)", () => {
     await db.update(tenants).set({ validUntil: past }).where(eq(tenants.id, tenantId));
 
     const { releaseSubscriptionAction } = await import("./actions");
-    const result = await releaseSubscriptionAction(tenantId);
+    const result = await releaseSubscriptionAction(tenantId, 1);
     if (!result.ok) throw new Error(result.error);
 
-    const expected = Date.now() + 30 * 24 * 60 * 60 * 1000;
-    const diff = Math.abs(result.data.newValidUntil.getTime() - expected);
+    const expected = addCalendarMonths(new Date(), 1);
+    const diff = Math.abs(result.data.newValidUntil.getTime() - expected.getTime());
     expect(diff).toBeLessThan(10000);
   });
 
-  it("T26 — releaseSubscriptionAction atualiza valid_until e zera suspended_at (RF14)", async () => {
+  it("T26/T61 — releaseSubscriptionAction atualiza valid_until e zera suspended_at (RF04)", async () => {
     const { userId } = await makeFounder();
     const tenantId = await makeTenant(userId);
 
@@ -84,7 +85,7 @@ suite("admin billing actions (integração)", () => {
       .where(eq(tenants.id, tenantId));
 
     const { releaseSubscriptionAction } = await import("./actions");
-    const result = await releaseSubscriptionAction(tenantId);
+    const result = await releaseSubscriptionAction(tenantId, 1);
     expect(result.ok).toBe(true);
 
     const [row] = await db
@@ -96,12 +97,13 @@ suite("admin billing actions (integração)", () => {
     expect(row?.suspendedAt).toBeNull();
   });
 
-  it("T28 — releaseSubscriptionAction insere subscription_log action=renewed (RF15)", async () => {
+  it("T28/T62/T63 — log grava action=renewed, months_released e validade resultante (RF05)", async () => {
     const { userId } = await makeFounder();
     const tenantId = await makeTenant(userId);
 
     const { releaseSubscriptionAction } = await import("./actions");
-    await releaseSubscriptionAction(tenantId);
+    const result = await releaseSubscriptionAction(tenantId, 3);
+    if (!result.ok) throw new Error(result.error);
 
     const logs = await db
       .select()
@@ -110,23 +112,40 @@ suite("admin billing actions (integração)", () => {
     const renewed = logs.find((l) => l.action === "renewed");
     expect(renewed).toBeDefined();
     expect(renewed?.byUserId).toBe(userId);
+    expect(renewed?.monthsReleased).toBe(3); // T62
+    expect(renewed?.validUntilAfter?.getTime()).toBe(result.data.newValidUntil.getTime()); // T63
   });
 
-  it("T31 — releaseSubscriptionAction rejeita não-autenticado (RF02)", async () => {
+  it("T64 — months fora do range é rejeitado no servidor antes de escrever (RN01)", async () => {
+    const { userId } = await makeFounder();
+    const tenantId = await makeTenant(userId);
+
+    const { releaseSubscriptionAction } = await import("./actions");
+    const result = await releaseSubscriptionAction(tenantId, 99);
+    expect(result.ok).toBe(false);
+
+    const logs = await db
+      .select()
+      .from(subscriptionLog)
+      .where(eq(subscriptionLog.tenantId, tenantId));
+    expect(logs.some((l) => l.action === "renewed")).toBe(false); // nada gravado
+  });
+
+  it("T31 — releaseSubscriptionAction rejeita não-autenticado (RNF01)", async () => {
     mockedGetAuthUser.mockResolvedValue(null);
     const { releaseSubscriptionAction } = await import("./actions");
-    const result = await releaseSubscriptionAction("any");
+    const result = await releaseSubscriptionAction("any", 1);
     expect(result.ok).toBe(false);
   });
 
-  it("T32 — releaseSubscriptionAction rejeita não-founder (RF02)", async () => {
+  it("T32/T65 — releaseSubscriptionAction rejeita não-founder (RNF01)", async () => {
     const { userId } = await createTestUser();
     created.push({ userId, tenantId: "" });
     await db.update(users).set({ isFounder: false }).where(eq(users.id, userId));
     mockedGetAuthUser.mockResolvedValue({ id: userId });
 
     const { releaseSubscriptionAction } = await import("./actions");
-    const result = await releaseSubscriptionAction("any");
+    const result = await releaseSubscriptionAction("any", 1);
     expect(result.ok).toBe(false);
   });
 
