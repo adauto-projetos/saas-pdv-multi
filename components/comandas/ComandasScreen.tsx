@@ -13,7 +13,7 @@ import { OpenComandaDialog } from "./OpenComandaDialog";
 /**
  * RF08 — tela principal de comandas: grade de abertas + histórico.
  * selectedId controla qual card está expandido (mostra item panel inline).
- * O botão "Abrir comanda" foi movido para AppTopBar (OD-1).
+ * O botão "Abrir comanda" fica no cabeçalho desta tela.
  */
 export function ComandasScreen({
   openComandas,
