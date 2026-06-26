@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export default function PagarPage() {
   return (
-    <div className="grid gap-8 px-4 md:px-7 py-6">
+    <div className="grid gap-8 px-4 md:px-7 py-6 max-w-[1280px]">
       <h1 className="text-xl font-semibold">Contas a pagar</h1>
       <PagarView />
     </div>

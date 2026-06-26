@@ -9,7 +9,6 @@ import { getUserTenantId } from "@/lib/services/tenants/onboarding";
 import { getDaysUntilExpiry, getTenantStatus } from "@/lib/services/subscriptions/subscription-status";
 import { selectHasRenewed } from "@/lib/services/subscriptions/repository";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { AppTopBar } from "@/components/layout/AppTopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ImpersonationBanner } from "@/components/layout/ImpersonationBanner";
 import { SubscriptionWarningBanner } from "@/components/layout/SubscriptionWarningBanner";
@@ -100,7 +99,6 @@ export default async function AppLayout({
           {showLocked && <SubscriptionLockedBanner />}
           {showWarning && <SubscriptionWarningBanner daysLeft={daysLeft} />}
           {showTrial && <SubscriptionTrialBanner daysLeft={daysLeft} />}
-          <AppTopBar />
           {children}
         </main>
         <BottomNav className="lg:hidden" isFounder={userRow?.isFounder ?? false} />

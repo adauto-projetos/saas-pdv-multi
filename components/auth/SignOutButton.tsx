@@ -15,7 +15,12 @@ export function SignOutButton() {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleSignOut}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleSignOut}
+      className="font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+    >
       Sair
     </Button>
   );

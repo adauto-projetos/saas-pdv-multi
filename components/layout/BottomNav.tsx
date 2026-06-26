@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   BarChart3,
   ClipboardList,
@@ -20,18 +20,33 @@ import {
 import { logoutAction } from "@/app/(auth)/actions";
 
 const NAV_PRIMARY = [
-  { href: "/caixa", label: "Caixa", icon: LayoutDashboard },
-  { href: "/comandas", label: "Comandas", icon: ClipboardList },
-  { href: "/products", label: "Produtos", icon: Package },
-  { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet },
+  { href: "/caixa", label: "Caixa", icon: LayoutDashboard, color: "#4f46e5" },
+  { href: "/comandas", label: "Comandas", icon: ClipboardList, color: "#e11d48" },
+  { href: "/products", label: "Produtos", icon: Package, color: "#ea580c" },
+  { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet, color: "#16a34a" },
 ] as const;
 
 const NAV_DRAWER = [
-  { href: "/vendas", label: "Vendas", icon: BarChart3 },
-  { href: "/estoque", label: "Estoque", icon: Layers },
-  { href: "/lucro", label: "Lucro", icon: TrendingUp },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/vendas", label: "Vendas", icon: BarChart3, color: "#2563eb" },
+  { href: "/estoque", label: "Estoque", icon: Layers, color: "#0d9488" },
+  { href: "/lucro", label: "Lucro", icon: TrendingUp, color: "#d97706" },
+  { href: "/settings", label: "Configurações", icon: Settings, color: "#64748b" },
 ] as const;
+
+/** Chip arredondado com ícone colorido. Ativo → preenchido na cor. */
+function chipStyle(color: string, active: boolean): CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    flexShrink: 0,
+    background: active ? color : `${color}1f`,
+    color: active ? "#ffffff" : color,
+  };
+}
 
 interface BottomNavProps {
   className?: string;
@@ -73,9 +88,9 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
       {drawerOpen && (
         <div
           role="menu"
-          className="fixed bottom-16 left-4 right-4 z-50 rounded-2xl border border-gray-100 bg-white shadow-lg"
+          className="fixed bottom-16 left-4 right-4 z-50 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg"
         >
-          {NAV_DRAWER.map(({ href, label, icon: Icon }) => {
+          {NAV_DRAWER.map(({ href, label, icon: Icon, color }) => {
             const active = isActive(href);
             return (
               <Link
@@ -87,14 +102,16 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
                   display: "flex",
                   alignItems: "center",
                   gap: 12,
-                  padding: "14px 20px",
+                  padding: "12px 16px",
                   textDecoration: "none",
-                  color: active ? "#4f46e5" : "#475569",
-                  fontWeight: 600,
+                  color: active ? color : "#1e293b",
+                  fontWeight: 700,
                   fontSize: 15,
                 }}
               >
-                <Icon size={18} strokeWidth={1.8} />
+                <span style={chipStyle(color, active)}>
+                  <Icon size={17} strokeWidth={2} />
+                </span>
                 {label}
               </Link>
             );
@@ -109,15 +126,17 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
-                padding: "14px 20px",
+                padding: "12px 16px",
                 textDecoration: "none",
-                color: "#4f46e5",
-                fontWeight: 600,
+                color: "#1e293b",
+                fontWeight: 700,
                 fontSize: 15,
                 borderTop: "1px solid #f1f5f9",
               }}
             >
-              <Shield size={18} strokeWidth={1.8} />
+              <span style={chipStyle("#dc2626", pathname.startsWith("/superadmin"))}>
+                <Shield size={17} strokeWidth={2} />
+              </span>
               Super Admin
             </Link>
           )}
@@ -131,18 +150,20 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
               alignItems: "center",
               gap: 12,
               width: "100%",
-              padding: "14px 20px",
+              padding: "12px 16px",
               background: "none",
               border: "none",
               borderTop: "1px solid #f1f5f9",
               color: "#dc2626",
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: 15,
               cursor: "pointer",
               font: "inherit",
             }}
           >
-            <LogOut size={18} strokeWidth={1.8} />
+            <span style={chipStyle("#dc2626", false)}>
+              <LogOut size={17} strokeWidth={2} />
+            </span>
             Sair
           </button>
         </div>
@@ -153,42 +174,61 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex items-center justify-around">
-          {NAV_PRIMARY.map(({ href, label, icon: Icon }) => {
+          {NAV_PRIMARY.map(({ href, label, icon: Icon, color }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-[3px] px-3 py-2"
+                className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-[3px] px-3 py-1.5"
                 style={{
                   textDecoration: "none",
-                  color: active ? "#4f46e5" : "#94a3b8",
+                  color: active ? "#4f46e5" : "#64748b",
                 }}
               >
-                <Icon size={20} strokeWidth={1.8} />
                 <span
-                  className="text-[10px] font-semibold"
-                  style={{ color: active ? "#4f46e5" : "#94a3b8" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 44,
+                    height: 26,
+                    borderRadius: 9,
+                    background: active ? "#eef2ff" : "transparent",
+                    color: color,
+                    transition: "background 0.12s",
+                  }}
                 >
-                  {label}
+                  <Icon size={20} strokeWidth={2} />
                 </span>
+                <span className="text-[10px] font-semibold">{label}</span>
               </Link>
             );
           })}
 
           <button
             onClick={() => setDrawerOpen((v) => !v)}
-            className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-[3px] px-3 py-2"
+            className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-[3px] px-3 py-1.5"
             aria-label="Mais opções"
             style={{
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: "#94a3b8",
+              color: "#64748b",
               font: "inherit",
             }}
           >
-            <MoreHorizontal size={20} strokeWidth={1.8} />
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 44,
+                height: 26,
+              }}
+            >
+              <MoreHorizontal size={20} strokeWidth={2} />
+            </span>
             <span className="text-[10px] font-semibold">Mais</span>
           </button>
         </div>

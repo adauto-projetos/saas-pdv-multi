@@ -51,8 +51,8 @@ export function ProfitFilter({ initial }: { initial: ProfitDto }) {
   }, [from, to]);
 
   return (
-    <div className="flex flex-col gap-5">
-      <PageCard>
+    <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[4fr_8fr]">
+      <PageCard className="min-w-0">
         <PageCardHeader>
           Período de análise
           <InfoButton
@@ -88,12 +88,14 @@ export function ProfitFilter({ initial }: { initial: ProfitDto }) {
         </div>
       </PageCard>
 
-      {error ? (
-        <p className="text-sm text-destructive">{error}</p>
-      ) : null}
+      <div className="flex min-w-0 flex-col gap-3">
+        {error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : null}
 
-      <div className={loading ? "opacity-60" : undefined}>
-        <ProfitSummaryCard profit={profit} />
+        <div className={loading ? "opacity-60" : undefined}>
+          <ProfitSummaryCard profit={profit} />
+        </div>
       </div>
     </div>
   );

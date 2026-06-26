@@ -42,7 +42,7 @@ export function CustomerForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border p-4">
+    <form onSubmit={handleSubmit} className="grid gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor="customer-name">Nome</Label>

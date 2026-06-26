@@ -14,50 +14,59 @@ export default async function CaixaPage() {
   const sessionResult = await getOpenSessionAction();
 
   return (
-    <div className="flex flex-col gap-5 px-4 md:px-7 py-6 max-w-[820px]">
+    <div className="flex flex-col gap-5 px-4 md:px-7 py-6 max-w-[1280px]">
       <h1 style={{ fontFamily: "var(--font-jakarta)", fontWeight: 800, fontSize: 24, margin: 0, color: "#0f172a" }}>
         Financeiro
       </h1>
-      {/* Turno + Saldo em grid 2-col */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {sessionResult.ok ? (
-          <CashSessionPanel session={sessionResult.data} />
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-destructive">
-              Não foi possível carregar o turno de caixa.
-            </p>
+
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[5fr_7fr]">
+        {/* Coluna esquerda: turno/saldo + nova movimentação */}
+        <div className="flex min-w-0 flex-col gap-5">
+          {/* Turno + Saldo em grid 2-col */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {sessionResult.ok ? (
+              <CashSessionPanel session={sessionResult.data} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-destructive">
+                  Não foi possível carregar o turno de caixa.
+                </p>
+              </div>
+            )}
+            {result.ok ? (
+              <CashBalanceCard balanceCents={result.data.balanceCents} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-destructive">
+                  Não foi possível carregar o saldo do caixa.
+                </p>
+              </div>
+            )}
           </div>
-        )}
-        {result.ok ? (
-          <CashBalanceCard balanceCents={result.data.balanceCents} />
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-destructive">
-              Não foi possível carregar o saldo do caixa.
-            </p>
-          </div>
-        )}
+
+          {/* Nova movimentação */}
+          <PageCard>
+            <PageCardHeader>Nova movimentação</PageCardHeader>
+            <div className="p-5">
+              <CashMovementDialog />
+            </div>
+          </PageCard>
+        </div>
+
+        {/* Coluna direita: extrato + histórico de turnos */}
+        <div className="flex min-w-0 flex-col gap-5">
+          {/* Extrato */}
+          <CashStatement />
+
+          {/* Histórico de turnos */}
+          <PageCard>
+            <PageCardHeader>Histórico de turnos</PageCardHeader>
+            <div className="p-5">
+              <SessionHistory />
+            </div>
+          </PageCard>
+        </div>
       </div>
-
-      {/* Nova movimentação */}
-      <PageCard>
-        <PageCardHeader>Nova movimentação</PageCardHeader>
-        <div className="p-5">
-          <CashMovementDialog />
-        </div>
-      </PageCard>
-
-      {/* Extrato */}
-      <CashStatement />
-
-      {/* Histórico de turnos */}
-      <PageCard>
-        <PageCardHeader>Histórico de turnos</PageCardHeader>
-        <div className="p-5">
-          <SessionHistory />
-        </div>
-      </PageCard>
     </div>
   );
 }

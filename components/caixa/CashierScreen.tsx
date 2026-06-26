@@ -140,7 +140,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
   const empty = cart.items.length === 0;
 
   return (
-    <div className={`flex h-full min-w-0 overflow-hidden flex-col ${showGrid ? "lg:flex-row" : ""}`}>
+    <div className={`flex h-full min-w-0 flex-1 overflow-hidden flex-col ${showGrid ? "lg:flex-row" : ""}`}>
       {/* Tab bar — mobile only, always in DOM (CSS-hide on desktop for RN04) */}
       <div
         className={`flex flex-shrink-0 lg:hidden ${!showGrid ? "hidden" : ""}`}
@@ -578,7 +578,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
 
       {/* RIGHT: cart panel */}
       <div
-        className={`flex-col min-h-0 ${showGrid ? `lg:flex ${mobileTab === "cart" ? "flex" : "hidden"} w-full lg:w-[392px] lg:flex-shrink-0` : "flex flex-1"}`}
+        className={`flex-col min-h-0 ${showGrid ? `lg:flex ${mobileTab === "cart" ? "flex" : "hidden"} w-full lg:flex-[1.4] lg:min-w-[420px]` : "flex flex-1"}`}
         style={{
           background: "#fff",
           ...(showGrid ? { borderLeft: "1px solid #edf0f4" } : {}),
@@ -637,8 +637,6 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                 {cart.items.length === 1 ? "item" : "itens"}
               </div>
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={toggleGrid}
               title={showGrid ? "Ocultar grade de produtos" : "Mostrar grade de produtos"}
@@ -662,18 +660,22 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                 <rect x="3" y="14" width="7" height="7" rx="1"/>
               </svg>
             </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={cart.clear}
               disabled={empty}
               style={{
-                background: "none",
+                background: empty ? "#f3f4f6" : "#e5e7eb",
                 border: "none",
-                color: "#b6bdc9",
+                borderRadius: 11,
+                padding: "9px 18px",
+                color: empty ? "#c4cad3" : "#dc2626",
                 font: "inherit",
-                fontSize: 12.5,
+                fontSize: 13.5,
                 fontWeight: 700,
                 cursor: empty ? "default" : "pointer",
-                opacity: empty ? 0.5 : 1,
+                boxShadow: empty ? "none" : "0 2px 6px rgba(16,24,40,.10)",
               }}
             >
               Limpar
