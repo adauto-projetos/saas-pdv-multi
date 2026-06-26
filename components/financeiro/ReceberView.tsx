@@ -15,16 +15,16 @@ export function ReceberView() {
   const [reloadKey, setReloadKey] = React.useState(0);
 
   return (
-    <>
-      <section className="grid gap-3">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[5fr_7fr]">
+      <section className="grid min-w-0 gap-3">
         <h2 className="font-medium">Nova conta a receber</h2>
         <NewReceivableForm onCreated={() => setReloadKey((k) => k + 1)} />
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid min-w-0 gap-3">
         <h2 className="font-medium">Contas</h2>
         <ReceivableList reloadKey={reloadKey} />
       </section>
-    </>
+    </div>
   );
 }
