@@ -44,6 +44,11 @@ export const products = pgTable(
     minStock: numeric("min_stock", { precision: 10, scale: 3 }),
     emoji: text("emoji"),
     category: text("category"),
+    // Foto do produto (feature 0016F). O banco guarda só a referência, nunca o binário:
+    // `image_key` é a chave do objeto no R2 (<slug-da-loja>-<tenant_id>/<uuid>.webp — usada p/ deletar),
+    // `image_url` é a URL pública de exibição. Ambas nullable (RN01: foto é opcional).
+    imageKey: text("image_key"),
+    imageUrl: text("image_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

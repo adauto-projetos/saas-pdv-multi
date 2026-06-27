@@ -30,6 +30,8 @@ function toProductDto(row: ProductRow): ProductDto {
     minStock: row.minStock != null ? Number(row.minStock) : null,
     emoji: row.emoji ?? null,
     category: row.category ?? null,
+    imageKey: row.imageKey ?? null,
+    imageUrl: row.imageUrl ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -61,6 +63,8 @@ export type UpdateProductData = Partial<{
   minStock: number | null;
   emoji: string | null;
   category: string | null;
+  imageKey: string | null;
+  imageUrl: string | null;
 }>;
 
 export async function insertProduct(
@@ -112,6 +116,8 @@ export async function updateProductRow(
     set.minStock = data.minStock === null ? null : data.minStock.toString();
   if (data.emoji !== undefined) set.emoji = data.emoji;
   if (data.category !== undefined) set.category = data.category;
+  if (data.imageKey !== undefined) set.imageKey = data.imageKey;
+  if (data.imageUrl !== undefined) set.imageUrl = data.imageUrl;
 
   const [row] = await tx
     .update(products)
@@ -119,6 +125,24 @@ export async function updateProductRow(
     .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
     .returning();
   return row ? toProductDto(row) : null;
+}
+
+/**
+ * Apaga a linha do produto (RF07) e retorna a `imageKey` que estava gravada (ou
+ * null), para o service decidir se há arquivo no R2 a remover. Retorna `undefined`
+ * quando nenhuma linha foi apagada (id inexistente nessa loja) — distinto de uma
+ * linha apagada sem foto (`imageKey` null).
+ */
+export async function deleteProductRow(
+  tx: Pick<Database, "delete">,
+  tenantId: string,
+  productId: string,
+): Promise<{ imageKey: string | null } | undefined> {
+  const [row] = await tx
+    .delete(products)
+    .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+    .returning({ imageKey: products.imageKey });
+  return row ? { imageKey: row.imageKey ?? null } : undefined;
 }
 
 export async function selectProducts(
@@ -240,6 +264,19 @@ export async function selectLowStockProducts(
     )
     .orderBy(asc(products.name));
   return rows.map(toProductDto);
+}
+
+/** Nome da loja (tenant) — usado para nomear a pasta das fotos no R2 (RN03). */
+export async function selectTenantName(
+  tx: Executor,
+  tenantId: string,
+): Promise<string | null> {
+  const [row] = await tx
+    .select({ name: tenants.name })
+    .from(tenants)
+    .where(eq(tenants.id, tenantId))
+    .limit(1);
+  return row ? row.name : null;
 }
 
 export async function selectTenantDefaultMarkup(

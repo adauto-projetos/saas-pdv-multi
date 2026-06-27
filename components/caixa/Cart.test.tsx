@@ -14,6 +14,7 @@ const items: CartItem[] = [
     quantity: 2,
     emoji: "🥤",
     category: "Bebidas",
+    imageUrl: null,
   },
 ];
 
@@ -60,6 +61,7 @@ describe("Cart (RF04/RF05)", () => {
         quantity: 1,
         emoji: null,
         category: null,
+        imageUrl: null,
       },
     ];
     const onSetQuantity = vi.fn();

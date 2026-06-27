@@ -53,6 +53,8 @@ const SAMPLE_PRODUCT: ProductDto = {
   barcode: null,
   emoji: "🥤",
   category: "Bebidas",
+  imageKey: null,
+  imageUrl: null,
   stockQuantity: 10,
   minStock: 2,
   tenantId: "t1",

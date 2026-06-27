@@ -29,6 +29,8 @@ const product: ProductDto = {
   minStock: null,
   emoji: null,
   category: null,
+  imageKey: null,
+  imageUrl: null,
   createdAt: "2026-06-09T00:00:00.000Z",
   updatedAt: "2026-06-09T00:00:00.000Z",
 };

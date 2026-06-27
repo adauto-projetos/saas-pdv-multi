@@ -19,6 +19,7 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
     <Table>
       <TableHeader>
         <TableRow>
+          <PdvTableHead className="w-12">Foto</PdvTableHead>
           <PdvTableHead>Produto</PdvTableHead>
           <PdvTableHead className="text-right">Preço de venda</PdvTableHead>
           <PdvTableHead className="text-center">Un.</PdvTableHead>
@@ -29,6 +30,22 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
       <TableBody>
         {products.map((product) => (
           <TableRow key={product.id}>
+            <PdvTableCell>
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-muted text-xl">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-contain"
+                  />
+                ) : product.emoji ? (
+                  <span aria-hidden>{product.emoji}</span>
+                ) : (
+                  <span aria-hidden>📦</span>
+                )}
+              </div>
+            </PdvTableCell>
             <PdvTableCell className="font-medium">{product.name}</PdvTableCell>
             <PdvTableCell className="text-right font-semibold text-green-600">
               {centsToBRL(product.salePriceCents)}

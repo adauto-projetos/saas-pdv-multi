@@ -12,6 +12,7 @@ import type {
   ProductDto,
 } from "@/types/product";
 
+import * as imageService from "./image-service";
 import * as data from "./data";
 import { resolvePriceOnCreate, suggestPriceOnCostChange } from "./markup";
 
@@ -85,6 +86,96 @@ export async function updateProduct(
       throw new ConflictError(BARCODE_CONFLICT_MESSAGE, "barcode");
     }
     throw error;
+  }
+}
+
+/**
+ * Anexa/troca a foto do produto (RF01/RF02/RF06). Lê a chave atual sob RLS, processa
+ * a imagem (sharp valida RN05 + resize/WebP RNF01), grava no R2 com chave aleatória
+ * prefixada por tenant (RN03/RN04), e persiste imageKey/imageUrl sob RLS. Se já havia
+ * foto, o arquivo antigo é removido (RF06) tolerando falha (RF09). RN02: chave única —
+ * a nova sobrescreve a referência da anterior. Desacoplado do create/update (RF08).
+ */
+export async function uploadProductImage(
+  ctx: AuthContext,
+  productId: string,
+  bytes: Buffer,
+): Promise<ProductDto> {
+  // 1. Lê a foto atual (confirma que o produto existe nesta loja) e o nome da loja,
+  //    sob RLS, na mesma transação.
+  const { current, storeName } = await withUserRls(ctx.userId, async (tx) => {
+    const current = await data.selectProductById(tx, ctx.tenantId, productId);
+    const storeName = await data.selectTenantName(tx, ctx.tenantId);
+    return { current, storeName };
+  });
+  if (!current) throw new NotFoundError("Produto não encontrado");
+
+  // 2. Processa + grava no R2 (fora da transação — I/O externo). RN03: pasta por loja
+  //    `<slug-do-nome>-<tenantId>/` — legível no painel e única por tenant.
+  const keyPrefix = imageService.storeKeyPrefix(storeName ?? "", ctx.tenantId);
+  const { key, url } = await imageService.uploadImage(
+    keyPrefix,
+    bytes,
+    current.imageKey,
+  );
+
+  // 3. Persiste a referência sob RLS.
+  const result = await withUserRls(ctx.userId, (tx) =>
+    data.updateProductRow(tx, ctx.tenantId, productId, {
+      imageKey: key,
+      imageUrl: url,
+    }),
+  );
+  if (!result) throw new NotFoundError("Produto não encontrado");
+  return result;
+}
+
+/**
+ * Remove a foto do produto (RF02): zera imageKey/imageUrl sob RLS e apaga o arquivo
+ * no R2 tolerando falha (RF09). Idempotente: produto sem foto retorna sem efeito.
+ */
+export async function removeProductImage(
+  ctx: AuthContext,
+  productId: string,
+): Promise<ProductDto> {
+  const current = await withUserRls(ctx.userId, (tx) =>
+    data.selectProductById(tx, ctx.tenantId, productId),
+  );
+  if (!current) throw new NotFoundError("Produto não encontrado");
+
+  // Apaga o arquivo ANTES de zerar a referência (RF09 tolerante): se o delete no R2
+  // falha, a linha ainda guarda a chave e a ação pode ser reexecutada; zerar primeiro
+  // perderia a chave e deixaria um órfão sem rastro num crash entre os dois passos.
+  if (current.imageKey) {
+    await imageService.safeDelete(current.imageKey);
+  }
+
+  const result = await withUserRls(ctx.userId, (tx) =>
+    data.updateProductRow(tx, ctx.tenantId, productId, {
+      imageKey: null,
+      imageUrl: null,
+    }),
+  );
+  if (!result) throw new NotFoundError("Produto não encontrado");
+  return result;
+}
+
+/**
+ * Exclui o produto (RF07). Apaga a linha sob RLS e, se havia foto, remove o arquivo
+ * do R2 tolerando falha (RF09 — órfão raro é aceito). Lança NotFoundError se a linha
+ * não existia nessa loja.
+ */
+export async function deleteProduct(
+  ctx: AuthContext,
+  productId: string,
+): Promise<void> {
+  const deleted = await withUserRls(ctx.userId, (tx) =>
+    data.deleteProductRow(tx, ctx.tenantId, productId),
+  );
+  if (!deleted) throw new NotFoundError("Produto não encontrado");
+
+  if (deleted.imageKey) {
+    await imageService.safeDelete(deleted.imageKey);
   }
 }
 

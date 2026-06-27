@@ -394,9 +394,18 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                       width: 36, height: 36, borderRadius: 9,
                       background: catStyle.bg,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 22, flexShrink: 0,
+                      fontSize: 22, flexShrink: 0, overflow: "hidden",
                     }}>
-                      {p.emoji ?? "📦"}
+                      {p.imageUrl ? (
+                        <img
+                          src={p.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        />
+                      ) : (
+                        p.emoji || "📦"
+                      )}
                     </div>
                     <span style={{ flex: 1, fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
                       {p.name}
@@ -518,9 +527,19 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                         justifyContent: "center",
                         fontSize: 42,
                         background: catStyle.bg,
+                        overflow: "hidden",
                       }}
                     >
-                      {p.emoji ?? "📦"}
+                      {p.imageUrl ? (
+                        <img
+                          src={p.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        />
+                      ) : (
+                        p.emoji || "📦"
+                      )}
                     </div>
                     <div
                       style={{

@@ -15,6 +15,7 @@ import {
   productIdSchema,
   updateProductSchema,
 } from "@/lib/validation/product";
+import { imageRemoveSchema } from "@/lib/validation/storage";
 import type { PriceSuggestionDto, ProductDto } from "@/types/product";
 
 /** Mapeia erros de validação do zod para { campo: mensagem }. */
@@ -93,6 +94,51 @@ export async function getProductAction(
     const ctx = await requireAuthContext();
     await requirePermission(ctx, "produtos");
     return { ok: true, data: await service.getProduct(ctx, parsed.data.id) };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * RF02 — remove a foto do produto. Zera a referência no banco e apaga o arquivo no
+ * R2 (tolerante a falha, RF09). O upload/troca é feito pelo route handler
+ * `POST /api/products/[id]/upload` (recebe multipart); aqui só a remoção.
+ */
+export async function removeProductImageAction(
+  input: unknown,
+): Promise<ActionResult<ProductDto>> {
+  const parsed = imageRemoveSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Produto inválido." };
+  }
+  try {
+    const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
+    const product = await service.removeProductImage(ctx, parsed.data.id);
+    revalidatePath("/products");
+    return { ok: true, data: product };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+/**
+ * RF07 — exclui o produto e, se houver, remove sua foto do R2 (tolerante, RF09).
+ * Contrato exposto pela feature 0016F; sem fiação de UI por ora.
+ */
+export async function deleteProductAction(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = productIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Produto inválido." };
+  }
+  try {
+    const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
+    await service.deleteProduct(ctx, parsed.data.id);
+    revalidatePath("/products");
+    return { ok: true, data: { id: parsed.data.id } };
   } catch (error) {
     return toActionError(error);
   }

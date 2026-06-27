@@ -45,7 +45,7 @@ export function Cart({
             border: "1px solid #f1f3f7",
           }}
         >
-          {/* Emoji tile */}
+          {/* Foto / emoji tile (fallback foto → emoji → 📦) */}
           <div
             style={{
               width: 32,
@@ -56,10 +56,20 @@ export function Cart({
               alignItems: "center",
               justifyContent: "center",
               fontSize: 18,
+              overflow: "hidden",
               background: tileBg(item.category),
             }}
           >
-            {item.emoji ?? "📦"}
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt=""
+                loading="lazy"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            ) : (
+              item.emoji || "📦"
+            )}
           </div>
 
           {/* Name + unit price */}

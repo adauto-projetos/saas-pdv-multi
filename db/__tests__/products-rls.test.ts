@@ -38,6 +38,9 @@ suite("products RLS isolation (RN05)", () => {
         unit: "un",
         salePriceCents: 500,
         stockQuantity: "0",
+        // Referência de foto da loja B (feature 0016F) — RN03: A não pode lê-la.
+        imageKey: `${tenantB}/secret.webp`,
+        imageUrl: "https://cdn.example/secret.webp",
       })
       .returning();
     productB = p.id;
@@ -54,6 +57,17 @@ suite("products RLS isolation (RN05)", () => {
     const rows = await withUserRls(userA.userId, (tx) =>
       tx.select().from(products).where(eq(products.id, productB)),
     );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("T16/RN03 — usuário A não lê a referência de foto (imageKey) da loja B", async () => {
+    const rows = await withUserRls(userA.userId, (tx) =>
+      tx
+        .select({ imageKey: products.imageKey })
+        .from(products)
+        .where(eq(products.id, productB)),
+    );
+    // RLS bloqueia a linha inteira: A nunca enxerga a chave do arquivo de B.
     expect(rows).toHaveLength(0);
   });
 

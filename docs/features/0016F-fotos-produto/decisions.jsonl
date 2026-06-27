@@ -1,0 +1,1 @@
+{"ts":"2026-06-27T21:11:21Z","agent":"backend","type":"pivot","from":"pasta = <tenantId>/","decision":"pasta = <slug-da-loja>-<tenantId>/","reason":"founder quer pasta reconhecivel por loja no painel R2; slug legivel + tenantId garante unicidade/isolamento"}

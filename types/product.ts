@@ -21,6 +21,11 @@ export type ProductDto = {
   minStock: number | null;
   emoji: string | null;
   category: string | null;
+  // Foto do produto (feature 0016F). Referência ao objeto no R2; nunca o binário.
+  // Ambas nullable (RN01: foto é opcional). `imageKey` é a chave
+  // (<slug-da-loja>-<tenantId>/<uuid>.webp, usada p/ deletar), `imageUrl` é a URL pública.
+  imageKey: string | null;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };

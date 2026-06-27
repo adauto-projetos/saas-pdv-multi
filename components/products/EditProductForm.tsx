@@ -26,7 +26,11 @@ export function EditProductForm({ product }: { product: ProductDto }) {
 
   async function onSubmit(
     input: CreateProductInput,
+    // Em edição a foto já é enviada/removida no momento da seleção (RF02/RF06),
+    // então o arquivo staged não é usado aqui.
+    stagedImage: File | null,
   ): Promise<ActionResult<ProductDto>> {
+    void stagedImage;
     const costChanged =
       (input.costCents ?? null) !== (product.costCents ?? null);
 

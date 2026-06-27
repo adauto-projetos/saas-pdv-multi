@@ -12,6 +12,7 @@ export type CartItem = {
   quantity: number;
   emoji: string | null;
   category: string | null;
+  imageUrl: string | null;
 };
 
 /** Subtotal em centavos = round(preço × quantidade) — espelha o servidor (RN06). */
@@ -57,6 +58,7 @@ function reducer(state: State, action: Action): State {
             quantity: 1,
             emoji: action.product.emoji,
             category: action.product.category,
+            imageUrl: action.product.imageUrl,
           },
         ],
       };
@@ -86,6 +88,7 @@ function reducer(state: State, action: Action): State {
             quantity: qty,
             emoji: action.product.emoji,
             category: action.product.category,
+            imageUrl: action.product.imageUrl,
           },
         ],
       };

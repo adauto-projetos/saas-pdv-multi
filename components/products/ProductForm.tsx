@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { z } from "zod";
 
 import { MarkupCalculatorFields } from "@/components/products/MarkupCalculatorFields";
+import { ProductImageUpload } from "@/components/products/ProductImageUpload";
 import { Button } from "@/components/ui/button";
 import { InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,15 @@ type ProductFormProps = {
   /** Margem padrão da loja para pré-preencher novos cadastros (RF05). */
   defaultMarkupPercent: number;
   defaultValues?: ProductDto;
-  /** Sucesso (toast/redirect/RF06) é responsabilidade de quem chama. */
-  onSubmit: (input: CreateProductInput) => Promise<ActionResult<ProductDto>>;
+  /**
+   * Sucesso (toast/redirect/RF06) é responsabilidade de quem chama.
+   * `stagedImage` é a foto escolhida mas ainda não enviada (modo create, RF01); no
+   * modo edição o upload já aconteceu no `ProductImageUpload`, então vem `null`.
+   */
+  onSubmit: (
+    input: CreateProductInput,
+    stagedImage: File | null,
+  ) => Promise<ActionResult<ProductDto>>;
 };
 
 function zodFieldErrors(error: z.ZodError): Record<string, string> {
@@ -64,6 +72,7 @@ export function ProductForm({
   );
   const [emoji, setEmoji] = React.useState(defaultValues?.emoji ?? "");
   const [category, setCategory] = React.useState(defaultValues?.category ?? "");
+  const [stagedImage, setStagedImage] = React.useState<File | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
     {},
   );
@@ -101,7 +110,7 @@ export function ProductForm({
     }
 
     setSubmitting(true);
-    const result = await onSubmit(parsed.data);
+    const result = await onSubmit(parsed.data, stagedImage);
     setSubmitting(false);
 
     if (!result.ok) {
@@ -130,6 +139,13 @@ export function ProductForm({
           <p className="text-sm text-destructive">{fieldErrors.name}</p>
         ) : null}
       </div>
+
+      <ProductImageUpload
+        productId={mode === "edit" ? defaultValues?.id : undefined}
+        defaultImageUrl={defaultValues?.imageUrl}
+        emoji={emoji}
+        onStagedChange={setStagedImage}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">

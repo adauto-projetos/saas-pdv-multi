@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import sharp from "sharp";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   cleanupTenant,
@@ -16,7 +17,31 @@ import {
 } from "@/lib/validation/product";
 import type { AuthContext } from "@/types/product";
 
+// Mocka o R2 (sem rede). image-service real: sharp processa de verdade; só o I/O
+// externo de storage é falso. `put` resolve; `del` é rastreado por teste.
+vi.mock("@/lib/services/storage/r2-client", () => ({
+  put: vi.fn(async () => {}),
+  del: vi.fn(async () => {}),
+  publicUrl: vi.fn((key: string) => `https://cdn.example/${key}`),
+}));
+
+import * as r2 from "@/lib/services/storage/r2-client";
+
 import * as service from "./product-service";
+
+/** PNG real (magic bytes válidos) para o pipeline sharp aceitar. */
+async function realPng(): Promise<Buffer> {
+  return sharp({
+    create: {
+      width: 200,
+      height: 200,
+      channels: 3,
+      background: { r: 1, g: 2, b: 3 },
+    },
+  })
+    .png()
+    .toBuffer();
+}
 
 // Integração: exige Supabase real + service-role. Pulado sem creds.
 const suite = HAS_AUTH ? describe : describe.skip;
@@ -176,5 +201,115 @@ suite("product-service (integração)", () => {
     );
     expect(a.barcode).toBe("SHARED-1");
     expect(b.barcode).toBe("SHARED-1");
+  });
+
+  // -------------------------------------------------------------------------
+  // Fotos de produto (feature 0016F) — R2 mockado, sharp real.
+  // -------------------------------------------------------------------------
+
+  it("T13/RN01 — produto criado sem foto fica com imageKey/imageUrl null", async () => {
+    const p = await create({
+      name: "Sem foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    expect(p.imageKey).toBeNull();
+    expect(p.imageUrl).toBeNull();
+  });
+
+  it("T01/T15/RN03 — upload persiste chave na pasta da loja <slug>-<tenantId> + URL", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Com foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    const updated = await service.uploadProductImage(ctx, p.id, await realPng());
+    expect(updated.imageKey).not.toBeNull();
+    // Pasta legível + tenantId (loja semeada como "Loja A"). O tenantId no prefixo
+    // garante unicidade entre lojas de mesmo nome (RN03).
+    const folder = updated.imageKey!.split("/")[0];
+    expect(folder).toBe(`loja-a-${tenantId}`);
+    expect(updated.imageUrl).toBe(`https://cdn.example/${updated.imageKey}`);
+    expect(r2.put).toHaveBeenCalledOnce();
+  });
+
+  it("T02/T14/RF06/RN02 — segundo upload sobrescreve e deleta a chave antiga", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Troca foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    const first = await service.uploadProductImage(ctx, p.id, await realPng());
+    const second = await service.uploadProductImage(ctx, p.id, await realPng());
+    expect(second.imageKey).not.toBe(first.imageKey);
+    // Chave única (RN02): a antiga foi removida do R2 (RF06).
+    expect(r2.del).toHaveBeenCalledWith(first.imageKey);
+  });
+
+  it("T08/T12/RF07/RF09 — deleteProduct remove a linha e o arquivo (tolera falha)", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Excluir com foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    const withImg = await service.uploadProductImage(ctx, p.id, await realPng());
+    vi.mocked(r2.del).mockRejectedValueOnce(new Error("R2 down"));
+    await expect(service.deleteProduct(ctx, p.id)).resolves.toBeUndefined();
+    // del foi chamado com a chave do produto, apesar de ter falhado (RF09).
+    expect(r2.del).toHaveBeenCalledWith(withImg.imageKey);
+    // Produto realmente sumiu.
+    await expect(service.getProduct(ctx, p.id)).rejects.toThrow();
+  });
+
+  it("deleteProduct sem foto não chama r2.del", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Excluir sem foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    await service.deleteProduct(ctx, p.id);
+    expect(r2.del).not.toHaveBeenCalled();
+  });
+
+  it("removeProductImage zera as colunas e deleta o arquivo", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Remover foto",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    const withImg = await service.uploadProductImage(ctx, p.id, await realPng());
+    const cleared = await service.removeProductImage(ctx, p.id);
+    expect(cleared.imageKey).toBeNull();
+    expect(cleared.imageUrl).toBeNull();
+    expect(r2.del).toHaveBeenCalledWith(withImg.imageKey);
+  });
+
+  it("T09/RF08 — create/update não são afetados pelo R2 (desacoplado)", async () => {
+    vi.clearAllMocks();
+    const p = await create({
+      name: "Desacoplado",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 500,
+    });
+    const updated = await service.updateProduct(
+      ctx,
+      updateProductSchema.parse({ id: p.id, name: "Desacoplado 2" }),
+    );
+    expect(updated.name).toBe("Desacoplado 2");
+    // Nenhuma operação de storage foi disparada por create/update.
+    expect(r2.put).not.toHaveBeenCalled();
+    expect(r2.del).not.toHaveBeenCalled();
   });
 });
