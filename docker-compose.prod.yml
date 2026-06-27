@@ -30,6 +30,12 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/pdv
       SESSION_SECRET: ${SESSION_SECRET}
+      # Cloudflare R2 — fotos de produto (0016F). Valores vêm do /opt/pdv/.env
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      R2_BUCKET: ${R2_BUCKET}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
     depends_on:
       db:
         condition: service_healthy
