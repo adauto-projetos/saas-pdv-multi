@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { createReceivableAction } from "@/app/(app)/financeiro/receber/actions";
 import { Button } from "@/components/ui/button";
+import { HelpTip, InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -58,7 +59,13 @@ export function NewReceivableForm({ onCreated }: { onCreated?: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border p-4">
       <div className="grid gap-2">
-        <Label htmlFor="receivable-customer">Cliente</Label>
+        <div className="flex items-center">
+          <Label htmlFor="receivable-customer">Cliente</Label>
+          <InfoButton
+            title="Cliente"
+            detail="Quem está devendo. O cliente precisa estar cadastrado antes (em Financeiro → Clientes). Cada conta a receber pertence a um cliente."
+          />
+        </div>
         <CustomerPicker
           inputId="receivable-customer"
           value={customer}
@@ -67,7 +74,13 @@ export function NewReceivableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="receivable-total">Valor</Label>
+        <div className="flex items-center">
+          <Label htmlFor="receivable-total">Valor</Label>
+          <InfoButton
+            title="Valor a receber"
+            detail="Quanto o cliente está devendo nesta conta. Você pode receber em partes depois, até quitar tudo."
+          />
+        </div>
         <MoneyInput
           id="receivable-total"
           value={totalCents}
@@ -77,7 +90,13 @@ export function NewReceivableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="receivable-description">Descrição (opcional)</Label>
+        <div className="flex items-center">
+          <Label htmlFor="receivable-description">Descrição (opcional)</Label>
+          <InfoButton
+            title="Descrição"
+            detail="Uma nota para lembrar do que se trata o fiado. Ex.: 'fiado da semana', 'compra do mês'. É opcional."
+          />
+        </div>
         <Input
           id="receivable-description"
           className="text-base"
@@ -88,7 +107,13 @@ export function NewReceivableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="receivable-due">Vencimento (opcional)</Label>
+        <div className="flex items-center">
+          <Label htmlFor="receivable-due">Vencimento (opcional)</Label>
+          <InfoButton
+            title="Vencimento"
+            detail="A data em que o cliente deveria pagar. Contas vencidas e ainda abertas ficam marcadas, ajudando a saber quem cobrar. É opcional."
+          />
+        </div>
         <Input
           id="receivable-due"
           type="date"
@@ -98,9 +123,16 @@ export function NewReceivableForm({ onCreated }: { onCreated?: () => void }) {
         />
       </div>
 
-      <Button type="submit" disabled={submitting} className="w-fit">
-        {submitting ? "Salvando..." : "Criar conta a receber"}
-      </Button>
+      <HelpTip
+        text="Cria a conta a receber"
+        detail="Registra o quanto o cliente deve. A conta aparece na lista e em Clientes (somando no total em aberto). Ao receber, em dinheiro o valor entra no caixa."
+        dialogTitle="Criar conta a receber"
+        style={{ width: "fit-content" }}
+      >
+        <Button type="submit" disabled={submitting} className="w-fit">
+          {submitting ? "Salvando..." : "Criar conta a receber"}
+        </Button>
+      </HelpTip>
     </form>
   );
 }

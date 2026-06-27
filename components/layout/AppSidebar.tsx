@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import {
   BarChart3,
+  BookOpen,
   ClipboardList,
   HelpCircle,
   KeyRound,
@@ -79,6 +80,7 @@ const NAV_SECONDARY = [
   { href: "/auditoria",           label: "Auditoria",     icon: ScrollText, color: "#9333ea", tip: "Quem fez o quê por operador e período", perm: "gerenciar_usuarios" },
   { href: "/settings",            label: "Configurações", icon: Settings,   color: "#64748b", tip: "Configurações da loja e do sistema", perm: "loja" },
   { href: "/perfil",              label: "Meu perfil",    icon: KeyRound,   color: "#475569", tip: "Troque a sua senha", perm: undefined },
+  { href: "/manual",              label: "Manual",        icon: BookOpen,   color: "#4f46e5", tip: "Guia completo de todas as áreas do app", perm: undefined },
 ] as const;
 
 interface AppSidebarProps {
@@ -375,7 +377,7 @@ export function AppSidebar({
               >
                 <HelpCircle size={17} strokeWidth={2} />
               </span>
-              {!collapsed && <span>{helpActive ? "Ajuda ativa" : "Manual / Ajuda"}</span>}
+              {!collapsed && <span>{helpActive ? "Ajuda ativa" : "Modo Ajuda"}</span>}
             </button>
           </HelpTip>
         </div>

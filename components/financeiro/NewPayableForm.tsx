@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { createPayableAction } from "@/app/(app)/financeiro/pagar/actions";
 import { Button } from "@/components/ui/button";
+import { HelpTip, InfoButton } from "@/components/ui/help-tip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -59,7 +60,13 @@ export function NewPayableForm({ onCreated }: { onCreated?: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border p-4">
       <div className="grid gap-2">
-        <Label htmlFor="payable-description">Descrição</Label>
+        <div className="flex items-center">
+          <Label htmlFor="payable-description">Descrição</Label>
+          <InfoButton
+            title="Descrição da conta"
+            detail="O que é essa despesa. Ex.: 'conta de luz', 'fornecedor de bebidas', 'aluguel'. Use um nome que você reconheça depois na lista."
+          />
+        </div>
         <Input
           id="payable-description"
           className="text-base"
@@ -70,7 +77,13 @@ export function NewPayableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="payable-total">Valor</Label>
+        <div className="flex items-center">
+          <Label htmlFor="payable-total">Valor</Label>
+          <InfoButton
+            title="Valor da conta"
+            detail="Quanto você precisa pagar no total. Você pode registrar pagamentos parciais depois, até quitar a conta."
+          />
+        </div>
         <MoneyInput
           id="payable-total"
           value={totalCents}
@@ -80,7 +93,13 @@ export function NewPayableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="payable-category-input">Categoria</Label>
+        <div className="flex items-center">
+          <Label htmlFor="payable-category-input">Categoria</Label>
+          <InfoButton
+            title="Categoria da despesa"
+            detail="Agrupa as contas por tipo (energia, aluguel, fornecedor, etc.). Ajuda a entender para onde o dinheiro está indo."
+          />
+        </div>
         <Input
           id="payable-category-input"
           className="text-base"
@@ -91,7 +110,13 @@ export function NewPayableForm({ onCreated }: { onCreated?: () => void }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="payable-due">Vencimento (opcional)</Label>
+        <div className="flex items-center">
+          <Label htmlFor="payable-due">Vencimento (opcional)</Label>
+          <InfoButton
+            title="Vencimento"
+            detail="A data-limite para pagar. Contas que passam dessa data e ainda não foram pagas ficam marcadas como vencidas. É opcional."
+          />
+        </div>
         <Input
           id="payable-due"
           type="date"
@@ -101,9 +126,16 @@ export function NewPayableForm({ onCreated }: { onCreated?: () => void }) {
         />
       </div>
 
-      <Button type="submit" disabled={submitting} className="w-fit">
-        {submitting ? "Salvando..." : "Criar conta a pagar"}
-      </Button>
+      <HelpTip
+        text="Cria a conta a pagar"
+        detail="A conta entra na lista de contas a pagar. Depois você registra o pagamento (total ou parcial) escolhendo a forma. Em dinheiro, o valor sai do caixa."
+        dialogTitle="Criar conta a pagar"
+        style={{ width: "fit-content" }}
+      >
+        <Button type="submit" disabled={submitting} className="w-fit">
+          {submitting ? "Salvando..." : "Criar conta a pagar"}
+        </Button>
+      </HelpTip>
     </form>
   );
 }

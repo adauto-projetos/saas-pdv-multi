@@ -12,6 +12,7 @@ import {
   updateOperatorAction,
   updateOperatorPermissionsAction,
 } from "@/app/(app)/usuarios/actions";
+import { InfoButton } from "@/components/ui/help-tip";
 import { PageCard } from "@/components/ui/PageCard";
 import {
   PERMISSION_CODES,
@@ -166,7 +167,13 @@ function CreateOperatorForm({ onDone }: { onDone: () => void }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-gray-400">Presets:</span>
+        <span className="inline-flex items-center text-xs font-semibold text-gray-400">
+          Presets:
+          <InfoButton
+            title="Presets de permissão"
+            detail="Atalhos que marcam um conjunto pronto de permissões. 'Caixa' libera vendas e comanda (balconista). 'Gerente' libera quase tudo, menos as configurações da loja. Depois de aplicar um preset, você ainda pode marcar ou desmarcar permissões manualmente abaixo."
+          />
+        </span>
         {(Object.keys(PERMISSION_PRESETS) as PresetKey[]).map((key) => (
           <button
             key={key}
@@ -479,15 +486,25 @@ export function UsuariosClient({
             color: "#0f172a",
           }}
         >
-          <span>Novo operador</span>
+          <span className="inline-flex items-center">
+            Novo operador
+            <InfoButton
+              title="Criar um operador"
+              detail="Cadastre um funcionário com nome, e-mail e senha provisória (mín. 6 caracteres). Escolha um preset ou marque as permissões manualmente. O operador entra com essa senha e deve trocá-la no primeiro acesso, em Meu perfil. O dono tem acesso a tudo e não aparece nesta lista de operadores."
+            />
+          </span>
           <span
-            className="rounded-md px-2.5 py-1 text-[12px] font-bold"
+            className="inline-flex items-center rounded-md px-2.5 py-1 text-[12px] font-bold"
             style={{
               background: limitReached ? "#fef2f2" : "#eef2ff",
               color: limitReached ? "#dc2626" : "#4f46e5",
             }}
           >
             {activeOperators} de {maxOperators} operadores
+            <InfoButton
+              title="Limite de operadores"
+              detail="Seu plano permite um número máximo de operadores ativos ao mesmo tempo. O dono não conta no limite. Se atingir o máximo, desative um operador para liberar espaço ou peça ao suporte para aumentar o limite."
+            />
           </span>
         </div>
         {limitReached ? (

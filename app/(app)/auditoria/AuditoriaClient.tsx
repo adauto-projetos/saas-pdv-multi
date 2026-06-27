@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { getAuditAction } from "@/app/(app)/auditoria/actions";
+import { InfoButton } from "@/components/ui/help-tip";
 import { PageCard } from "@/components/ui/PageCard";
 import { centsToBRL } from "@/lib/format/money";
 import type { AuditReportDto } from "@/types/audit";
@@ -74,8 +75,12 @@ export function AuditoriaClient({ initial }: { initial: AuditReportDto }) {
       <PageCard>
         <div className="flex flex-wrap items-end gap-3 p-4">
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-semibold text-gray-400">
+            <label className="flex items-center text-[11px] font-semibold text-gray-400">
               Operador
+              <InfoButton
+                title="Filtrar a auditoria"
+                detail="Escolha um operador (ou 'Todos') e um período (De/Até) para ver o que cada um fez. O botão 'Hoje' filtra só o dia atual e 'Limpar' remove os filtros. Depois clique em 'Aplicar'."
+              />
             </label>
             <select
               value={operatorId}
@@ -144,7 +149,15 @@ export function AuditoriaClient({ initial }: { initial: AuditReportDto }) {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-gray-100 text-left text-[11px] uppercase tracking-wide text-gray-400">
-                <th className="px-4 py-3">Operador</th>
+                <th className="px-4 py-3">
+                  <span className="inline-flex items-center">
+                    Operador
+                    <InfoButton
+                      title="Como ler a tabela"
+                      detail="Cada linha é um operador. Vendas = nº de vendas; Σ Vendas = total faturado por ele; Caixa abre/fecha = quantas vezes abriu e fechou o caixa; Comandas (A/F/C) = Abertas / Fechadas / Canceladas; Estoque = nº de movimentações de estoque; Caixa mov. = lançamentos manuais de dinheiro (suprimento/sangria)."
+                    />
+                  </span>
+                </th>
                 <th className="px-3 py-3">Vendas</th>
                 <th className="px-3 py-3">Σ Vendas</th>
                 <th className="px-3 py-3">Caixa abre/fecha</th>

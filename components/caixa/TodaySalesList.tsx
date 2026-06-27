@@ -1,5 +1,6 @@
 "use client";
 
+import { InfoButton } from "@/components/ui/help-tip";
 import { PageCard, PageCardHeader } from "@/components/ui/PageCard";
 import { StatCard } from "@/components/ui/StatCard";
 import {
@@ -44,7 +45,15 @@ export function TodaySalesList({ sales }: { sales: SaleDto[] }) {
       </div>
 
       <PageCard>
-        <PageCardHeader>Histórico do dia</PageCardHeader>
+        <PageCardHeader>
+          <div className="flex items-center">
+            <span>Histórico do dia</span>
+            <InfoButton
+              title="Histórico de vendas do dia"
+              detail="Cada linha é uma venda finalizada no caixa hoje, com a hora, quantos itens, a forma de pagamento (Dinheiro, Pix, Cartão ou Fiado) e o total. Os cards acima resumem o total faturado, o número de vendas e o ticket médio (total dividido pelo número de vendas). Para ver dias anteriores, use a Auditoria ou o Lucro."
+            />
+          </div>
+        </PageCardHeader>
         {sales.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-gray-400">
             Nenhuma venda hoje ainda.
