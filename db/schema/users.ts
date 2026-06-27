@@ -10,6 +10,9 @@ export const users = pgTable("users", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
+  // nome de exibição do operador (RF03/0014F). Nullable: o dono (signup) não
+  // informa nome — a exibição cai para o email nesse caso.
+  name: text("name"),
   passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

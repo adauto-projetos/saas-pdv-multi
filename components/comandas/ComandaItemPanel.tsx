@@ -29,6 +29,7 @@ import { centsToBRL } from "@/lib/format/money";
 import type { ComandaDto } from "@/types/comanda";
 
 import { AddItemForm } from "./AddItemForm";
+import { OverrideDialog, type OverrideCredentials } from "./OverrideDialog";
 import { ReprintButton } from "./ReprintButton";
 
 /**
@@ -39,6 +40,10 @@ import { ReprintButton } from "./ReprintButton";
 export function ComandaItemPanel({ comanda }: { comanda: ComandaDto }) {
   const router = useRouter();
   const [removingId, setRemovingId] = React.useState<string | null>(null);
+  const [pendingItem, setPendingItem] = React.useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   async function handleRemove(itemId: string, name: string) {
     setRemovingId(itemId);
@@ -49,11 +54,30 @@ export function ComandaItemPanel({ comanda }: { comanda: ComandaDto }) {
     setRemovingId(null);
 
     if (!res.ok) {
+      // SF02: sem permissão "comanda" → abre o diálogo de override para este item.
+      if (res.overrideRequired) {
+        setPendingItem({ id: itemId, name });
+        return;
+      }
       toast.error(res.error);
       return;
     }
     toast.success(`${name} removido`);
     router.refresh();
+  }
+
+  /** Reenvia a remoção do item pendente com as credenciais do autorizador (SF02). */
+  async function handleAuthorizeRemove(credentials: OverrideCredentials) {
+    if (!pendingItem) return { ok: false, error: "Nenhum item selecionado." };
+    const res = await removeComandaItemAction(
+      { comandaId: comanda.id, itemId: pendingItem.id },
+      credentials,
+    );
+    if (!res.ok) return { ok: false, error: res.error };
+    toast.success(`${pendingItem.name} removido`);
+    setPendingItem(null);
+    router.refresh();
+    return { ok: true };
   }
 
   return (
@@ -153,6 +177,15 @@ export function ComandaItemPanel({ comanda }: { comanda: ComandaDto }) {
         <h4 className="text-sm font-medium">Lançar item</h4>
         <AddItemForm comandaId={comanda.id} />
       </div>
+
+      <OverrideDialog
+        open={pendingItem !== null}
+        onOpenChange={(next) => {
+          if (!next) setPendingItem(null);
+        }}
+        actionLabel="remover o item da comanda"
+        onAuthorize={handleAuthorizeRemove}
+      />
     </div>
   );
 }

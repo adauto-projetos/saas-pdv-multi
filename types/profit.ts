@@ -34,6 +34,9 @@ export type CashSessionDto = {
   closedAt: string | null;
   closedBy: string | null;
   countedCents: number | null;
+  /** Conferência de cartão/pix preenchida pelo operador no fechamento (0014F). */
+  countedCardCents: number | null;
+  countedPixCents: number | null;
   /** Esperado = opening + Σ dinheiro do turno (RN06). null enquanto aberta. */
   expectedCents: number | null;
   /** Divergência = contado − esperado (sobra/falta — RN07). null enquanto aberta. */

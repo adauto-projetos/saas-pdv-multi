@@ -72,6 +72,9 @@ export async function closeCashSession(
     const closed = await data.closeCashSession(tx, ctx.tenantId, open.id, {
       closedBy: ctx.userId,
       countedCents: input.countedCents,
+      // Conferência de cartão/pix: o operador só preenche (0014F). Default 0.
+      countedCardCents: input.countedCardCents ?? 0,
+      countedPixCents: input.countedPixCents ?? 0,
       expectedCents,
       divergenceCents,
     });

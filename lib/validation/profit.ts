@@ -14,12 +14,26 @@ export const openSessionSchema = z.object({
     .min(0, "Valor não pode ser negativo"),
 });
 
-/** Fechamento de turno: contagem real da gaveta — inteiro ≥ 0 (RN02/RF06). */
+/**
+ * Fechamento de turno: contagem real informada pelo operador (RN02/RF06).
+ * `countedCents` = dinheiro na gaveta; `countedCardCents`/`countedPixCents` =
+ * conferência de cartão/pix (0014F — o operador só preenche, opcionais, ≥ 0).
+ */
 export const closeSessionSchema = z.object({
   countedCents: z
     .number()
     .int("Valor deve ser inteiro (centavos)")
     .min(0, "Valor não pode ser negativo"),
+  countedCardCents: z
+    .number()
+    .int("Valor deve ser inteiro (centavos)")
+    .min(0, "Valor não pode ser negativo")
+    .optional(),
+  countedPixCents: z
+    .number()
+    .int("Valor deve ser inteiro (centavos)")
+    .min(0, "Valor não pode ser negativo")
+    .optional(),
 });
 
 /** Filtro de período do lucro / histórico de sessões — from/to opcionais (RF02/RF07). */

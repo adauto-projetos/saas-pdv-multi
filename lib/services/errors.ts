@@ -53,7 +53,18 @@ export class UnauthorizedError extends AppError {
 /** Resultado seguro de uma Server Action. */
 export type ActionResult<T> =
   | { ok: true; data: T; printWarning?: string }
-  | { ok: false; error: string; fieldErrors?: Record<string, string> };
+  | {
+      ok: false;
+      error: string;
+      fieldErrors?: Record<string, string>;
+      // Override de ação sensível (0014F/SF02): quando uma ação sensível falha por
+      // falta de permissão, a action sinaliza que a UI deve abrir o diálogo de
+      // autorização em vez de mostrar um erro seco. `actionCode`/`targetRef`
+      // permitem reenviar a MESMA ação com as credenciais do autorizador.
+      overrideRequired?: boolean;
+      actionCode?: string;
+      targetRef?: string;
+    };
 
 /** Código de erro do Postgres para violação de unique constraint. */
 export const PG_UNIQUE_VIOLATION = "23505";

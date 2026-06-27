@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
+import { runWithOverride } from "@/lib/services/permissions/override-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -45,6 +47,7 @@ export async function openComandaAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "comanda");
     const comanda = await openComanda(ctx, parsed.data);
     revalidatePath("/comandas");
     return { ok: true, data: comanda };
@@ -64,6 +67,7 @@ export async function addComandaItemAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "comanda");
     // Serviço retorna comanda + item inserido (0007F/RF01).
     const { comanda, item } = await addComandaItem(ctx, parsed.data);
     revalidatePath("/comandas");
@@ -81,9 +85,13 @@ export async function addComandaItemAction(
   }
 }
 
-/** RF03 — remove item de comanda aberta (estorna estoque — RN03). */
+/**
+ * RF03 — remove item de comanda aberta (estorna estoque — RN03). Ação sensível
+ * (0014F/SF02): sem o código `comanda`, exige override de Administrador.
+ */
 export async function removeComandaItemAction(
   input: unknown,
+  credentials?: unknown,
 ): Promise<ActionResult<ComandaDto>> {
   const parsed = removeComandaItemSchema.safeParse(input);
   if (!parsed.success) {
@@ -92,17 +100,27 @@ export async function removeComandaItemAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
-    const comanda = await removeComandaItem(ctx, parsed.data);
+    const result = await runWithOverride(ctx, {
+      actionCode: "remover_item_comanda",
+      targetRef: parsed.data.itemId,
+      credentials,
+      run: () => removeComandaItem(ctx, parsed.data),
+    });
+    if (!result.ok) return result;
     revalidatePath("/comandas");
-    return { ok: true, data: comanda };
+    return { ok: true, data: result.data };
   } catch (error) {
     return toActionError(error);
   }
 }
 
-/** RF04 — cancela comanda aberta (estorna todos os itens, sem venda — RN06). */
+/**
+ * RF04 — cancela comanda aberta (estorna todos os itens, sem venda — RN06). Ação
+ * sensível (0014F/SF02): sem o código `comanda`, exige override de Administrador.
+ */
 export async function cancelComandaAction(
   input: unknown,
+  credentials?: unknown,
 ): Promise<ActionResult<ComandaDto>> {
   const parsed = comandaIdSchema.safeParse(input);
   if (!parsed.success) {
@@ -111,9 +129,15 @@ export async function cancelComandaAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
-    const comanda = await cancelComanda(ctx, parsed.data);
+    const result = await runWithOverride(ctx, {
+      actionCode: "cancelar_comanda",
+      targetRef: parsed.data.comandaId,
+      credentials,
+      run: () => cancelComanda(ctx, parsed.data),
+    });
+    if (!result.ok) return result;
     revalidatePath("/comandas");
-    return { ok: true, data: comanda };
+    return { ok: true, data: result.data };
   } catch (error) {
     return toActionError(error);
   }
@@ -133,6 +157,7 @@ export async function closeComandaAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "comanda");
     const sale = await closeComanda(ctx, parsed.data);
     revalidatePath("/comandas");
     // Seção pós-commit: tenantName + print são side-effects (RN04).
@@ -171,6 +196,7 @@ export async function getComandaAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "comanda");
     const comanda = await getComanda(ctx, parsed.data);
     return { ok: true, data: comanda };
   } catch (error) {
@@ -184,6 +210,7 @@ export async function listOpenComandasAction(): Promise<
 > {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "comanda");
     return { ok: true, data: await listOpenComandas(ctx) };
   } catch (error) {
     return toActionError(error);
@@ -200,6 +227,7 @@ export async function listComandaHistoryAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "comanda");
     return { ok: true, data: await listComandaHistory(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);

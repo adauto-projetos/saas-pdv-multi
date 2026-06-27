@@ -45,8 +45,12 @@ export const cashSessions = pgTable(
     closedBy: uuid("closed_by").references(() => users.id, {
       onDelete: "restrict",
     }),
-    // Contagem real da gaveta informada pelo operador no fechamento.
+    // Contagem real da gaveta (dinheiro) informada pelo operador no fechamento.
     countedCents: integer("counted_cents"),
+    // Conferência de cartão/pix informada pelo operador no fechamento (0014F):
+    // o operador SÓ preenche; não vê o esperado. O dono concilia depois.
+    countedCardCents: integer("counted_card_cents"),
+    countedPixCents: integer("counted_pix_cents"),
     // Esperado = opening_balance + SUM(cash_movements.amount_cents WHERE session_id).
     expectedCents: integer("expected_cents"),
     // Divergência = contado − esperado (pode ser negativo = falta ou positivo = sobra).

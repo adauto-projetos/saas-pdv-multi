@@ -10,6 +10,13 @@ vi.mock("@/lib/auth", () => ({
   ),
 }));
 
+// Guard de permissão (0014F): isolado em permissions.test.ts; aqui é no-op para
+// testar a action sem tocar o banco.
+vi.mock("@/lib/auth/permissions", () => ({
+  requirePermission: vi.fn(async () => {}),
+  requireAnyPermission: vi.fn(async () => {}),
+}));
+
 vi.mock("@/lib/services/products/product-service", () => ({
   createProduct: vi.fn(async (ctx: AuthContext, input: Record<string, unknown>) => ({
     id: "p1",

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { withUserRls } from "@/db/rls";
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -13,6 +14,7 @@ import {
   lookupProductByBarcode,
   searchProducts,
 } from "@/lib/services/sales/lookup";
+import { getOpenSession } from "@/lib/services/profit/cash-session-service";
 import { finalizeSale, listTodaySales } from "@/lib/services/sales/sale-service";
 import { finalizeSaleSchema } from "@/lib/validation/sale";
 import type { ProductDto } from "@/types/product";
@@ -23,6 +25,7 @@ export async function lookupProductByBarcodeAction(
 ): Promise<ActionResult<ProductDto | null>> {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "caixa");
     return { ok: true, data: await lookupProductByBarcode(ctx, barcode) };
   } catch (error) {
     return toActionError(error);
@@ -34,6 +37,7 @@ export async function searchProductsAction(
 ): Promise<ActionResult<ProductDto[]>> {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "caixa");
     return { ok: true, data: await searchProducts(ctx, query) };
   } catch (error) {
     return toActionError(error);
@@ -53,6 +57,15 @@ export async function finalizeSaleAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "caixa");
+    // Exige um turno de caixa aberto antes de registrar a venda.
+    const openSession = await getOpenSession(ctx);
+    if (!openSession) {
+      return {
+        ok: false,
+        error: "Abra o caixa antes de registrar vendas.",
+      };
+    }
     const sale = await finalizeSale(ctx, parsed.data);
     revalidatePath("/caixa");
     revalidatePath("/vendas");
@@ -85,6 +98,7 @@ export async function finalizeSaleAction(
 export async function listTodaySalesAction(): Promise<ActionResult<SaleDto[]>> {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "vendas");
     return { ok: true, data: await listTodaySales(ctx) };
   } catch (error) {
     return toActionError(error);

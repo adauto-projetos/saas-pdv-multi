@@ -6,31 +6,38 @@ import { useState, type CSSProperties } from "react";
 import {
   BarChart3,
   ClipboardList,
+  KeyRound,
   Layers,
   LayoutDashboard,
   LogOut,
   MoreHorizontal,
   Package,
+  ScrollText,
   Settings,
   Shield,
   TrendingUp,
+  UserCog,
   Wallet,
 } from "lucide-react";
 
 import { logoutAction } from "@/app/(auth)/actions";
+import type { PermissionCode } from "@/lib/validation/usuarios";
 
 const NAV_PRIMARY = [
-  { href: "/caixa", label: "Caixa", icon: LayoutDashboard, color: "#4f46e5" },
-  { href: "/comandas", label: "Comandas", icon: ClipboardList, color: "#e11d48" },
-  { href: "/products", label: "Produtos", icon: Package, color: "#ea580c" },
-  { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet, color: "#16a34a" },
+  { href: "/caixa", label: "Caixa", icon: LayoutDashboard, color: "#4f46e5", perm: "caixa" },
+  { href: "/comandas", label: "Comandas", icon: ClipboardList, color: "#e11d48", perm: "comanda" },
+  { href: "/products", label: "Produtos", icon: Package, color: "#ea580c", perm: "produtos" },
+  { href: "/financeiro/caixa", label: "Financeiro", icon: Wallet, color: "#16a34a", perm: "financeiro" },
 ] as const;
 
 const NAV_DRAWER = [
-  { href: "/vendas", label: "Vendas", icon: BarChart3, color: "#2563eb" },
-  { href: "/estoque", label: "Estoque", icon: Layers, color: "#0d9488" },
-  { href: "/lucro", label: "Lucro", icon: TrendingUp, color: "#d97706" },
-  { href: "/settings", label: "Configurações", icon: Settings, color: "#64748b" },
+  { href: "/vendas", label: "Vendas", icon: BarChart3, color: "#2563eb", perm: "vendas" },
+  { href: "/estoque", label: "Estoque", icon: Layers, color: "#0d9488", perm: "estoque" },
+  { href: "/lucro", label: "Lucro", icon: TrendingUp, color: "#d97706", perm: "financeiro" },
+  { href: "/usuarios", label: "Usuários", icon: UserCog, color: "#0891b2", perm: "gerenciar_usuarios" },
+  { href: "/auditoria", label: "Auditoria", icon: ScrollText, color: "#9333ea", perm: "gerenciar_usuarios" },
+  { href: "/settings", label: "Configurações", icon: Settings, color: "#64748b", perm: "loja" },
+  { href: "/perfil", label: "Meu perfil", icon: KeyRound, color: "#475569", perm: undefined },
 ] as const;
 
 /** Chip arredondado com ícone colorido. Ativo → preenchido na cor. */
@@ -51,12 +58,27 @@ function chipStyle(color: string, active: boolean): CSSProperties {
 interface BottomNavProps {
   className?: string;
   isFounder?: boolean;
+  permissions?: PermissionCode[];
+  canSeeAll?: boolean;
 }
 
-export function BottomNav({ className, isFounder = false }: BottomNavProps) {
+export function BottomNav({
+  className,
+  isFounder = false,
+  permissions = [],
+  canSeeAll = false,
+}: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const granted = new Set(permissions);
+  const seeAll = canSeeAll || isFounder;
+  const navPrimary = NAV_PRIMARY.filter(
+    (i) => !i.perm || seeAll || granted.has(i.perm),
+  );
+  const navDrawer = NAV_DRAWER.filter(
+    (i) => !i.perm || seeAll || granted.has(i.perm),
+  );
 
   async function handleSignOut() {
     setDrawerOpen(false);
@@ -90,7 +112,7 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
           role="menu"
           className="fixed bottom-16 left-4 right-4 z-50 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg"
         >
-          {NAV_DRAWER.map(({ href, label, icon: Icon, color }) => {
+          {navDrawer.map(({ href, label, icon: Icon, color }) => {
             const active = isActive(href);
             return (
               <Link
@@ -174,7 +196,7 @@ export function BottomNav({ className, isFounder = false }: BottomNavProps) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex items-center justify-around">
-          {NAV_PRIMARY.map(({ href, label, icon: Icon, color }) => {
+          {navPrimary.map(({ href, label, icon: Icon, color }) => {
             const active = isActive(href);
             return (
               <Link

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -17,6 +18,7 @@ export async function getDefaultMarkupAction(): Promise<
 > {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "loja");
     return { ok: true, data: await getDefaultMarkup(ctx) };
   } catch (error) {
     return toActionError(error);
@@ -36,6 +38,7 @@ export async function updateDefaultMarkupAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "loja");
     const settings = await updateDefaultMarkup(ctx, parsed.data.percent);
     revalidatePath("/settings");
     return { ok: true, data: settings };

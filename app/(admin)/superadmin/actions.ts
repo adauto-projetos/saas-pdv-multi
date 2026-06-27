@@ -14,9 +14,12 @@ import {
 } from "@/lib/services/admin/tenant-admin-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
-import { setMonthlyPlanPriceCents } from "@/lib/services/platform/settings-repository";
+import {
+  setMaxOperators,
+  setMonthlyPlanPriceCents,
+} from "@/lib/services/platform/settings-repository";
 import { insertSubscriptionLog, selectTenantById } from "@/lib/services/subscriptions/repository";
-import { planPriceSchema } from "@/lib/validation/platform";
+import { maxOperatorsSchema, planPriceSchema } from "@/lib/validation/platform";
 import { releaseMonthsSchema } from "@/lib/validation/subscription";
 
 export async function releaseSubscriptionAction(
@@ -172,6 +175,27 @@ export async function updatePlanPriceAction(
     await setMonthlyPlanPriceCents(parsed.data.priceCents, userId);
     revalidatePath("/superadmin");
     return { ok: true, data: { priceCents: parsed.data.priceCents } };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function updateMaxOperatorsAction(
+  maxOperators: number,
+): Promise<ActionResult<{ maxOperators: number }>> {
+  // RN: revalida no servidor (defesa em profundidade) — 0014F/SF03 RF02.
+  const parsed = maxOperatorsSchema.safeParse({ maxOperators });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Limite inválido",
+    };
+  }
+  try {
+    const { userId } = await requireFounder();
+    await setMaxOperators(parsed.data.maxOperators, userId);
+    revalidatePath("/superadmin");
+    return { ok: true, data: { maxOperators: parsed.data.maxOperators } };
   } catch (error) {
     return toActionError(error);
   }

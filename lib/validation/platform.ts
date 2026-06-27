@@ -19,3 +19,18 @@ export const planPriceSchema = z.object({
 });
 
 export type PlanPriceInput = z.infer<typeof planPriceSchema>;
+
+/**
+ * Teto de operadores: inteiro ≥ 1 (loja sempre pode ter ao menos um operador),
+ * com teto de sanidade. Revalidado no servidor (defesa em profundidade) — 0014F/SF03.
+ */
+export const maxOperatorsSchema = z.object({
+  maxOperators: z
+    .number()
+    .finite("Valor inválido")
+    .int("O limite deve ser um número inteiro")
+    .min(1, "O limite deve ser ao menos 1")
+    .max(1000, "Limite acima do máximo (1000)"),
+});
+
+export type MaxOperatorsInput = z.infer<typeof maxOperatorsSchema>;

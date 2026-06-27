@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { tenants, users } from "@/db/schema";
 import { getAuthUser } from "@/lib/auth/session";
+import { getNavPermissions } from "@/lib/auth/permissions";
 import { getImpersonatedTenantId } from "@/lib/auth/impersonation";
 import { getUserTenantId } from "@/lib/services/tenants/onboarding";
 import { getDaysUntilExpiry, getTenantStatus } from "@/lib/services/subscriptions/subscription-status";
@@ -52,6 +53,11 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  // Permissões para filtrar o menu (RF11). Owner recebe todas; founder
+  // impersonando vê tudo (canSeeAll). Operador, só os códigos concedidos.
+  const nav = await getNavPermissions(tenantId, user.id);
+  const canSeeAll = nav.isOwner || impersonating;
+
   let subscriptionStatus: "testando" | "ativa" | "travada" | null = null;
   let daysLeft = 0;
   let storeName = "";
@@ -93,7 +99,12 @@ export default async function AppLayout({
         className="flex h-screen flex-col overflow-hidden lg:flex-row"
         style={{ background: "var(--pdv-bg)" }}
       >
-        <AppSidebar userEmail={userRow?.email ?? ""} isFounder={userRow?.isFounder ?? false} />
+        <AppSidebar
+          userEmail={userRow?.email ?? ""}
+          isFounder={userRow?.isFounder ?? false}
+          permissions={nav.codes}
+          canSeeAll={canSeeAll}
+        />
         <main className="flex flex-1 flex-col min-w-0 overflow-x-hidden overflow-y-auto pb-16 lg:pb-0">
           {impersonating && <ImpersonationBanner storeName={storeName} />}
           {showLocked && <SubscriptionLockedBanner />}
@@ -101,7 +112,12 @@ export default async function AppLayout({
           {showTrial && <SubscriptionTrialBanner daysLeft={daysLeft} />}
           {children}
         </main>
-        <BottomNav className="lg:hidden" isFounder={userRow?.isFounder ?? false} />
+        <BottomNav
+          className="lg:hidden"
+          isFounder={userRow?.isFounder ?? false}
+          permissions={nav.codes}
+          canSeeAll={canSeeAll}
+        />
       </div>
     </HelpProvider>
   );

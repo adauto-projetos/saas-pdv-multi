@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requireAnyPermission, requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -28,6 +29,8 @@ export async function registerCashInflowAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    // Suprimento/sangria são operação do registrador: liberado a "financeiro" OU "caixa".
+    await requireAnyPermission(ctx, ["financeiro", "caixa"]);
     const movement = await registerCashMovement(ctx, {
       ...parsed.data,
       type: "entrada",
@@ -49,6 +52,8 @@ export async function registerCashOutflowAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    // Suprimento/sangria são operação do registrador: liberado a "financeiro" OU "caixa".
+    await requireAnyPermission(ctx, ["financeiro", "caixa"]);
     const movement = await registerCashMovement(ctx, {
       ...parsed.data,
       type: "saida",
@@ -65,6 +70,7 @@ export async function getCashBalanceAction(): Promise<
 > {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "financeiro");
     return { ok: true, data: await getCashBalance(ctx) };
   } catch (error) {
     return toActionError(error);
@@ -80,6 +86,7 @@ export async function listCashMovementsAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "financeiro");
     return { ok: true, data: await listCashMovements(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);

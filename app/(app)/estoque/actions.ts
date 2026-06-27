@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -36,6 +37,7 @@ export async function recordEntryAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "estoque");
     const movement = await recordEntry(ctx, parsed.data);
     revalidatePath("/estoque");
     revalidatePath("/products");
@@ -55,6 +57,7 @@ export async function recordAdjustmentAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "estoque");
     const movement = await recordAdjustment(ctx, parsed.data);
     revalidatePath("/estoque");
     revalidatePath("/products");
@@ -73,6 +76,7 @@ export async function listMovementsAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "estoque");
     return { ok: true, data: await listMovements(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);
@@ -88,6 +92,7 @@ export async function setMinStockAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "estoque");
     const product = await setMinStock(ctx, parsed.data);
     revalidatePath("/estoque");
     revalidatePath("/products");
@@ -100,6 +105,7 @@ export async function setMinStockAction(
 export async function listLowStockAction(): Promise<ActionResult<ProductDto[]>> {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "estoque");
     return { ok: true, data: await listLowStock(ctx) };
   } catch (error) {
     return toActionError(error);

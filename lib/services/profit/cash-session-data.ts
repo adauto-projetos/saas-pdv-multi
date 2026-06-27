@@ -23,6 +23,8 @@ function toCashSessionDto(
     closedAt: row.closedAt ? row.closedAt.toISOString() : null,
     closedBy: row.closedBy,
     countedCents: row.countedCents,
+    countedCardCents: row.countedCardCents,
+    countedPixCents: row.countedPixCents,
     expectedCents: row.expectedCents,
     divergenceCents: row.divergenceCents,
     status: row.status as CashSessionStatus,
@@ -128,6 +130,8 @@ export async function closeCashSession(
   data: {
     closedBy: string;
     countedCents: number;
+    countedCardCents: number;
+    countedPixCents: number;
     expectedCents: number;
     divergenceCents: number;
   },
@@ -138,6 +142,8 @@ export async function closeCashSession(
       closedAt: new Date(),
       closedBy: data.closedBy,
       countedCents: data.countedCents,
+      countedCardCents: data.countedCardCents,
+      countedPixCents: data.countedPixCents,
       expectedCents: data.expectedCents,
       divergenceCents: data.divergenceCents,
       status: "fechada",

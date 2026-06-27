@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { z } from "zod";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requireAnyPermission, requirePermission } from "@/lib/auth/permissions";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import * as service from "@/lib/services/products/product-service";
@@ -39,6 +40,7 @@ export async function createProductAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
     const product = await service.createProduct(ctx, parsed.data);
     revalidatePath("/products");
     return { ok: true, data: product };
@@ -60,6 +62,7 @@ export async function updateProductAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
     const product = await service.updateProduct(ctx, parsed.data);
     revalidatePath("/products");
     return { ok: true, data: product };
@@ -71,6 +74,8 @@ export async function updateProductAction(
 export async function listProductsAction(): Promise<ActionResult<ProductDto[]>> {
   try {
     const ctx = await requireAuthContext();
+    // Leitura compartilhada: gestores de produto e operadores do PDV (caixa).
+    await requireAnyPermission(ctx, ["produtos", "caixa"]);
     return { ok: true, data: await service.listProducts(ctx) };
   } catch (error) {
     return toActionError(error);
@@ -86,6 +91,7 @@ export async function getProductAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
     return { ok: true, data: await service.getProduct(ctx, parsed.data.id) };
   } catch (error) {
     return toActionError(error);
@@ -106,6 +112,7 @@ export async function previewPriceOnCostChangeAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
     const suggestion = await service.previewPriceOnCostChange(ctx, parsed.data);
     return { ok: true, data: suggestion };
   } catch (error) {
@@ -127,6 +134,7 @@ export async function applyCostChangeAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "produtos");
     const product = await service.applyCostChange(ctx, parsed.data);
     revalidatePath("/products");
     return { ok: true, data: product };

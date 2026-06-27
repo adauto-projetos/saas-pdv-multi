@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
+import { runWithOverride } from "@/lib/services/permissions/override-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
 import {
@@ -34,6 +36,8 @@ export async function getProfitAction(
   }
   try {
     const ctx = await requireAuthContext();
+    // Lucro/margem é dado sensível → permissão "financeiro" (não "caixa").
+    await requirePermission(ctx, "financeiro");
     return { ok: true, data: await getProfitByPeriod(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);
@@ -51,6 +55,7 @@ export async function openCashSessionAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "caixa");
     const session = await openCashSession(ctx, parsed.data);
     revalidatePath("/lucro");
     revalidatePath("/financeiro/caixa");
@@ -60,9 +65,13 @@ export async function openCashSessionAction(
   }
 }
 
-/** RF06/RF07 — fecha o turno (esperado/contado/divergência). */
+/**
+ * RF06/RF07 — fecha o turno (esperado/contado/divergência). Ação sensível
+ * (0014F/SF02): sem o código `caixa`, exige override de Administrador.
+ */
 export async function closeCashSessionAction(
   input: unknown,
+  credentials?: unknown,
 ): Promise<ActionResult<CashSessionDto>> {
   const parsed = closeSessionSchema.safeParse(input);
   if (!parsed.success) {
@@ -71,10 +80,15 @@ export async function closeCashSessionAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
-    const session = await closeCashSession(ctx, parsed.data);
+    const result = await runWithOverride(ctx, {
+      actionCode: "fechar_caixa",
+      credentials,
+      run: () => closeCashSession(ctx, parsed.data),
+    });
+    if (!result.ok) return result;
     revalidatePath("/lucro");
     revalidatePath("/financeiro/caixa");
-    return { ok: true, data: session };
+    return { ok: true, data: result.data };
   } catch (error) {
     return toActionError(error);
   }
@@ -86,6 +100,7 @@ export async function getOpenSessionAction(): Promise<
 > {
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "caixa");
     return { ok: true, data: await getOpenSession(ctx) };
   } catch (error) {
     return toActionError(error);
@@ -102,6 +117,7 @@ export async function listSessionsAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "caixa");
     return { ok: true, data: await listSessions(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);

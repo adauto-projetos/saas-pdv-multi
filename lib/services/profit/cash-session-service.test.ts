@@ -66,6 +66,19 @@ suite("cash-session-service (integração)", () => {
       }),
     );
 
+  it("close: grava a conferência de cartão/pix preenchida pelo operador (0014F)", async () => {
+    await ensureNoOpenSession();
+    await openCashSession(ctx, { openingBalanceCents: 0 });
+    const closed = await closeCashSession(ctx, {
+      countedCents: 5000,
+      countedCardCents: 12000,
+      countedPixCents: 3000,
+    });
+    expect(closed.countedCents).toBe(5000);
+    expect(closed.countedCardCents).toBe(12000);
+    expect(closed.countedPixCents).toBe(3000);
+  });
+
   it("session-RF04-open: abrir cria sessão 'aberta' com saldo inicial", async () => {
     await ensureNoOpenSession();
     const session = await openCashSession(ctx, { openingBalanceCents: 5000 });

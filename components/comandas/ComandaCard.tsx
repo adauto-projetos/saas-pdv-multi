@@ -23,6 +23,7 @@ import type { ComandaDto, ComandaStatus } from "@/types/comanda";
 
 import { CloseComandaDialog } from "./CloseComandaDialog";
 import { ComandaItemPanel } from "./ComandaItemPanel";
+import { OverrideDialog, type OverrideCredentials } from "./OverrideDialog";
 
 function StatusBadge({ status }: { status: ComandaStatus }) {
   if (status === "aberta") {
@@ -63,8 +64,14 @@ export function ComandaCard({
   const router = useRouter();
   const [closeOpen, setCloseOpen] = React.useState(false);
   const [cancelling, setCancelling] = React.useState(false);
+  const [overrideOpen, setOverrideOpen] = React.useState(false);
 
   const isAberta = comanda.status === "aberta";
+
+  function applyCancelled() {
+    toast.success(`Comanda "${comanda.label}" cancelada`);
+    router.refresh();
+  }
 
   async function handleCancel() {
     setCancelling(true);
@@ -72,11 +79,24 @@ export function ComandaCard({
     setCancelling(false);
 
     if (!res.ok) {
+      // SF02: sem permissão "comanda" → abre o diálogo de override.
+      if (res.overrideRequired) {
+        setOverrideOpen(true);
+        return;
+      }
       toast.error(res.error);
       return;
     }
-    toast.success(`Comanda "${comanda.label}" cancelada`);
-    router.refresh();
+    applyCancelled();
+  }
+
+  /** Reenvia o cancelamento com as credenciais do autorizador (SF02). */
+  async function handleAuthorizeCancel(credentials: OverrideCredentials) {
+    const res = await cancelComandaAction({ comandaId: comanda.id }, credentials);
+    if (!res.ok) return { ok: false, error: res.error };
+    setOverrideOpen(false);
+    applyCancelled();
+    return { ok: true };
   }
 
   return (
@@ -201,6 +221,13 @@ export function ComandaCard({
           onOpenChange={setCloseOpen}
         />
       ) : null}
+
+      <OverrideDialog
+        open={overrideOpen}
+        onOpenChange={setOverrideOpen}
+        actionLabel="cancelar a comanda"
+        onAuthorize={handleAuthorizeCancel}
+      />
     </PageCard>
   );
 }

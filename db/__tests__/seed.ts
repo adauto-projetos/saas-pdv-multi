@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
+import postgres from "postgres";
 
 import { db } from "@/db";
+import { hashPassword } from "@/lib/auth/password";
 import {
   cashMovements,
   cashSessions,
@@ -12,8 +14,10 @@ import {
   receivables,
   tenantMembers,
   tenants,
+  userPermissions,
   users,
 } from "@/db/schema";
+import type { PermissionCode } from "@/lib/validation/usuarios";
 import type { ProductUnit } from "@/types/product";
 
 /**
@@ -43,6 +47,17 @@ export async function deleteTestUser(userId: string): Promise<void> {
   await db.delete(users).where(eq(users.id, userId));
 }
 
+/** Grava uma senha bcrypt real para o usuário (testes de override/login). */
+export async function setUserPassword(
+  userId: string,
+  plain: string,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ passwordHash: await hashPassword(plain) })
+    .where(eq(users.id, userId));
+}
+
 export async function seedTenant(
   userId: string,
   name = "Loja Teste",
@@ -61,6 +76,71 @@ export async function seedTenant(
 /** Remove o tenant (cascade apaga members, products, sales e sale_items). */
 export async function cleanupTenant(tenantId: string): Promise<void> {
   await db.delete(tenants).where(eq(tenants.id, tenantId));
+}
+
+/**
+ * Serializa seções de teste que mutam o singleton GLOBAL `platform_settings`
+ * (ex.: `max_operators`) entre arquivos de teste que rodam em paralelo (workers).
+ *
+ * Usa um advisory lock de SESSÃO numa conexão DEDICADA (fora do pool do `db`):
+ * assim segurar o lock não consome um slot do pool — `fn` pode abrir suas próprias
+ * transações (ex.: `createOperator`) sem risco de deadlock por exaustão de
+ * conexões. Serializa entre processos via lock no Postgres.
+ */
+export async function withGlobalSettingsLock<T>(
+  fn: () => Promise<T>,
+): Promise<T> {
+  const url = process.env.DATABASE_URL ?? "";
+  const lockClient = postgres(url, { max: 1, prepare: false });
+  try {
+    await lockClient`select pg_advisory_lock(914003)`;
+    return await fn();
+  } finally {
+    await lockClient`select pg_advisory_unlock(914003)`;
+    await lockClient.end();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Operadores + permissões seed helpers (0014F/SF01). Owner `db` (bypassa RLS).
+// ---------------------------------------------------------------------------
+
+/**
+ * Cria um operador (usuário + vínculo `operator`) no tenant, com permissões
+ * opcionais. Retorna o userId/email. Bypassa RLS — correto para semear teste.
+ */
+export async function seedOperator(
+  tenantId: string,
+  opts: {
+    permissions?: PermissionCode[];
+    isActive?: boolean;
+    name?: string;
+    /** Senha em texto puro; se dada, gravada como bcrypt (testes de override). */
+    password?: string;
+  } = {},
+): Promise<{ userId: string; email: string }> {
+  const { userId, email } = await createTestUser();
+  if (opts.password) await setUserPassword(userId, opts.password);
+  if (opts.name) {
+    await db.update(users).set({ name: opts.name }).where(eq(users.id, userId));
+  }
+  await db.insert(tenantMembers).values({
+    tenantId,
+    userId,
+    role: "operator",
+    isActive: opts.isActive ?? true,
+  });
+  if (opts.permissions && opts.permissions.length > 0) {
+    await db.insert(userPermissions).values(
+      opts.permissions.map((code) => ({
+        tenantId,
+        userId,
+        permissionCode: code,
+        grantedBy: null,
+      })),
+    );
+  }
+  return { userId, email };
 }
 
 export async function seedProduct(

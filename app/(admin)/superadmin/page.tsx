@@ -7,8 +7,12 @@ import {
   listAllTenantsWithStats,
 } from "@/lib/services/admin/tenant-admin-service";
 import type { TenantStatus } from "@/lib/services/subscriptions/subscription-status";
-import { getMonthlyPlanPriceCents } from "@/lib/services/platform/settings-repository";
+import {
+  getMaxOperators,
+  getMonthlyPlanPriceCents,
+} from "@/lib/services/platform/settings-repository";
 import { ExpiringTenantsList } from "@/components/admin/expiring-tenants-list";
+import { MaxOperatorsSettings } from "@/components/admin/max-operators-settings";
 import { MetricsCards } from "@/components/admin/metrics-cards";
 import { PlanPriceSettings } from "@/components/admin/plan-price-settings";
 import { TenantTable } from "@/components/admin/tenant-table";
@@ -23,10 +27,11 @@ export default async function AdminPage() {
     throw error;
   }
 
-  const [tenants, expiring, monthlyPriceCents] = await Promise.all([
+  const [tenants, expiring, monthlyPriceCents, maxOperators] = await Promise.all([
     listAllTenantsWithStats(),
     getExpiringTenants(3),
     getMonthlyPlanPriceCents(),
+    getMaxOperators(),
   ]);
 
   const statusCounts: Record<TenantStatus, number> = {
@@ -59,6 +64,10 @@ export default async function AdminPage() {
 
       <div style={{ marginTop: 28 }}>
         <PlanPriceSettings initialPriceCents={monthlyPriceCents} />
+      </div>
+
+      <div style={{ marginTop: 28 }}>
+        <MaxOperatorsSettings initialMaxOperators={maxOperators} />
       </div>
 
       {expiring.length > 0 && (

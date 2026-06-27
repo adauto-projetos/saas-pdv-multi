@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAuthContext } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth/permissions";
 import { requireActiveTenant } from "@/lib/auth/tenant-guard";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -32,6 +33,7 @@ export async function createPayableAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "financeiro");
     const payable = await createPayable(ctx, parsed.data);
     revalidatePath("/financeiro/pagar");
     return { ok: true, data: payable };
@@ -49,6 +51,7 @@ export async function listPayablesAction(
   }
   try {
     const ctx = await requireAuthContext();
+    await requirePermission(ctx, "financeiro");
     return { ok: true, data: await listPayables(ctx, parsed.data) };
   } catch (error) {
     return toActionError(error);
@@ -65,6 +68,7 @@ export async function recordPayablePaymentAction(
   try {
     const ctx = await requireAuthContext();
     await requireActiveTenant(ctx.tenantId);
+    await requirePermission(ctx, "financeiro");
     const payable = await recordPayablePayment(ctx, parsed.data);
     revalidatePath("/financeiro/pagar");
     return { ok: true, data: payable };

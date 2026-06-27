@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { subscriptionLog, tenantMembers, tenants, users } from "@/db/schema";
@@ -51,12 +51,18 @@ export async function getUserByEmail(email: string) {
 /**
  * Resolve o tenant do usuário a partir do vínculo (sessão -> tenantId). Filtra por
  * userId explicitamente; usado pela camada de actions para montar o AuthContext.
+ *
+ * Operador desativado (`is_active=false`) é tratado como SEM loja: o vínculo é
+ * ignorado aqui, então a sessão é rejeitada por request — desligamento tem efeito
+ * imediato, sem esperar o cookie expirar (RF15/RN04 — 0014F).
  */
 export async function getUserTenantId(userId: string): Promise<string | null> {
   const [row] = await db
     .select({ tenantId: tenantMembers.tenantId })
     .from(tenantMembers)
-    .where(eq(tenantMembers.userId, userId))
+    .where(
+      and(eq(tenantMembers.userId, userId), eq(tenantMembers.isActive, true)),
+    )
     .limit(1);
   return row?.tenantId ?? null;
 }

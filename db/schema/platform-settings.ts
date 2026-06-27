@@ -24,6 +24,10 @@ export const platformSettings = pgTable("platform_settings", {
   // Preço do plano mensal em centavos (regra do projeto: dinheiro = inteiro em
   // centavos). 0 = ainda não definido — o signup não exibe valor enquanto for 0.
   monthlyPriceCents: integer("monthly_price_cents").notNull().default(0),
+  // Teto global de operadores por loja (0014F/SF03). Default 3 — o founder edita
+  // no painel super admin sem deploy. Global (um plano único); vira gancho de
+  // receita por plano quando surgirem tiers. Owner não conta no teto (RN02).
+  maxOperators: integer("max_operators").notNull().default(3),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
