@@ -1,0 +1,1 @@
+{"ts":"2026-06-27T22:50:21Z","agent":"/hotfix","type":"fix","slug":"super-admin-impersonation-bypass","what":"founder impersonando bypassa guards de permissao","files":["types/product.ts","lib/auth.ts","lib/auth/permissions.ts"]}

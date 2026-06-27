@@ -25,6 +25,10 @@ export async function hasPermission(
   ctx: AuthContext,
   code: PermissionCode,
 ): Promise<boolean> {
+  // Founder impersonando a loja (0011F/SF03): acesso total para dar suporte,
+  // mesmo sem vínculo em tenant_members. Espelha o `canSeeAll` do menu (0017H).
+  if (ctx.isImpersonating) return true;
+
   const [member] = await db
     .select({ role: tenantMembers.role, isActive: tenantMembers.isActive })
     .from(tenantMembers)
@@ -83,6 +87,9 @@ export async function requireAnyPermission(
   ctx: AuthContext,
   codes: PermissionCode[],
 ): Promise<void> {
+  // Founder impersonando: acesso total (0017H, ver hasPermission).
+  if (ctx.isImpersonating) return;
+
   const [member] = await db
     .select({ role: tenantMembers.role, isActive: tenantMembers.isActive })
     .from(tenantMembers)
@@ -121,6 +128,9 @@ export async function requireAnyPermission(
 
 /** True se o usuário é o dono (`role='owner'`) da loja do contexto. */
 export async function isOwner(ctx: AuthContext): Promise<boolean> {
+  // Founder impersonando age como dono para fins de suporte (0017H).
+  if (ctx.isImpersonating) return true;
+
   const [member] = await db
     .select({ role: tenantMembers.role })
     .from(tenantMembers)

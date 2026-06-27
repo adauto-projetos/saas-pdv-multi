@@ -20,6 +20,28 @@ import {
 
 const suite = HAS_DB ? describe : describe.skip;
 
+// Bypass de founder impersonando (0017H): não toca o banco — short-circuita antes
+// da query. Roda sempre, mesmo sem DATABASE_URL.
+describe("founder impersonando bypassa os guards (0017H)", () => {
+  const ctx = { userId: "founder1", tenantId: "tImp", isImpersonating: true };
+
+  it("hasPermission retorna true para qualquer código", async () => {
+    expect(await hasPermission(ctx, "loja")).toBe(true);
+    expect(await hasPermission(ctx, "financeiro")).toBe(true);
+  });
+
+  it("requirePermission e requireAnyPermission não lançam", async () => {
+    await expect(requirePermission(ctx, "produtos")).resolves.toBeUndefined();
+    await expect(
+      requireAnyPermission(ctx, ["financeiro", "caixa"]),
+    ).resolves.toBeUndefined();
+  });
+
+  it("isOwner retorna true (age como dono para suporte)", async () => {
+    expect(await isOwner(ctx)).toBe(true);
+  });
+});
+
 suite("requirePermission / hasPermission (RF09)", () => {
   let owner = { userId: "", email: "" };
   let tenantId = "";

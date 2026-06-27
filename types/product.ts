@@ -50,4 +50,11 @@ export type TenantSettingsDto = {
 export type AuthContext = {
   userId: string;
   tenantId: string;
+  /**
+   * Super admin (founder) operando a loja via impersonação (0011F/SF03). Quando
+   * true, os guards de permissão (0014F) liberam acesso total — o founder não tem
+   * vínculo em `tenant_members` da loja-alvo, mas precisa de tudo para dar suporte.
+   * Espelha o `canSeeAll` do menu (app/(app)/layout.tsx).
+   */
+  isImpersonating?: boolean;
 };

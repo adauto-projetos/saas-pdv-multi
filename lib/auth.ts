@@ -20,11 +20,13 @@ export async function requireAuthContext(): Promise<AuthContext> {
   if (!user) throw new UnauthorizedError();
 
   let tenantId = await getUserTenantId(user.id);
+  let isImpersonating = false;
 
   if (!tenantId) {
     const impersonated = await getImpersonatedTenantId();
     if (impersonated && (await selectIsFounder(user.id))) {
       tenantId = impersonated;
+      isImpersonating = true;
     }
   }
 
@@ -32,5 +34,5 @@ export async function requireAuthContext(): Promise<AuthContext> {
     throw new UnauthorizedError("Usuário sem loja associada");
   }
 
-  return { userId: user.id, tenantId };
+  return { userId: user.id, tenantId, isImpersonating };
 }
