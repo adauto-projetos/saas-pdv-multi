@@ -46,7 +46,11 @@ describe("requireAuthContext (RN05)", () => {
   it("retorna o contexto com userId + tenantId da sessão", async () => {
     mockedGetAuthUser.mockResolvedValue({ id: "u1" });
     mockedGetUserTenantId.mockResolvedValue("t1");
-    expect(await requireAuthContext()).toEqual({ userId: "u1", tenantId: "t1" });
+    expect(await requireAuthContext()).toEqual({
+      userId: "u1",
+      tenantId: "t1",
+      isImpersonating: false,
+    });
   });
 
   it("T06 — founder sem loja própria + cookie impersona o tenant-alvo (SF03 RF11)", async () => {
@@ -54,7 +58,11 @@ describe("requireAuthContext (RN05)", () => {
     mockedGetUserTenantId.mockResolvedValue(null);
     mockedGetImpersonatedTenantId.mockResolvedValue("tImp");
     mockedSelectIsFounder.mockResolvedValue(true);
-    expect(await requireAuthContext()).toEqual({ userId: "founder1", tenantId: "tImp" });
+    expect(await requireAuthContext()).toEqual({
+      userId: "founder1",
+      tenantId: "tImp",
+      isImpersonating: true,
+    });
   });
 
   it("T06b — não-founder com cookie de impersonação é ignorado (RN01)", async () => {
