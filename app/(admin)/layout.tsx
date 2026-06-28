@@ -54,7 +54,7 @@ export default async function AdminLayout({
               letterSpacing: "-0.3px",
             }}
           >
-            PDV<span style={{ color: "#818cf8" }}>.multi</span>
+            PDV<span style={{ color: "#818cf8" }}>.ART</span>.br
             <span style={{ color: "#64748b", fontWeight: 600, marginLeft: 8 }}>
               / Admin
             </span>

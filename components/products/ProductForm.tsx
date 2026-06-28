@@ -5,6 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { EmojiPicker } from "@/components/products/EmojiPicker";
 import { MarkupCalculatorFields } from "@/components/products/MarkupCalculatorFields";
 import { ProductImageUpload } from "@/components/products/ProductImageUpload";
 import { Button } from "@/components/ui/button";
@@ -150,14 +151,7 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="emoji">Emoji do produto</Label>
-          <Input
-            id="emoji"
-            className="text-base"
-            value={emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-            placeholder="Ex.: 🍺 🥤 🍔"
-            maxLength={10}
-          />
+          <EmojiPicker value={emoji} onChange={setEmoji} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="category">

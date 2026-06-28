@@ -47,21 +47,36 @@ function quickAmounts(totalCents: number): number[] {
   return [roundUp, ...bills].slice(0, 4);
 }
 
-function printInBrowser(receipt: ReceiptDto): void {
+/** Escapa caracteres especiais para inserção segura em HTML (nome da loja é dado do usuário). */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Monta o HTML do cupom impresso. Pura (sem efeitos) para ser testável.
+ * Cabeçalho = nome da loja do tenant; vazio cai para a marca "PDV.ART.br" (RN02).
+ * Rodapé discreto "via PDV.ART.br" (RF05).
+ */
+export function buildReceiptHtml(receipt: ReceiptDto): string {
   const fmt = (cents: number) =>
     (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const date = new Date(receipt.createdAt).toLocaleString("pt-BR");
-  const method = METHOD_LABELS[receipt.paymentMethod] ?? receipt.paymentMethod;
+  const method = escapeHtml(METHOD_LABELS[receipt.paymentMethod] ?? receipt.paymentMethod);
+  const storeName = escapeHtml(receipt.storeName || "PDV.ART.br");
 
   const itemRows = receipt.items
     .map(
       (item) =>
-        `<div class="row"><span>${item.quantity % 1 === 0 ? item.quantity.toFixed(0) : item.quantity.toFixed(3)} ${item.unit} ${item.name}</span><span>${fmt(item.subtotalCents)}</span></div>`,
+        `<div class="row"><span>${item.quantity % 1 === 0 ? item.quantity.toFixed(0) : item.quantity.toFixed(3)} ${escapeHtml(item.unit)} ${escapeHtml(item.name)}</span><span>${fmt(item.subtotalCents)}</span></div>`,
     )
     .join("");
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -71,11 +86,12 @@ function printInBrowser(receipt: ReceiptDto): void {
   .divider { border-top: 1px dashed #000; margin: 6px 0; }
   .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
   .total { font-size: 16px; font-weight: bold; margin-top: 4px; }
+  .brand { text-align: center; font-size: 10px; color: #666; margin-top: 6px; }
   @media print { body { margin: 0; } }
 </style>
 </head>
 <body>
-  <h1>PDV.multi</h1>
+  <h1>${storeName}</h1>
   <p style="text-align:center;margin:2px 0">${date}</p>
   <div class="divider"></div>
   ${itemRows}
@@ -84,9 +100,13 @@ function printInBrowser(receipt: ReceiptDto): void {
   <div class="row"><span>Pgto</span><span>${method}</span></div>
   <div class="divider"></div>
   <p style="text-align:center">Obrigado!</p>
+  <p class="brand">via PDV.ART.br</p>
 </body>
 </html>`;
+}
 
+function printInBrowser(receipt: ReceiptDto): void {
+  const html = buildReceiptHtml(receipt);
   const win = window.open("", "_blank", "width=340,height=600");
   if (!win) return;
   win.document.write(html);

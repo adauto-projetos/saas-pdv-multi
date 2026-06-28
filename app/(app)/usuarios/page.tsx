@@ -4,7 +4,7 @@ import { getMaxOperators } from "@/lib/services/platform/settings-repository";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Usuários — SAAS PDV.multi" };
+export const metadata = { title: "Usuários — PDV.ART.br" };
 
 export default async function UsuariosPage() {
   const [result, maxOperators] = await Promise.all([

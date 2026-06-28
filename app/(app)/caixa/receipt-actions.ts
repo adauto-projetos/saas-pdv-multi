@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { withUserRls } from "@/db/rls";
-import { saleItems, sales } from "@/db/schema";
+import { saleItems, sales, tenants } from "@/db/schema";
 import { requireAuthContext } from "@/lib/auth";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError, ValidationError } from "@/lib/services/errors";
@@ -21,6 +21,8 @@ export type ReceiptLineDto = {
 
 export type ReceiptDto = {
   saleId: string;
+  /** Nome da loja (tenant da sessão). Pode vir vazio; o fallback de marca é da UI (RN02). */
+  storeName: string;
   totalCents: number;
   paymentMethod: string;
   createdAt: string;
@@ -49,13 +51,20 @@ export async function getSaleReceiptAction(
         .where(
           and(eq(saleItems.saleId, saleId), eq(saleItems.tenantId, ctx.tenantId)),
         );
-      return { sale, lines };
+      // Nome da loja escopado ao tenant da sessão (sob RLS) — RN02.
+      const [tenant] = await tx
+        .select({ name: tenants.name })
+        .from(tenants)
+        .where(eq(tenants.id, ctx.tenantId))
+        .limit(1);
+      return { sale, lines, storeName: tenant?.name ?? "" };
     });
     if (!result) return { ok: false, error: "Venda não encontrada" };
     return {
       ok: true,
       data: {
         saleId: result.sale.id,
+        storeName: result.storeName,
         totalCents: result.sale.totalCents,
         paymentMethod: result.sale.paymentMethod,
         createdAt: result.sale.createdAt.toISOString(),

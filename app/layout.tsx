@@ -15,7 +15,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SAAS PDV.multi",
+  title: "PDV.ART.br",
   description: "PDV SaaS multi-tenant para comércios híbridos.",
 };
 

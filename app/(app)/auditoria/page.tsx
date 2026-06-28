@@ -3,7 +3,7 @@ import { AuditoriaClient } from "@/app/(app)/auditoria/AuditoriaClient";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Auditoria — SAAS PDV.multi" };
+export const metadata = { title: "Auditoria — PDV.ART.br" };
 
 export default async function AuditoriaPage() {
   const result = await getAuditAction();

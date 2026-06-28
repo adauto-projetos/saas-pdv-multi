@@ -218,39 +218,21 @@ export function AppSidebar({
         {/* Logo + botão de recolher/expandir */}
         <div
           style={{
-            padding: collapsed ? "20px 0 14px" : "24px 22px 18px",
+            padding: collapsed ? "18px 0 14px" : "22px 20px 16px",
             display: "flex",
+            flexDirection: collapsed ? "column" : "row",
             alignItems: "center",
             justifyContent: collapsed ? "center" : "space-between",
-            gap: 8,
+            gap: collapsed ? 12 : 8,
           }}
         >
-          {!collapsed && (
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-jakarta)",
-                  fontWeight: 800,
-                  fontSize: 21,
-                  letterSpacing: "-0.5px",
-                  color: "#0f172a",
-                }}
-              >
-                PDV<span style={{ color: "#4f46e5" }}>.multi</span>
-              </div>
-              <div
-                style={{
-                  fontSize: 10.5,
-                  letterSpacing: "2px",
-                  color: "#aab2c0",
-                  fontWeight: 700,
-                  marginTop: 3,
-                }}
-              >
-                PONTO DE VENDA
-              </div>
-            </div>
-          )}
+          {/* Logo completo na sidebar expandida; só o emblema quando recolhida. */}
+          <img
+            src={collapsed ? "/logo-icon.webp" : "/logo-full.webp"}
+            alt="PDV.ART.br"
+            loading="lazy"
+            style={{ height: collapsed ? 34 : 38, width: "auto" }}
+          />
           <HelpTip
             text={collapsed ? "Expandir menu" : "Recolher menu"}
             placement="bottom"

@@ -47,13 +47,13 @@ export function SignupForm({ monthlyPriceCents = 0 }: SignupFormProps) {
   }
 
   return (
-    <Card>
+    <Card className="border-0 bg-[#0c2a4d] text-white ring-1 ring-sky-400/30">
       <CardHeader>
         <CardTitle>Criar loja</CardTitle>
         <CardDescription>
           Crie sua conta e sua loja para começar a cadastrar produtos.
         </CardDescription>
-        <p className="mt-2 rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
+        <p className="mt-2 rounded-lg bg-sky-500/10 px-3 py-2 text-sm font-medium text-sky-100 ring-1 ring-sky-500/20">
           {monthlyPriceCents > 0 ? (
             <>
               7 dias grátis para testar. Depois,{" "}
@@ -101,7 +101,7 @@ export function SignupForm({ monthlyPriceCents = 0 }: SignupFormProps) {
             />
           </div>
         </CardContent>
-        <CardFooter className="mt-4 flex flex-col gap-3">
+        <CardFooter className="mt-4 flex flex-col gap-3 border-t-0 bg-transparent">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Criando..." : "Criar loja"}
           </Button>

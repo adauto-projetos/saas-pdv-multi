@@ -3,7 +3,7 @@ import { PageCard, PageCardHeader } from "@/components/ui/PageCard";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Meu perfil — SAAS PDV.multi" };
+export const metadata = { title: "Meu perfil — PDV.ART.br" };
 
 export default function PerfilPage() {
   return (

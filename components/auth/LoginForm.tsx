@@ -38,7 +38,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-0 bg-[#0c2a4d] text-white ring-1 ring-sky-400/30">
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
         <CardDescription>Acesse sua loja para gerenciar produtos.</CardDescription>
@@ -70,7 +70,7 @@ export function LoginForm() {
             />
           </div>
         </CardContent>
-        <CardFooter className="mt-4 flex flex-col gap-3">
+        <CardFooter className="mt-4 flex flex-col gap-3 border-t-0 bg-transparent">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>

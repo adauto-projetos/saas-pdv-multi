@@ -2,7 +2,7 @@ import { ManualContent } from "@/components/manual/ManualContent";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Manual — SAAS PDV.multi" };
+export const metadata = { title: "Manual — PDV.ART.br" };
 
 export default function ManualPage() {
   return (

@@ -491,8 +491,8 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-                gap: 14,
+                gridTemplateColumns: "repeat(auto-fill, minmax(105px, 1fr))",
+                gap: 10,
               }}
             >
               {filteredProducts.map((p) => {
@@ -506,10 +506,10 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                       position: "relative",
                       display: "flex",
                       flexDirection: "column",
-                      gap: 9,
-                      padding: 13,
+                      gap: 6,
+                      padding: 9,
                       border: "1px solid #eef1f5",
-                      borderRadius: 18,
+                      borderRadius: 14,
                       background: "#fff",
                       cursor: "pointer",
                       textAlign: "left",
@@ -521,11 +521,11 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                       style={{
                         width: "100%",
                         aspectRatio: "1.5",
-                        borderRadius: 13,
+                        borderRadius: 10,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 42,
+                        fontSize: 30,
                         background: catStyle.bg,
                         overflow: "hidden",
                       }}
@@ -544,10 +544,10 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                     <div
                       style={{
                         fontWeight: 700,
-                        fontSize: 13.5,
+                        fontSize: 12,
                         color: "#0f172a",
-                        lineHeight: 1.25,
-                        minHeight: 34,
+                        lineHeight: 1.2,
+                        minHeight: 24,
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
@@ -567,7 +567,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                         style={{
                           fontWeight: 800,
                           color: "#4f46e5",
-                          fontSize: 15.5,
+                          fontSize: 13,
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
@@ -575,12 +575,12 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
                       </span>
                       <span
                         style={{
-                          fontSize: 10.5,
+                          fontSize: 9.5,
                           fontWeight: 700,
                           color: stock.color,
                           background: stock.bg,
-                          padding: "3px 7px",
-                          borderRadius: 7,
+                          padding: "2px 6px",
+                          borderRadius: 6,
                         }}
                       >
                         {stock.label}

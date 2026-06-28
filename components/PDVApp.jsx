@@ -1,4 +1,4 @@
-// PDVApp.jsx — SAAS PDV.multi
+// PDVApp.jsx — PDV.ART.br
 // 1. Copie para src/ do seu projeto React
 // 2. Importe no App.jsx: import PDVApp from './PDVApp'; import './PDVApp.css';
 // 3. Renderize: <PDVApp />

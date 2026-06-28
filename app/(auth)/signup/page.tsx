@@ -1,7 +1,7 @@
 import { SignupForm } from "@/components/auth/SignupForm";
 import { getMonthlyPlanPriceCents } from "@/lib/services/platform/settings-repository";
 
-export const metadata = { title: "Criar loja — SAAS PDV.multi" };
+export const metadata = { title: "Criar loja — PDV.ART.br" };
 
 // Lê o preço do plano (config global) por requisição, não no build: o valor é
 // editável no super admin e o build do Docker não tem o banco acessível

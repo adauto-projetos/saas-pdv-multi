@@ -26,7 +26,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         kind: "p",
-        text: "O PDV.multi controla a sua loja num só lugar: vendas, comandas de mesa, produtos, estoque, dinheiro do caixa, fiado, contas a pagar e o lucro do período. Tudo é separado por loja — os dados de um estabelecimento nunca se misturam com os de outro.",
+        text: "O PDV.ART.br controla a sua loja num só lugar: vendas, comandas de mesa, produtos, estoque, dinheiro do caixa, fiado, contas a pagar e o lucro do período. Tudo é separado por loja — os dados de um estabelecimento nunca se misturam com os de outro.",
       },
       {
         kind: "steps",
