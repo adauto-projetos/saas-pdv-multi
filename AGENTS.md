@@ -75,3 +75,10 @@ Os padrões detalhados por área (COMO implementar) vivem na skill `project-patt
 - CLAUDE.md = ONDE as coisas moram (estrutura, paths, camadas). `project-patterns` = COMO implementar (padrões, exemplos com `path:line`).
 - A discovery de cada feature (`docs/features/[ID]/discovery.md`) cobre o contexto específico daquela feature; a skill cobre os padrões transversais do projeto.
 - Auditoria pontual de qualidade de código: `docs/code-quality-review.md` (gerada junto, snapshot — não é fonte de padrão).
+
+---
+
+## Shell policy (Windows)
+Always execute commands via Git Bash:
+`& "C:/Program Files/Git/bin/bash.exe" -lc "<command>"`
+Do not use WSL bash (`bash ...`) directly.
