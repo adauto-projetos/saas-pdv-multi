@@ -10,8 +10,24 @@ import { cookies } from "next/headers";
 const COOKIE_NAME = "pdv_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 dias
 
+const DEV_SECRET = "dev-insecure-secret-change-me";
+const MIN_SECRET_LEN = 32;
+
 function secret(): string {
-  return process.env.SESSION_SECRET ?? "dev-insecure-secret-change-me";
+  const value = process.env.SESSION_SECRET;
+  // Em produção a chave HMAC do cookie é a ÚNICA barreira contra forjar sessão
+  // (account takeover total). Sem fail-fast, um deploy sem SESSION_SECRET cairia
+  // num default público — qualquer um assinaria o cookie de qualquer usuário.
+  if (process.env.NODE_ENV === "production") {
+    if (!value || value.length < MIN_SECRET_LEN || value === DEV_SECRET) {
+      throw new Error(
+        `SESSION_SECRET ausente, fraco ou igual ao default de dev em produção. ` +
+          `Defina uma chave aleatória com pelo menos ${MIN_SECRET_LEN} caracteres.`,
+      );
+    }
+    return value;
+  }
+  return value ?? DEV_SECRET;
 }
 
 function sign(userId: string): string {

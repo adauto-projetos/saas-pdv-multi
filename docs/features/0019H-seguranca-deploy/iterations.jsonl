@@ -1,0 +1,1 @@
+{"ts":"2026-06-28T23:35:23Z","agent":"/hotfix","type":"fix","slug":"seguranca-deploy-u1","what":"SESSION_SECRET fail-fast + RLS boot assertion + undici fix","files":["lib/auth/session.ts","scripts/verify-prod.ts","Dockerfile","package.json"]}
