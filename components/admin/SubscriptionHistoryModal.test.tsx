@@ -23,7 +23,7 @@ vi.mock("@/components/ui/dialog", () => ({
   ),
 }));
 
-import { SubscriptionHistoryModal } from "./subscription-history-modal";
+import { SubscriptionHistoryModal } from "./SubscriptionHistoryModal";
 
 const ENTRIES = [
   {

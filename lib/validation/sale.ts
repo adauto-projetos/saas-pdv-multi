@@ -28,5 +28,9 @@ export const finalizeSaleSchema = z
     path: ["customerId"],
   });
 
+/** Recibo de venda: valida o id (UUID) antes de buscar a venda sob RLS. */
+export const receiptSchema = z.object({ saleId: z.string().uuid("ID inválido") });
+
 export type SaleItemInput = z.infer<typeof saleItemInputSchema>;
 export type FinalizeSaleInput = z.infer<typeof finalizeSaleSchema>;
+export type ReceiptInput = z.infer<typeof receiptSchema>;

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { addCalendarMonths } from "@/lib/format/calendar-month";
-import { ReleaseDialog } from "./release-dialog";
+import { ReleaseDialog } from "./ReleaseDialog";
 
 const TENANT = {
   id: "t1",

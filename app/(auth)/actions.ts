@@ -1,7 +1,5 @@
 "use server";
 
-import { z } from "zod";
-
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession } from "@/lib/auth/session";
 import type { ActionResult } from "@/lib/services/errors";
@@ -10,17 +8,7 @@ import {
   createUserWithTenant,
   getUserByEmail,
 } from "@/lib/services/tenants/onboarding";
-
-const loginSchema = z.object({
-  email: z.email("E-mail inválido"),
-  password: z.string().min(1, "Informe a senha"),
-});
-
-const signUpSchema = z.object({
-  email: z.email("E-mail inválido"),
-  password: z.string().min(6, "A senha precisa de ao menos 6 caracteres"),
-  tenantName: z.string().trim().min(1, "Informe o nome da loja"),
-});
+import { loginSchema, signUpSchema } from "@/lib/validation/auth";
 
 export async function loginAction(
   input: unknown,

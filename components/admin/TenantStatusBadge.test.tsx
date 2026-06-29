@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { TenantStatusBadge } from "./tenant-status-badge";
+import { TenantStatusBadge } from "./TenantStatusBadge";
 
 describe("TenantStatusBadge (RF11)", () => {
   it("T22a — testando mostra cor azul", () => {

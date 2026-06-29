@@ -1,3 +1,7 @@
+# ⚠️ TOPOLOGIA: o nginx escuta na porta 80 (mapeamento "80:80" abaixo) e encaminha
+# para o app via rede proxy-net. Use QUANDO o app NÃO publica a 80 diretamente.
+# NÃO suba junto com docker-compose.prod.yml (que mapeia "80:3000") no mesmo host —
+# conflito de porta 80. São topologias mutuamente exclusivas.
 networks:
   proxy-net:
     external: true

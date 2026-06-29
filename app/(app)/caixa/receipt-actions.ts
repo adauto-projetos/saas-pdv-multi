@@ -1,15 +1,13 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { z } from "zod";
 
 import { withUserRls } from "@/db/rls";
 import { saleItems, sales, tenants } from "@/db/schema";
 import { requireAuthContext } from "@/lib/auth";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError, ValidationError } from "@/lib/services/errors";
-
-const receiptSchema = z.object({ saleId: z.string().uuid("ID inválido") });
+import { receiptSchema } from "@/lib/validation/sale";
 
 export type ReceiptLineDto = {
   name: string;

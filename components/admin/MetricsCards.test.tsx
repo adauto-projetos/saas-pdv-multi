@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { MetricsCards } from "./metrics-cards";
+import { MetricsCards } from "./MetricsCards";
 
 describe("MetricsCards (RF06)", () => {
   it("T12 — exibe contagens corretas por status", () => {

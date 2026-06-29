@@ -11,11 +11,11 @@ import {
   getMaxOperators,
   getMonthlyPlanPriceCents,
 } from "@/lib/services/platform/settings-repository";
-import { ExpiringTenantsList } from "@/components/admin/expiring-tenants-list";
-import { MaxOperatorsSettings } from "@/components/admin/max-operators-settings";
-import { MetricsCards } from "@/components/admin/metrics-cards";
-import { PlanPriceSettings } from "@/components/admin/plan-price-settings";
-import { TenantTable } from "@/components/admin/tenant-table";
+import { ExpiringTenantsList } from "@/components/admin/ExpiringTenantsList";
+import { MaxOperatorsSettings } from "@/components/admin/MaxOperatorsSettings";
+import { MetricsCards } from "@/components/admin/MetricsCards";
+import { PlanPriceSettings } from "@/components/admin/PlanPriceSettings";
+import { TenantTable } from "@/components/admin/TenantTable";
 
 export default async function AdminPage() {
   try {

@@ -3,10 +3,11 @@ import postgres from "postgres";
 
 import * as schema from "./schema";
 
-// Conexão direta ao Postgres (Supabase) para o data layer (Drizzle) e migrations.
-// A connection string usa o papel `postgres`, que consegue assumir o papel
-// `authenticated` por transação — é assim que a RLS é respeitada em runtime
-// (ver `withUserRls` em ./rls.ts). `prepare: false` é exigido pelo pooler do Supabase.
+// Conexão direta ao Postgres (Docker local ou self-hosted) para o data layer (Drizzle)
+// e migrations. A connection string usa o papel `postgres` (dono), que executa DDL e
+// bypassa RLS. O acesso a dados de negócio roda sob o papel `app_user` via `withUserRls`
+// (ver ./rls.ts) — é assim que a RLS é respeitada em runtime. `prepare: false` evita
+// prepared statements, recomendado quando há reuso de conexão por pooler.
 const connectionString = process.env.DATABASE_URL ?? "";
 
 export const queryClient = postgres(connectionString, { prepare: false });

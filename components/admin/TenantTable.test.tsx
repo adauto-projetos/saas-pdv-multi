@@ -15,7 +15,7 @@ vi.mock("@/app/(admin)/superadmin/impersonation-actions", () => ({
 }));
 
 // Mock dialog components to keep tests simple
-vi.mock("./release-dialog", () => ({
+vi.mock("./ReleaseDialog", () => ({
   ReleaseDialog: ({
     open,
     onConfirm,
@@ -36,7 +36,7 @@ vi.mock("./release-dialog", () => ({
     ) : null,
 }));
 
-vi.mock("./suspend-dialog", () => ({
+vi.mock("./SuspendDialog", () => ({
   SuspendDialog: ({
     open,
     onConfirm,
@@ -57,7 +57,7 @@ vi.mock("./suspend-dialog", () => ({
     ) : null,
 }));
 
-vi.mock("./subscription-history-modal", () => ({
+vi.mock("./SubscriptionHistoryModal", () => ({
   SubscriptionHistoryModal: ({
     open,
     onOpenChange,
@@ -75,12 +75,12 @@ vi.mock("./subscription-history-modal", () => ({
     ) : null,
 }));
 
-vi.mock("./tenant-status-badge", () => ({
+vi.mock("./TenantStatusBadge", () => ({
   TenantStatusBadge: ({ status }: { status: string }) => <span>{status}</span>,
 }));
 
 import { releaseSubscriptionAction, suspendTenantAction } from "@/app/(admin)/superadmin/actions";
-import { TenantTable } from "./tenant-table";
+import { TenantTable } from "./TenantTable";
 
 const TENANTS = [
   {

@@ -10,11 +10,11 @@ import {
   suspendTenantAction,
 } from "@/app/(admin)/superadmin/actions";
 import { enterStoreAction } from "@/app/(admin)/superadmin/impersonation-actions";
-import { DeleteStoreDialog } from "./delete-store-dialog";
-import { ReleaseDialog } from "./release-dialog";
-import { SuspendDialog } from "./suspend-dialog";
-import { SubscriptionHistoryModal } from "./subscription-history-modal";
-import { TenantStatusBadge } from "./tenant-status-badge";
+import { DeleteStoreDialog } from "./DeleteStoreDialog";
+import { ReleaseDialog } from "./ReleaseDialog";
+import { SuspendDialog } from "./SuspendDialog";
+import { SubscriptionHistoryModal } from "./SubscriptionHistoryModal";
+import { TenantStatusBadge } from "./TenantStatusBadge";
 
 interface TenantTableProps {
   tenants: AdminTenantRow[];
