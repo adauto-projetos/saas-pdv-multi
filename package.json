@@ -14,7 +14,6 @@
     "deploy": "bash scripts/deploy.sh",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit migrate",
     "db:rls": "tsx scripts/apply-rls.ts",
     "verify:prod": "tsx scripts/verify-prod.ts",
     "seed:testfull": "tsx --env-file=.env.local scripts/seed-testfull.ts",

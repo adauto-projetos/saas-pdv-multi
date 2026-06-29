@@ -1,16 +1,16 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { db } from "@/db";
-import { tenants } from "@/db/schema";
 import { requireFounder } from "@/lib/auth/admin";
-import { addCalendarMonths } from "@/lib/format/calendar-month";
 import type { SubscriptionLogEntry } from "@/lib/services/admin/tenant-admin-service";
 import {
   deleteTenantById,
+  getTenantName,
   getTenantSubscriptionHistory,
+  releaseFromSuspension,
+  releaseSubscription,
+  suspendTenant,
 } from "@/lib/services/admin/tenant-admin-service";
 import type { ActionResult } from "@/lib/services/errors";
 import { toActionError } from "@/lib/services/errors";
@@ -18,7 +18,6 @@ import {
   setMaxOperators,
   setMonthlyPlanPriceCents,
 } from "@/lib/services/platform/settings-repository";
-import { insertSubscriptionLog, selectTenantById } from "@/lib/services/subscriptions/repository";
 import { maxOperatorsSchema, planPriceSchema } from "@/lib/validation/platform";
 import { releaseMonthsSchema } from "@/lib/validation/subscription";
 
@@ -33,35 +32,11 @@ export async function releaseSubscriptionAction(
   }
   try {
     const { userId } = await requireFounder();
-
-    const tenant = await selectTenantById(tenantId);
-    if (!tenant) return { ok: false, error: "Loja não encontrada" };
-
-    const now = new Date();
-    // RN03: acumula a partir do maior entre a validade vigente e hoje (loja vencida
-    // não recupera tempo perdido).
-    const base =
-      tenant.validUntil && tenant.validUntil > now ? tenant.validUntil : now;
-    // RN02: meses de calendário (não blocos de 30 dias), com clamp de fim-de-mês.
-    const newValidUntil = addCalendarMonths(base, parsed.data.months);
-    const validUntilBefore = tenant.validUntil;
-
-    await db.transaction(async (tx) => {
-      await tx
-        .update(tenants)
-        .set({ validUntil: newValidUntil, suspendedAt: null })
-        .where(eq(tenants.id, tenantId));
-      await insertSubscriptionLog(tx, {
-        tenantId,
-        action: "renewed",
-        validUntilBefore,
-        validUntilAfter: newValidUntil,
-        byUserId: userId,
-        // RF05: registra quantos meses foram liberados nesta ação.
-        monthsReleased: parsed.data.months,
-      });
-    });
-
+    const { newValidUntil } = await releaseSubscription(
+      tenantId,
+      parsed.data.months,
+      userId,
+    );
     revalidatePath("/superadmin");
     return { ok: true, data: { newValidUntil } };
   } catch (error) {
@@ -74,28 +49,7 @@ export async function suspendTenantAction(
 ): Promise<ActionResult<void>> {
   try {
     const { userId } = await requireFounder();
-
-    const tenant = await selectTenantById(tenantId);
-    if (!tenant) return { ok: false, error: "Loja não encontrada" };
-
-    const now = new Date();
-
-    await db.transaction(async (tx) => {
-      await tx
-        .update(tenants)
-        .set({ suspendedAt: now })
-        .where(eq(tenants.id, tenantId));
-      await insertSubscriptionLog(tx, {
-        tenantId,
-        action: "suspended",
-        // Snapshot do valid_until no momento da suspensão (auditoria) — a suspensão
-        // não altera valid_until, mas o log preserva o valor vigente.
-        validUntilBefore: tenant.validUntil,
-        validUntilAfter: tenant.validUntil,
-        byUserId: userId,
-      });
-    });
-
+    await suspendTenant(tenantId, userId);
     revalidatePath("/superadmin");
     return { ok: true, data: undefined };
   } catch (error) {
@@ -108,24 +62,7 @@ export async function releaseFromSuspensionAction(
 ): Promise<ActionResult<void>> {
   try {
     const { userId } = await requireFounder();
-
-    const tenant = await selectTenantById(tenantId);
-    if (!tenant) return { ok: false, error: "Loja não encontrada" };
-
-    await db.transaction(async (tx) => {
-      await tx
-        .update(tenants)
-        .set({ suspendedAt: null })
-        .where(eq(tenants.id, tenantId));
-      await insertSubscriptionLog(tx, {
-        tenantId,
-        action: "released",
-        validUntilBefore: tenant.validUntil,
-        validUntilAfter: tenant.validUntil,
-        byUserId: userId,
-      });
-    });
-
+    await releaseFromSuspension(tenantId, userId);
     revalidatePath("/superadmin");
     return { ok: true, data: undefined };
   } catch (error) {
@@ -140,11 +77,7 @@ export async function deleteTenantAction(
   try {
     await requireFounder();
 
-    const [tenant] = await db
-      .select({ name: tenants.name })
-      .from(tenants)
-      .where(eq(tenants.id, tenantId))
-      .limit(1);
+    const tenant = await getTenantName(tenantId);
     if (!tenant) return { ok: false, error: "Loja não encontrada" };
 
     // Confirmação: o nome digitado precisa bater exatamente com o da loja.

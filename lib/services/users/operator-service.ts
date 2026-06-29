@@ -15,7 +15,7 @@ import {
 } from "@/lib/services/permissions/permission-service";
 import {
   insertPermissions,
-  selectPermissionCodes,
+  selectPermissionsByUserIds,
 } from "@/lib/services/permissions/permission-data";
 import type {
   ChangeOwnPasswordInput,
@@ -64,27 +64,33 @@ async function assertEditableOperator(
   return member;
 }
 
-/** Lista owner + operadores da loja com suas permissões (RF03/menu de gestão). */
+/**
+ * Lista owner + operadores da loja com suas permissões (RF03/menu de gestão).
+ * ≤2 queries (RF02): 1 select de membros + 1 batch de permissões — não cresce
+ * com o nº de operadores (sem N+1).
+ */
 export async function listOperators(ctx: AuthContext): Promise<OperatorDto[]> {
   const rows = await selectOperators(ctx.tenantId);
-  return Promise.all(
-    rows.map(async (row) => {
-      const isOwnerRow = row.role === "owner";
-      return {
-        userId: row.userId,
-        name: row.name,
-        email: row.email,
-        role: row.role,
-        isOwner: isOwnerRow,
-        isActive: row.isActive,
-        // Owner tem tudo implícito; não lemos linhas (não existem) — UI mostra "todas".
-        permissions: isOwnerRow
-          ? []
-          : await selectPermissionCodes(ctx.tenantId, row.userId),
-        createdAt: row.createdAt.toISOString(),
-      };
-    }),
-  );
+  // Owner tem tudo implícito (não lê linhas); buscamos permissões só dos operadores.
+  const nonOwnerIds = rows
+    .filter((row) => row.role !== "owner")
+    .map((row) => row.userId);
+  const permsMap = await selectPermissionsByUserIds(ctx.tenantId, nonOwnerIds);
+
+  return rows.map((row) => {
+    const isOwnerRow = row.role === "owner";
+    return {
+      userId: row.userId,
+      name: row.name,
+      email: row.email,
+      role: row.role,
+      isOwner: isOwnerRow,
+      isActive: row.isActive,
+      // Owner → [] (UI mostra "todas"); operador → suas codes (ausente = sem permissão).
+      permissions: isOwnerRow ? [] : permsMap.get(row.userId) ?? [],
+      createdAt: row.createdAt.toISOString(),
+    };
+  });
 }
 
 /**

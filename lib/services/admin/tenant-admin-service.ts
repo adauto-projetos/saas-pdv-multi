@@ -2,8 +2,16 @@ import { and, asc, between, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { subscriptionLog, tenantMembers, tenants, users } from "@/db/schema";
+import { addCalendarMonths } from "@/lib/format/calendar-month";
+import { NotFoundError } from "@/lib/services/errors";
 import type { TenantStatus } from "@/lib/services/subscriptions/subscription-status";
 import { getTenantStatus } from "@/lib/services/subscriptions/subscription-status";
+import {
+  insertSubscriptionLog,
+  selectTenantById,
+} from "@/lib/services/subscriptions/repository";
+
+import { selectTenantName } from "./admin-data";
 
 export type AdminTenantRow = {
   id: string;
@@ -177,4 +185,114 @@ export async function getTenantSubscriptionHistory(
     byUserId: r.byUserId,
     at: r.at,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Funções transacionais do super-admin (0020F/RF01). Owner-bypass (sem RLS);
+// a action só valida borda + autoriza (requireFounder) e delega aqui. Reusa os
+// helpers de subscriptions/repository.ts dentro de db.transaction (atomicidade:
+// update do tenant + insert no log juntos, ou nada).
+// ---------------------------------------------------------------------------
+
+/** Nome do tenant por PK (owner db). Para confirmação de exclusão no super-admin. */
+export async function getTenantName(
+  tenantId: string,
+): Promise<{ name: string } | null> {
+  return selectTenantName(tenantId);
+}
+
+/**
+ * Renova a assinatura: recalcula valid_until (a partir do maior entre a validade
+ * vigente e hoje — loja vencida não recupera tempo perdido), atualiza o tenant
+ * (limpando suspended_at) e grava o log "renewed" numa única transação (RF01).
+ * Assume `months` já validado pela action (inteiro positivo).
+ */
+export async function releaseSubscription(
+  tenantId: string,
+  months: number,
+  byUserId: string,
+): Promise<{ newValidUntil: Date }> {
+  // Read+write na MESMA transação (0020F): o snapshot de `validUntilBefore` reflete
+  // exatamente o estado que será sobrescrito, mesmo sob escrita concorrente.
+  return db.transaction(async (tx) => {
+    const tenant = await selectTenantById(tenantId, tx);
+    if (!tenant) throw new NotFoundError("Loja não encontrada");
+
+    const now = new Date();
+    // RN03: acumula a partir do maior entre a validade vigente e hoje.
+    const base = tenant.validUntil && tenant.validUntil > now ? tenant.validUntil : now;
+    // RN02: meses de calendário (não blocos de 30 dias), com clamp de fim-de-mês.
+    const newValidUntil = addCalendarMonths(base, months);
+
+    await tx
+      .update(tenants)
+      .set({ validUntil: newValidUntil, suspendedAt: null })
+      .where(eq(tenants.id, tenantId));
+    await insertSubscriptionLog(tx, {
+      tenantId,
+      action: "renewed",
+      validUntilBefore: tenant.validUntil,
+      validUntilAfter: newValidUntil,
+      byUserId,
+      // RF05: registra quantos meses foram liberados nesta ação.
+      monthsReleased: months,
+    });
+
+    return { newValidUntil };
+  });
+}
+
+/**
+ * Suspende a loja: seta suspended_at=now e grava o log "suspended" numa única
+ * transação (RF01). A suspensão não altera valid_until — o log apenas faz o
+ * snapshot do valor vigente (auditoria).
+ */
+export async function suspendTenant(
+  tenantId: string,
+  byUserId: string,
+): Promise<void> {
+  // Read+write na MESMA transação (0020F): snapshot de auditoria consistente.
+  await db.transaction(async (tx) => {
+    const tenant = await selectTenantById(tenantId, tx);
+    if (!tenant) throw new NotFoundError("Loja não encontrada");
+
+    await tx
+      .update(tenants)
+      .set({ suspendedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
+    await insertSubscriptionLog(tx, {
+      tenantId,
+      action: "suspended",
+      validUntilBefore: tenant.validUntil,
+      validUntilAfter: tenant.validUntil,
+      byUserId,
+    });
+  });
+}
+
+/**
+ * Libera a loja da suspensão: seta suspended_at=null e grava o log "released"
+ * numa única transação (RF01). valid_until permanece inalterado.
+ */
+export async function releaseFromSuspension(
+  tenantId: string,
+  byUserId: string,
+): Promise<void> {
+  // Read+write na MESMA transação (0020F): snapshot de auditoria consistente.
+  await db.transaction(async (tx) => {
+    const tenant = await selectTenantById(tenantId, tx);
+    if (!tenant) throw new NotFoundError("Loja não encontrada");
+
+    await tx
+      .update(tenants)
+      .set({ suspendedAt: null })
+      .where(eq(tenants.id, tenantId));
+    await insertSubscriptionLog(tx, {
+      tenantId,
+      action: "released",
+      validUntilBefore: tenant.validUntil,
+      validUntilAfter: tenant.validUntil,
+      byUserId,
+    });
+  });
 }

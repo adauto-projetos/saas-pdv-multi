@@ -1,0 +1,1 @@
+{"ts":"2026-06-29T14:20:54Z","agent":"backend","type":"pivot","from":"selectOverrides reusa dateRange com coluna sql crua","decision":"inline date conds com cast ::timestamptz em selectOverrides","reason":"dateRange liga Date cru numa coluna sql nao-tipada -> postgres-js rejeita (bug latente exposto pelo teste do indice)","attempt":1}

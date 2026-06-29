@@ -57,7 +57,8 @@ Rodar antes de concluir qualquer feature. Todos devem sair com exit 0.
 ```
 
 - `test` roda Vitest. Testes que tocam o banco (RLS, constraints, integração) são **pulados** sem `DATABASE_URL` no `.env.local` — com o Postgres do Docker no ar, rodam de verdade (34 passam).
-- Banco: `docker compose up -d` (sobe o Postgres) → `npm run db:setup` (= `db:push` + `db:rls`). Exige `.env.local` (ver `.env.example`).
+- Banco: `docker compose up -d` (sobe o Postgres) → `npm run db:setup` (= `db:push --force` + `db:rls`). Exige `.env.local` (ver `.env.example`).
+- **Push-only** é a estratégia oficial de evolução de schema (RN01): o snapshot Drizzle (`db/schema/`) é a fonte da verdade; `db:setup` é o caminho canônico; não existe `db:migrate`. Os arquivos `*_rls.sql` em `db/migrations/` são policies RLS aplicadas separadamente por `scripts/apply-rls.ts` — não são migrations Drizzle.
 - ⚠️ `drizzle-kit push` **derruba as RLS policies** (não as conhece). SEMPRE rode `npm run db:rls` depois de um `db:push` avulso — ou use `npm run db:setup`.
 
 ## Implementation Patterns

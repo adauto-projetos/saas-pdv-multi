@@ -199,7 +199,21 @@ export async function selectOverrides(
   from?: string,
   to?: string,
 ): Promise<OverrideEntryDto[]> {
-  const conds = dateRange(sql`ol.created_at`, from, to);
+  // `ol.created_at` é uma coluna SQL crua (não um column tipado do Drizzle), então
+  // o binding precisa de cast explícito `::timestamptz` — caso contrário o postgres-js
+  // recebe um Date sem tipo e rejeita ("Received an instance of Date"). Por isso não
+  // reusamos `dateRange()` aqui (ela serve às queries com colunas tipadas do Drizzle).
+  const conds: SQL[] = [];
+  if (from) {
+    const d = new Date(from);
+    if (!Number.isNaN(d.getTime()))
+      conds.push(sql`ol.created_at >= ${d.toISOString()}::timestamptz`);
+  }
+  if (to) {
+    const d = new Date(to);
+    if (!Number.isNaN(d.getTime()))
+      conds.push(sql`ol.created_at <= ${d.toISOString()}::timestamptz`);
+  }
   const where = conds.length
     ? sql` and ${sql.join(conds, sql` and `)}`
     : sql``;

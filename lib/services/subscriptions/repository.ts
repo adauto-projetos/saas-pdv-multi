@@ -10,9 +10,13 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /**
  * Busca o tenant por PK via conexão owner (sem RLS).
  * Usado por requireActiveTenant — PK lookup < 50ms (RNF01).
+ *
+ * Aceita `exec` (default `db`) para rodar dentro de uma transação aberta — assim
+ * o super-admin lê e escreve o tenant atomicamente (read+update na MESMA tx),
+ * evitando snapshot de auditoria desatualizado sob escrita concorrente (0020F).
  */
-export async function selectTenantById(tenantId: string) {
-  const [row] = await db
+export async function selectTenantById(tenantId: string, exec: typeof db | Tx = db) {
+  const [row] = await exec
     .select({
       id: tenants.id,
       validUntil: tenants.validUntil,
