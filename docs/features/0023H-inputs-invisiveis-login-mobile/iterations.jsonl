@@ -1,0 +1,3 @@
+{"ts":"2026-07-01T22:38:31Z","agent":"/hotfix","type":"fix","slug":"inputs-fill-login-mobile","what":"inputs bg-background visiveis + banner login so lg + emojis","files":["components/ui/input.tsx","components/products/ProductForm.tsx","app/(auth)/layout.tsx","components/products/EmojiPicker.tsx"]}
+{"ts":"2026-07-01T22:46:58Z","agent":"/hotfix","type":"fix","slug":"login-mobile-gradient-icon","what":"login mobile: gradiente + icone acima do card (azul liso feio)","files":["app/(auth)/layout.tsx"]}
+{"ts":"2026-07-01T22:53:59Z","agent":"/hotfix","type":"fix","slug":"login-mobile-light-logo","what":"login mobile: fundo claro + logo-full acima do card","files":["app/(auth)/layout.tsx"]}

@@ -31,6 +31,10 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🧉", keywords: ["chimarrao", "terere", "mate"] },
   { emoji: "🍵", keywords: ["cha", "mate"] },
   { emoji: "🍼", keywords: ["mamadeira", "leite bebe"] },
+  { emoji: "🍾", keywords: ["espumante", "champanhe", "garrafa", "champagne"] },
+  { emoji: "🫗", keywords: ["servir", "despejar", "bebida"] },
+  { emoji: "🧋", keywords: ["bubble tea", "tapioca", "cha gelado", "milk shake"] },
+  { emoji: "🍶", keywords: ["sake", "garrafa", "saque"] },
   // Lanches / comidas
   { emoji: "🍔", keywords: ["hamburguer", "lanche", "burguer", "x-burguer"] },
   { emoji: "🌭", keywords: ["cachorro quente", "hot dog", "dog"] },
@@ -63,6 +67,14 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🧀", keywords: ["queijo"] },
   { emoji: "🧇", keywords: ["waffle"] },
   { emoji: "🥞", keywords: ["panqueca"] },
+  { emoji: "🥟", keywords: ["pastel", "guioza", "empanada", "dumpling"] },
+  { emoji: "🍢", keywords: ["espetinho", "espeto", "churrasquinho"] },
+  { emoji: "🫓", keywords: ["tapioca", "pao sirio", "crepe", "beiju"] },
+  { emoji: "🥯", keywords: ["bagel", "rosca"] },
+  { emoji: "🍛", keywords: ["comida", "prato feito", "pf", "curry", "marmita"] },
+  { emoji: "🫔", keywords: ["pamonha", "pastel", "tamale"] },
+  { emoji: "🥠", keywords: ["biscoito da sorte"] },
+  { emoji: "🍥", keywords: ["kani", "narutomaki"] },
   // Doces
   { emoji: "🍦", keywords: ["sorvete", "casquinha"] },
   { emoji: "🍨", keywords: ["sorvete", "sundae"] },
@@ -79,6 +91,8 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🍮", keywords: ["pudim", "flan"] },
   { emoji: "🍯", keywords: ["mel"] },
   { emoji: "🍿", keywords: ["pipoca"] },
+  { emoji: "🍡", keywords: ["espetinho doce", "dango"] },
+  { emoji: "🍘", keywords: ["biscoito de arroz", "bolacha"] },
   // Frutas
   { emoji: "🍎", keywords: ["maca", "fruta"] },
   { emoji: "🍏", keywords: ["maca verde"] },
@@ -97,6 +111,7 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🍍", keywords: ["abacaxi"] },
   { emoji: "🥥", keywords: ["coco"] },
   { emoji: "🥝", keywords: ["kiwi"] },
+  { emoji: "🫒", keywords: ["azeitona", "oliva", "azeite"] },
   // Verduras / legumes
   { emoji: "🍅", keywords: ["tomate"] },
   { emoji: "🥑", keywords: ["abacate"] },
@@ -113,6 +128,9 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🧅", keywords: ["cebola"] },
   { emoji: "🍄", keywords: ["cogumelo"] },
   { emoji: "🥜", keywords: ["amendoim", "castanha"] },
+  { emoji: "🌰", keywords: ["castanha", "castanha portuguesa"] },
+  { emoji: "🫛", keywords: ["ervilha", "vagem"] },
+  { emoji: "🫚", keywords: ["gengibre", "raiz"] },
   // Mercearia
   { emoji: "🍚", keywords: ["arroz"] },
   { emoji: "🫘", keywords: ["feijao", "grao"] },
@@ -120,8 +138,9 @@ const EMOJIS: EmojiEntry[] = [
   { emoji: "🥣", keywords: ["cereal", "mingau", "tigela"] },
   { emoji: "🧈", keywords: ["manteiga", "margarina"] },
   { emoji: "🧂", keywords: ["sal", "tempero"] },
-  { emoji: "🥡", keywords: ["marmita", "viagem"] },
+  { emoji: "🥡", keywords: ["marmita", "viagem", "quentinha"] },
   { emoji: "🧊", keywords: ["gelo"] },
+  { emoji: "🫙", keywords: ["pote", "conserva", "vidro", "compota"] },
   // Higiene / limpeza
   { emoji: "🧴", keywords: ["sabonete liquido", "shampoo", "detergente", "alcool gel", "amaciante"] },
   { emoji: "🧼", keywords: ["sabao", "sabonete"] },
