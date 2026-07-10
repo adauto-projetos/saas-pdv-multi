@@ -121,7 +121,19 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6 pb-24">
+    <form onSubmit={handleSubmit} className="grid gap-4 pb-32 lg:pb-24">
+      <ProductImageUpload
+        productId={mode === "edit" ? defaultValues?.id : undefined}
+        defaultImageUrl={defaultValues?.imageUrl}
+        emoji={emoji}
+        onStagedChange={setStagedImage}
+      />
+
+      <div className="grid gap-2">
+        <Label htmlFor="emoji">Emoji do produto</Label>
+        <EmojiPicker value={emoji} onChange={setEmoji} />
+      </div>
+
       <div className="grid gap-2">
         <Label htmlFor="name">
           Nome
@@ -141,41 +153,28 @@ export function ProductForm({
         ) : null}
       </div>
 
-      <ProductImageUpload
-        productId={mode === "edit" ? defaultValues?.id : undefined}
-        defaultImageUrl={defaultValues?.imageUrl}
-        emoji={emoji}
-        onStagedChange={setStagedImage}
-      />
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="emoji">Emoji do produto</Label>
-          <EmojiPicker value={emoji} onChange={setEmoji} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="category">
-            Categoria
-            <InfoButton
-              title="Categoria"
-              detail="Organiza os produtos em grupos para facilitar a busca no caixa. Ex: Bebidas, Lanches, Mercearia. Você pode filtrar por categoria na tela do caixa."
-            />
-          </Label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-background px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <option value="">Sem categoria</option>
-            {PRODUCT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
+      <div className="grid gap-2">
+        <Label htmlFor="category">
+          Categoria
+          <InfoButton
+            title="Categoria"
+            detail="Organiza os produtos em grupos para facilitar a busca no caixa. Ex: Bebidas, Lanches, Mercearia. Você pode filtrar por categoria na tela do caixa."
+          />
+        </Label>
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="h-9 rounded-lg border border-input bg-background px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="">Sem categoria</option>
+          {PRODUCT_CATEGORIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <div className="grid gap-2">
           <Label htmlFor="barcode">
             Código de barras
@@ -215,7 +214,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <div className="grid gap-2">
           <Label htmlFor="stock">Estoque inicial</Label>
           <QuantityInput
@@ -271,7 +270,7 @@ export function ProductForm({
         para pré-preencher novos produtos.
       </p>
 
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background p-4">
+      <div className="fixed inset-x-0 bottom-16 z-50 border-t bg-background p-4 lg:bottom-0">
         <div className="mx-auto flex w-full max-w-5xl justify-end">
           <Button type="submit" disabled={submitting}>
             {submitting

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, lt, sql } from "drizzle-orm";
 
 import type { Database } from "@/db";
 import { saleItems, sales } from "@/db/schema";
@@ -124,4 +124,26 @@ export async function selectSalesOfDay(
   }
 
   return saleRows.map((s) => toSaleDto(s, bySale.get(s.id) ?? []));
+}
+
+/**
+ * Quantidade total vendida por produto, histórico completo, tenant-scoped.
+ * Usado para ordenar a grade do caixa pelos mais vendidos primeiro. Itens com
+ * `product_id` nulo (produto excluído) são ignorados — não há como ordenar um
+ * produto que não existe mais na lista.
+ */
+export async function selectProductSalesQuantities(
+  tx: Executor,
+  tenantId: string,
+): Promise<Map<string, number>> {
+  const rows = await tx
+    .select({
+      productId: saleItems.productId,
+      totalQuantity: sql<string>`sum(${saleItems.quantity})`,
+    })
+    .from(saleItems)
+    .where(and(eq(saleItems.tenantId, tenantId), isNotNull(saleItems.productId)))
+    .groupBy(saleItems.productId);
+
+  return new Map(rows.map((r) => [r.productId as string, Number(r.totalQuantity)]));
 }

@@ -83,6 +83,17 @@ export async function listProductsAction(): Promise<ActionResult<ProductDto[]>> 
   }
 }
 
+/** Lista para a grade do caixa: mais vendidos primeiro (histórico completo). */
+export async function listProductsForCaixaAction(): Promise<ActionResult<ProductDto[]>> {
+  try {
+    const ctx = await requireAuthContext();
+    await requireAnyPermission(ctx, ["produtos", "caixa"]);
+    return { ok: true, data: await service.listProductsForCaixa(ctx) };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
 export async function getProductAction(
   input: unknown,
 ): Promise<ActionResult<ProductDto>> {

@@ -1,0 +1,1 @@
+{"ts":"2026-07-10T23:03:56Z","agent":"/hotfix","type":"fix","slug":"produto-mobile-layout-salvar","what":"grid responsivo + botao salvar acima do menu no form de produto","files":["components/products/ProductForm.tsx"]}

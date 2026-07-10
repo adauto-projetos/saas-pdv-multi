@@ -1,12 +1,12 @@
 import { getOpenSessionAction } from "@/app/(app)/lucro/actions";
-import { listProductsAction } from "@/app/(app)/products/actions";
+import { listProductsForCaixaAction } from "@/app/(app)/products/actions";
 import { CaixaShell } from "@/components/caixa/CaixaShell";
 
 export const dynamic = "force-dynamic";
 
 export default async function CaixaPage() {
   const [productsResult, sessionResult] = await Promise.all([
-    listProductsAction(),
+    listProductsForCaixaAction(),
     getOpenSessionAction(),
   ]);
   const products = productsResult.ok ? productsResult.data : [];

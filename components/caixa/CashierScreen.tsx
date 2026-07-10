@@ -491,7 +491,7 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(105px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
                 gap: 10,
               }}
             >

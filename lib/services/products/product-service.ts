@@ -1,5 +1,6 @@
 import { withUserRls } from "@/db/rls";
 import { ConflictError, isUniqueViolation, NotFoundError } from "@/lib/services/errors";
+import { selectProductSalesQuantities } from "@/lib/services/sales/data";
 import type {
   ApplyCostChangeInput,
   CreateProductInput,
@@ -182,6 +183,21 @@ export async function deleteProduct(
 /** Lista produtos da loja, incluindo estoque (somente leitura) (RF07/RF08). */
 export async function listProducts(ctx: AuthContext): Promise<ProductDto[]> {
   return withUserRls(ctx.userId, (tx) => data.selectProducts(tx, ctx.tenantId));
+}
+
+/**
+ * Lista produtos para a grade do caixa, ordenados pelo mais vendido primeiro
+ * (histórico completo). Empate (incluindo produtos sem venda) mantém a ordem
+ * alfabética de `selectProducts` — `Array.prototype.sort` é estável.
+ */
+export async function listProductsForCaixa(ctx: AuthContext): Promise<ProductDto[]> {
+  return withUserRls(ctx.userId, async (tx) => {
+    const list = await data.selectProducts(tx, ctx.tenantId);
+    const salesQuantities = await selectProductSalesQuantities(tx, ctx.tenantId);
+    return [...list].sort(
+      (a, b) => (salesQuantities.get(b.id) ?? 0) - (salesQuantities.get(a.id) ?? 0),
+    );
+  });
 }
 
 export async function getProduct(
