@@ -5,6 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { CategorySelect } from "@/components/products/CategorySelect";
 import { EmojiPicker } from "@/components/products/EmojiPicker";
 import { MarkupCalculatorFields } from "@/components/products/MarkupCalculatorFields";
 import { ProductImageUpload } from "@/components/products/ProductImageUpload";
@@ -15,14 +16,16 @@ import { Label } from "@/components/ui/label";
 import { QuantityInput } from "@/components/ui/QuantityInput";
 import { calculateSalePrice } from "@/lib/services/products/markup";
 import type { ActionResult } from "@/lib/services/errors";
-import { createProductSchema, PRODUCT_CATEGORIES } from "@/lib/validation/product";
+import { createProductSchema } from "@/lib/validation/product";
 import type { CreateProductInput } from "@/lib/validation/product";
-import type { ProductDto, ProductUnit } from "@/types/product";
+import type { ProductCategoryDto, ProductDto, ProductUnit } from "@/types/product";
 
 type ProductFormProps = {
   mode: "create" | "edit";
   /** Margem padrão da loja para pré-preencher novos cadastros (RF05). */
   defaultMarkupPercent: number;
+  /** Categorias do tenant ordenadas por position — alimentam o CategorySelect (0025F, RF07). */
+  categories: ProductCategoryDto[];
   defaultValues?: ProductDto;
   /**
    * Sucesso (toast/redirect/RF06) é responsabilidade de quem chama.
@@ -47,6 +50,7 @@ function zodFieldErrors(error: z.ZodError): Record<string, string> {
 export function ProductForm({
   mode,
   defaultMarkupPercent,
+  categories,
   defaultValues,
   onSubmit,
 }: ProductFormProps) {
@@ -72,7 +76,10 @@ export function ProductForm({
     defaultValues?.minStock ?? null,
   );
   const [emoji, setEmoji] = React.useState(defaultValues?.emoji ?? "");
-  const [category, setCategory] = React.useState(defaultValues?.category ?? "");
+  // null = Sem categoria (RN04); no submit vai como `categoryId: null` explícito.
+  const [categoryId, setCategoryId] = React.useState<string | null>(
+    defaultValues?.category?.id ?? null,
+  );
   const [stagedImage, setStagedImage] = React.useState<File | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
     {},
@@ -101,7 +108,8 @@ export function ProductForm({
       // Só envia salePrice quando é override manual (RF03/RF04); senão o backend calcula.
       salePriceCents: priceIsManual ? (manualPrice ?? undefined) : undefined,
       emoji: emoji.trim() || undefined,
-      category: category || undefined,
+      // null explícito limpa a categoria no update (RN04); nunca envia "".
+      categoryId,
     };
 
     const parsed = createProductSchema.safeParse(input);
@@ -161,17 +169,15 @@ export function ProductForm({
             detail="Organiza os produtos em grupos para facilitar a busca no caixa. Ex: Bebidas, Lanches, Mercearia. Você pode filtrar por categoria na tela do caixa."
           />
         </Label>
-        <select
+        <CategorySelect
           id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="h-9 rounded-lg border border-input bg-background px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <option value="">Sem categoria</option>
-          {PRODUCT_CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
+          categories={categories}
+          value={categoryId}
+          onChange={setCategoryId}
+        />
+        {fieldErrors.categoryId ? (
+          <p className="text-sm text-destructive">{fieldErrors.categoryId}</p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">

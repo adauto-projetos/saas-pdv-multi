@@ -13,9 +13,20 @@ import { PriceSuggestionDialog } from "@/components/products/PriceSuggestionDial
 import { ProductForm } from "@/components/products/ProductForm";
 import type { ActionResult } from "@/lib/services/errors";
 import type { CreateProductInput } from "@/lib/validation/product";
-import type { PriceSuggestionDto, ProductDto } from "@/types/product";
+import type {
+  PriceSuggestionDto,
+  ProductCategoryDto,
+  ProductDto,
+} from "@/types/product";
 
-export function EditProductForm({ product }: { product: ProductDto }) {
+export function EditProductForm({
+  product,
+  categories,
+}: {
+  product: ProductDto;
+  /** Categorias do tenant (0025F/RF07) — buscadas pela página RSC. */
+  categories: ProductCategoryDto[];
+}) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [suggestion, setSuggestion] = React.useState<PriceSuggestionDto | null>(
@@ -86,6 +97,7 @@ export function EditProductForm({ product }: { product: ProductDto }) {
       <ProductForm
         mode="edit"
         defaultMarkupPercent={product.markupPercent ?? 0}
+        categories={categories}
         defaultValues={product}
         onSubmit={onSubmit}
       />

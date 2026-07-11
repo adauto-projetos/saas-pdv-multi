@@ -1,8 +1,14 @@
 import { and, asc, eq, ilike, isNotNull, sql } from "drizzle-orm";
 
 import type { Database } from "@/db";
-import { products, tenants } from "@/db/schema";
-import type { ProductDto, ProductUnit, TenantSettingsDto } from "@/types/product";
+import { productCategories, products, tenants } from "@/db/schema";
+import type { CategoryColor } from "@/lib/validation/product";
+import type {
+  ProductCategoryRef,
+  ProductDto,
+  ProductUnit,
+  TenantSettingsDto,
+} from "@/types/product";
 
 /**
  * Executor = conexão direta (`db`) OU transação RLS (`RlsTx`). As funções aqui
@@ -14,8 +20,33 @@ type Executor = Pick<Database, "insert" | "select" | "update">;
 
 type ProductRow = typeof products.$inferSelect;
 
+/**
+ * Shape da categoria nos selects com LEFT JOIN (0025F). Drizzle anula o objeto
+ * inteiro quando o join não casa — produto sem categoria vem como null (RN04).
+ */
+const categoryJoinColumns = {
+  id: productCategories.id,
+  name: productCategories.name,
+  color: productCategories.color,
+};
+
+type CategoryJoinRow = {
+  id: string;
+  name: string;
+  color: string;
+} | null;
+
+function toCategoryRef(row: CategoryJoinRow): ProductCategoryRef | null {
+  return row
+    ? { id: row.id, name: row.name, color: row.color as CategoryColor }
+    : null;
+}
+
 /** Coerção numeric(string do Postgres) -> number; nunca expõe a row crua. */
-function toProductDto(row: ProductRow): ProductDto {
+function toProductDto(
+  row: ProductRow,
+  category: ProductCategoryRef | null,
+): ProductDto {
   return {
     id: row.id,
     tenantId: row.tenantId,
@@ -29,12 +60,35 @@ function toProductDto(row: ProductRow): ProductDto {
     stockQuantity: Number(row.stockQuantity),
     minStock: row.minStock != null ? Number(row.minStock) : null,
     emoji: row.emoji ?? null,
-    category: row.category ?? null,
+    category,
     imageKey: row.imageKey ?? null,
     imageUrl: row.imageUrl ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+/**
+ * Resolve a `ProductCategoryRef` de um produto recém-escrito (insert/update com
+ * `.returning()` não tem join). Filtro por tenant aditivo à RLS.
+ */
+async function selectCategoryRef(
+  tx: Executor,
+  tenantId: string,
+  categoryId: string | null,
+): Promise<ProductCategoryRef | null> {
+  if (!categoryId) return null;
+  const [row] = await tx
+    .select(categoryJoinColumns)
+    .from(productCategories)
+    .where(
+      and(
+        eq(productCategories.tenantId, tenantId),
+        eq(productCategories.id, categoryId),
+      ),
+    )
+    .limit(1);
+  return toCategoryRef(row ?? null);
 }
 
 export type CreateProductData = {
@@ -48,7 +102,7 @@ export type CreateProductData = {
   stockQuantity: number;
   minStock?: number | null;
   emoji?: string | null;
-  category?: string | null;
+  categoryId?: string | null;
 };
 
 export type UpdateProductData = Partial<{
@@ -62,7 +116,7 @@ export type UpdateProductData = Partial<{
   stockQuantity: number;
   minStock: number | null;
   emoji: string | null;
-  category: string | null;
+  categoryId: string | null;
   imageKey: string | null;
   imageUrl: string | null;
 }>;
@@ -88,10 +142,12 @@ export async function insertProduct(
       stockQuantity: data.stockQuantity.toString(),
       minStock: data.minStock != null ? data.minStock.toString() : null,
       emoji: data.emoji ?? null,
-      category: data.category ?? null,
+      // 0025F: o app só escreve `category_id`; a coluna `category` (text) ficou
+      // como fonte do backfill/rollback e não é mais lida nem escrita aqui.
+      categoryId: data.categoryId ?? null,
     })
     .returning();
-  return toProductDto(row);
+  return toProductDto(row, await selectCategoryRef(tx, tenantId, row.categoryId));
 }
 
 export async function updateProductRow(
@@ -115,7 +171,7 @@ export async function updateProductRow(
   if (data.minStock !== undefined)
     set.minStock = data.minStock === null ? null : data.minStock.toString();
   if (data.emoji !== undefined) set.emoji = data.emoji;
-  if (data.category !== undefined) set.category = data.category;
+  if (data.categoryId !== undefined) set.categoryId = data.categoryId;
   if (data.imageKey !== undefined) set.imageKey = data.imageKey;
   if (data.imageUrl !== undefined) set.imageUrl = data.imageUrl;
 
@@ -124,7 +180,8 @@ export async function updateProductRow(
     .set(set)
     .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
     .returning();
-  return row ? toProductDto(row) : null;
+  if (!row) return null;
+  return toProductDto(row, await selectCategoryRef(tx, tenantId, row.categoryId));
 }
 
 /**
@@ -150,11 +207,12 @@ export async function selectProducts(
   tenantId: string,
 ): Promise<ProductDto[]> {
   const rows = await tx
-    .select()
+    .select({ product: products, category: categoryJoinColumns })
     .from(products)
+    .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(eq(products.tenantId, tenantId))
     .orderBy(asc(products.name));
-  return rows.map(toProductDto);
+  return rows.map((r) => toProductDto(r.product, toCategoryRef(r.category)));
 }
 
 export async function selectProductById(
@@ -163,11 +221,12 @@ export async function selectProductById(
   productId: string,
 ): Promise<ProductDto | null> {
   const [row] = await tx
-    .select()
+    .select({ product: products, category: categoryJoinColumns })
     .from(products)
+    .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
     .limit(1);
-  return row ? toProductDto(row) : null;
+  return row ? toProductDto(row.product, toCategoryRef(row.category)) : null;
 }
 
 /** Busca por código de barras (RF01) — único por tenant. */
@@ -177,11 +236,12 @@ export async function selectProductByBarcode(
   barcode: string,
 ): Promise<ProductDto | null> {
   const [row] = await tx
-    .select()
+    .select({ product: products, category: categoryJoinColumns })
     .from(products)
+    .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(and(eq(products.tenantId, tenantId), eq(products.barcode, barcode)))
     .limit(1);
-  return row ? toProductDto(row) : null;
+  return row ? toProductDto(row.product, toCategoryRef(row.category)) : null;
 }
 
 /** Busca por nome, parcial e case-insensitive (RF02). */
@@ -192,12 +252,13 @@ export async function searchProductsByName(
   limit = 20,
 ): Promise<ProductDto[]> {
   const rows = await tx
-    .select()
+    .select({ product: products, category: categoryJoinColumns })
     .from(products)
+    .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(and(eq(products.tenantId, tenantId), ilike(products.name, `%${query}%`)))
     .orderBy(asc(products.name))
     .limit(limit);
-  return rows.map(toProductDto);
+  return rows.map((r) => toProductDto(r.product, toCategoryRef(r.category)));
 }
 
 /** Soma `delta` (assinado: + entrada, − saída) ao estoque do produto (RF01/RF03). */
@@ -244,7 +305,8 @@ export async function setProductMinStock(
     })
     .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
     .returning();
-  return row ? toProductDto(row) : null;
+  if (!row) return null;
+  return toProductDto(row, await selectCategoryRef(tx, tenantId, row.categoryId));
 }
 
 /** Produtos com estoque ≤ mínimo (e mínimo definido) (RF07/RN06). */
@@ -253,8 +315,9 @@ export async function selectLowStockProducts(
   tenantId: string,
 ): Promise<ProductDto[]> {
   const rows = await tx
-    .select()
+    .select({ product: products, category: categoryJoinColumns })
     .from(products)
+    .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
     .where(
       and(
         eq(products.tenantId, tenantId),
@@ -263,7 +326,7 @@ export async function selectLowStockProducts(
       ),
     )
     .orderBy(asc(products.name));
-  return rows.map(toProductDto);
+  return rows.map((r) => toProductDto(r.product, toCategoryRef(r.category)));
 }
 
 /** Nome da loja (tenant) — usado para nomear a pasta das fotos no R2 (RN03). */

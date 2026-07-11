@@ -8,8 +8,12 @@ import {
   lookupProductByBarcodeAction,
 } from "@/app/(app)/caixa/actions";
 import { centsToBRL } from "@/lib/format/money";
-import { PRODUCT_CATEGORIES } from "@/lib/validation/product";
-import type { ProductDto } from "@/types/product";
+import { CATEGORY_PALETTE } from "@/lib/validation/product";
+import type {
+  ProductCategoryDto,
+  ProductCategoryRef,
+  ProductDto,
+} from "@/types/product";
 import type { PaymentMethod } from "@/types/sale";
 
 import { HelpTip } from "@/components/ui/help-tip";
@@ -18,19 +22,24 @@ import { Cart } from "./Cart";
 import { type ConfirmResult, PaymentDialog } from "./PaymentDialog";
 import { useCart } from "./use-cart";
 
-const CATEGORY_COLORS: Record<string, { bg: string; fg: string; bd: string }> = {
-  Bebidas:    { bg: "#e0f2fe", fg: "#0369a1", bd: "#bae6fd" },
-  Hortifruti: { bg: "#dcfce7", fg: "#15803d", bd: "#bbf7d0" },
-  Mercearia:  { bg: "#fef3c7", fg: "#b45309", bd: "#fde68a" },
-  Lanches:    { bg: "#ffedd5", fg: "#c2410c", bd: "#fed7aa" },
-  Doces:      { bg: "#fce7f3", fg: "#be185d", bd: "#fbcfe8" },
-  Limpeza:    { bg: "#cffafe", fg: "#0e7490", bd: "#a5f3fc" },
-  Outros:     { bg: "#f1f5f9", fg: "#475569", bd: "#e2e8f0" },
-};
+type ChipStyle = { bg: string; fg: string; bd: string };
 
-function getCategoryStyle(category: string | null) {
-  if (!category) return CATEGORY_COLORS["Outros"];
-  return CATEGORY_COLORS[category] ?? CATEGORY_COLORS["Outros"];
+// Sentinelas de filtro — ids de categoria são uuids, nunca colidem com elas.
+const FILTER_ALL = "__todos__";
+const FILTER_NONE = "__sem_categoria__";
+
+/** Estilo fixo do chip "Todos" (mesmo visual de antes do 0025F). */
+const ALL_CHIP_STYLE: ChipStyle = { bg: "#eef2ff", fg: "#4f46e5", bd: "#c7d2fe" };
+
+/**
+ * Tratamento neutro do produto sem categoria (RN04 — null é ausência, nunca
+ * vira "Outros"). Mesmos tons do antigo fallback visual.
+ */
+const NO_CATEGORY_STYLE: ChipStyle = { bg: "#f1f5f9", fg: "#475569", bd: "#e2e8f0" };
+
+function getCategoryStyle(category: ProductCategoryRef | null): ChipStyle {
+  if (!category) return NO_CATEGORY_STYLE;
+  return CATEGORY_PALETTE[category.color];
 }
 
 function getStockBadge(p: ProductDto): { label: string; bg: string; color: string } {
@@ -41,14 +50,21 @@ function getStockBadge(p: ProductDto): { label: string; bg: string; color: strin
   return { label: String(p.stockQuantity), bg: "#dcfce7", color: "#15803d" };
 }
 
-const ALL_CATEGORIES = ["Todos", ...PRODUCT_CATEGORIES] as const;
-
-export function CashierScreen({ products }: { products: ProductDto[] }) {
+export function CashierScreen({
+  products,
+  categories,
+}: {
+  products: ProductDto[];
+  categories: ProductCategoryDto[];
+}) {
   const cart = useCart();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [activeCategory, setActiveCategory] = React.useState("Todos");
+  const [activeCategory, setActiveCategory] = React.useState(FILTER_ALL);
+  // Chips de categoria recolhidos por padrão — "Todos" fica sempre visível e
+  // o botão "Categorias" expande/oculta o restante (pedido do owner, 0025F).
+  const [chipsExpanded, setChipsExpanded] = React.useState(false);
   const [mobileTab, setMobileTab] = React.useState<"products" | "cart">(
     "products",
   );
@@ -72,17 +88,38 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
     searchRef.current?.focus();
   }
 
-  const availableCategories = React.useMemo(() => {
-    const cats = new Set(products.map((p) => p.category ?? "Outros"));
-    return ALL_CATEGORIES.filter((c) => c === "Todos" || cats.has(c));
-  }, [products]);
+  // Chips dinâmicos (RF07): "Todos" + categorias do tenant por `position`;
+  // "Sem categoria" entra no FIM apenas quando existe produto sem categoria
+  // (RF08) — nunca é registro, só o estado null filtrável (RN04).
+  const categoryChips = React.useMemo(() => {
+    const chips: { key: string; label: string; color: ChipStyle }[] = [
+      { key: FILTER_ALL, label: "Todos", color: ALL_CHIP_STYLE },
+      ...[...categories]
+        .sort((a, b) => a.position - b.position)
+        .map((c) => ({
+          key: c.id,
+          label: c.name,
+          color: CATEGORY_PALETTE[c.color],
+        })),
+    ];
+    if (products.some((p) => p.category === null)) {
+      chips.push({
+        key: FILTER_NONE,
+        label: "Sem categoria",
+        color: NO_CATEGORY_STYLE,
+      });
+    }
+    return chips;
+  }, [categories, products]);
 
   const filteredProducts = React.useMemo(() => {
     const q = query.toLowerCase().trim();
     return products.filter((p) => {
       const matchesCat =
-        activeCategory === "Todos" ||
-        (p.category ?? "Outros") === activeCategory;
+        activeCategory === FILTER_ALL ||
+        (activeCategory === FILTER_NONE
+          ? p.category === null
+          : p.category?.id === activeCategory);
       const matchesQ = !q || p.name.toLowerCase().includes(q);
       return matchesCat && matchesQ;
     });
@@ -421,49 +458,103 @@ export function CashierScreen({ products }: { products: ProductDto[] }) {
         )}
 
         {showGrid && <>
-        {/* Category pills */}
+        {/* Category pills — "Todos" fixo + toggle "Categorias"; expandido usa
+            wrap (sem scroll horizontal), recolhido mantém o chip ativo visível */}
         <div
+          data-testid="category-chips"
           style={{
             display: "flex",
+            flexWrap: "wrap",
             gap: 8,
-            overflowX: "auto",
             paddingBottom: 14,
             flexShrink: 0,
           }}
         >
-          {availableCategories.map((cat) => {
-            const active = cat === activeCategory;
-            const catColor =
-              cat === "Todos"
-                ? { bg: "#eef2ff", fg: "#4f46e5", bd: "#c7d2fe" }
-                : CATEGORY_COLORS[cat] ?? { bg: "#f1f5f9", fg: "#475569", bd: "#e2e8f0" };
-            const style = active
-              ? catColor
-              : { bg: "#fff", fg: "#64748b", bd: "#e8ebf1" };
+          {(() => {
+            const renderChip = (chip: {
+              key: string;
+              label: string;
+              color: ChipStyle;
+            }) => {
+              const active = chip.key === activeCategory;
+              const style = active
+                ? chip.color
+                : { bg: "#fff", fg: "#64748b", bd: "#e8ebf1" };
+              return (
+                <button
+                  key={chip.key}
+                  onClick={() => setActiveCategory(chip.key)}
+                  style={{
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "9px 16px",
+                    border: `1px solid ${style.bd}`,
+                    borderRadius: 11,
+                    background: style.bg,
+                    color: style.fg,
+                    font: "inherit",
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {chip.label}
+                </button>
+              );
+            };
+            const [allChip, ...restChips] = categoryChips;
+            const activeChip = restChips.find((c) => c.key === activeCategory);
             return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  padding: "9px 16px",
-                  border: `1px solid ${style.bd}`,
-                  borderRadius: 11,
-                  background: style.bg,
-                  color: style.fg,
-                  font: "inherit",
-                  fontSize: 13.5,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {cat}
-              </button>
+              <>
+                {renderChip(allChip)}
+                <button
+                  onClick={() => setChipsExpanded((v) => !v)}
+                  aria-expanded={chipsExpanded}
+                  aria-label={
+                    chipsExpanded ? "Ocultar categorias" : "Mostrar categorias"
+                  }
+                  style={{
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "9px 14px",
+                    border: "1px dashed #c7d2fe",
+                    borderRadius: 11,
+                    background: chipsExpanded ? "#eef2ff" : "#fff",
+                    color: "#4f46e5",
+                    font: "inherit",
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Categorias
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      transform: chipsExpanded ? "rotate(180deg)" : "none",
+                      transition: "transform .15s",
+                    }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {chipsExpanded
+                  ? restChips.map(renderChip)
+                  : activeChip && renderChip(activeChip)}
+              </>
             );
-          })}
+          })()}
         </div>
 
         {/* Product grid */}

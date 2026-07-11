@@ -13,7 +13,7 @@ const items: CartItem[] = [
     unitPriceCents: 1000,
     quantity: 2,
     emoji: "🥤",
-    category: "Bebidas",
+    category: { id: "c1", name: "Bebidas", color: "azul" },
     imageUrl: null,
   },
 ];

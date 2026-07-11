@@ -1,7 +1,14 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { subscriptionLog, tenantMembers, tenants, users } from "@/db/schema";
+import {
+  productCategories,
+  subscriptionLog,
+  tenantMembers,
+  tenants,
+  users,
+} from "@/db/schema";
+import { DEFAULT_PRODUCT_CATEGORIES } from "@/lib/validation/product";
 
 /**
  * Signup atômico: cria usuário + loja + vínculo owner. Roda no `db` direto (papel
@@ -22,11 +29,29 @@ export async function createUserWithTenant(
     const validUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const [tenant] = await tx
       .insert(tenants)
-      .values({ name: tenantName, validUntil })
+      .values({
+        name: tenantName,
+        validUntil,
+        // RN03 (0025F): tenant novo já nasce com as 7 categorias padrão —
+        // grava a flag na própria INSERT (sem UPDATE separado).
+        productCategoriesSeededAt: new Date(),
+      })
       .returning({ id: tenants.id });
     await tx
       .insert(tenantMembers)
       .values({ tenantId: tenant.id, userId: user.id, role: "owner" });
+    // RN03 (0025F): as 7 categorias padrão, na mesma transação do onboarding —
+    // DEFAULT_PRODUCT_CATEGORIES é a fonte única (lib/validation/product.ts),
+    // também consumida por scripts/seed-product-categories.ts (tenants
+    // existentes) e pelos testes T15/T18.
+    await tx.insert(productCategories).values(
+      DEFAULT_PRODUCT_CATEGORIES.map((c) => ({
+        tenantId: tenant.id,
+        name: c.name,
+        color: c.color,
+        position: c.position,
+      })),
+    );
     // RN01/RF01: trial de 7 dias + log atômico na mesma transação.
     await tx.insert(subscriptionLog).values({
       tenantId: tenant.id,

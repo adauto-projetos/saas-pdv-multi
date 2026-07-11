@@ -17,15 +17,15 @@
  *   likewise succeeds and the "row still intact" assertion detects the mutation.
  *   Both failures are red; CI blocks the merge. This is the contract for RN03.
  *
- * Tables under test (19 — tenants root excluded; platform_settings excluded —
+ * Tables under test (20 — tenants root excluded; platform_settings excluded —
  * global singleton, no tenant_id):
- *   products, customers, sales, sale_items, comandas, comanda_items,
- *   kitchen_order_seqs, print_logs, stock_movements, cash_sessions,
- *   cash_movements, receivables, receivable_payments, payables,
+ *   products, product_categories, customers, sales, sale_items, comandas,
+ *   comanda_items, kitchen_order_seqs, print_logs, stock_movements,
+ *   cash_sessions, cash_movements, receivables, receivable_payments, payables,
  *   payable_payments, subscription_log, override_log, user_permissions,
  *   tenant_members
  *
- * (The plan prose said 18; the live schema currently exposes 19 tables with a
+ * (The plan prose said 18; the live schema currently exposes 20 tables with a
  * `tenant_id` column, and `iso-RN03-allpresent` derives the expected count from
  * the schema at runtime — so that test, not this comment, is authoritative.)
  */
@@ -48,6 +48,7 @@ import {
   payablePayments,
   payables,
   printLogs,
+  productCategories,
   products,
   receivablePayments,
   receivables,
@@ -73,6 +74,7 @@ import {
   seedOperator,
   seedPayable,
   seedProduct,
+  seedProductCategory,
   seedReceivable,
   seedTenant,
 } from "./seed";
@@ -337,6 +339,20 @@ suite("tenant-isolation-regression (RF03/RN03)", () => {
       mutatePatch: { name: "hacked" },
       originalKey: "name",
       originalValue: "Cliente B Isolation",
+    });
+
+    // -- product_categories (0025F) -----------------------------------------
+    const productCategoryB = await seedProductCategory(tenantB, {
+      name: "Categoria B Isolation",
+    });
+    tableConfigs.push({
+      name: "product_categories",
+      table: productCategories,
+      readWhere: eq(productCategories.id, productCategoryB.id),
+      writeWhere: eq(productCategories.id, productCategoryB.id),
+      mutatePatch: { name: "hacked" },
+      originalKey: "name",
+      originalValue: "Categoria B Isolation",
     });
 
     // -- sales -------------------------------------------------------------

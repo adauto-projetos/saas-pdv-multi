@@ -1,6 +1,6 @@
-import type { ProductUnit } from "@/lib/validation/product";
+import type { CategoryColor, ProductUnit } from "@/lib/validation/product";
 
-export type { ProductUnit };
+export type { CategoryColor, ProductUnit };
 
 /**
  * Forma de resposta de um produto (nunca expõe a row crua do banco).
@@ -20,7 +20,9 @@ export type ProductDto = {
   stockQuantity: number;
   minStock: number | null;
   emoji: string | null;
-  category: string | null;
+  // Categoria do tenant embutida via LEFT JOIN (0025F). null = "Sem categoria"
+  // (RN04 — ausência, não registro).
+  category: ProductCategoryRef | null;
   // Foto do produto (feature 0016F). Referência ao objeto no R2; nunca o binário.
   // Ambas nullable (RN01: foto é opcional). `imageKey` é a chave
   // (<slug-da-loja>-<tenantId>/<uuid>.webp, usada p/ deletar), `imageUrl` é a URL pública.
@@ -29,6 +31,29 @@ export type ProductDto = {
   createdAt: string;
   updatedAt: string;
 };
+
+/**
+ * Categoria de produto do tenant (0025F). `color` é sempre um slug da
+ * CATEGORY_PALETTE (nunca hex cru); `position` é a ordem manual (RF06).
+ * Datas como string ISO, seguindo os demais DTOs.
+ */
+export type ProductCategoryDto = {
+  id: string;
+  name: string;
+  color: CategoryColor;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Referência enxuta de categoria embutida em outros DTOs — é o shape de
+ * `ProductDto.category` (0025F); `null` = Sem categoria (RN04).
+ */
+export type ProductCategoryRef = Pick<
+  ProductCategoryDto,
+  "id" | "name" | "color"
+>;
 
 /** Sugestão de preço da RF06 (preview) — não persiste nada. */
 export type PriceSuggestionDto = {

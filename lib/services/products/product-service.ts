@@ -1,5 +1,11 @@
+import type { RlsTx } from "@/db/rls";
 import { withUserRls } from "@/db/rls";
-import { ConflictError, isUniqueViolation, NotFoundError } from "@/lib/services/errors";
+import {
+  ConflictError,
+  isUniqueViolation,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/services/errors";
 import { selectProductSalesQuantities } from "@/lib/services/sales/data";
 import type {
   ApplyCostChangeInput,
@@ -13,12 +19,37 @@ import type {
   ProductDto,
 } from "@/types/product";
 
+import * as categoryData from "./category-data";
 import * as imageService from "./image-service";
 import * as data from "./data";
 import { resolvePriceOnCreate, suggestPriceOnCostChange } from "./markup";
 
 const BARCODE_CONFLICT_MESSAGE =
   "Código de barras já cadastrado nesta loja";
+const INVALID_CATEGORY_MESSAGE = "Categoria inválida";
+
+/**
+ * Guard OBRIGATÓRIO do vínculo produto→categoria (0025F/RN02): o FK do Postgres
+ * é checado como owner e NÃO passa pela RLS — um `categoryId` de outro tenant
+ * passaria na constraint. A checagem sob RLS (que só enxerga o próprio tenant)
+ * é a verificação real de tenant.
+ */
+async function assertCategoryInTenant(
+  tx: RlsTx,
+  tenantId: string,
+  categoryId: string,
+): Promise<void> {
+  const category = await categoryData.selectProductCategoryById(
+    tx,
+    tenantId,
+    categoryId,
+  );
+  if (!category) {
+    throw new ValidationError(INVALID_CATEGORY_MESSAGE, {
+      categoryId: INVALID_CATEGORY_MESSAGE,
+    });
+  }
+}
 
 /**
  * Cria produto sob a RLS do usuário (RN05): `tenantId` vem do contexto de auth,
@@ -31,8 +62,12 @@ export async function createProduct(
 ): Promise<ProductDto> {
   const { salePriceCents, priceIsManual } = resolvePriceOnCreate(input);
   try {
-    return await withUserRls(ctx.userId, (tx) =>
-      data.insertProduct(tx, ctx.tenantId, {
+    return await withUserRls(ctx.userId, async (tx) => {
+      // RN02 (0025F): valida o vínculo de categoria sob RLS antes de gravar.
+      if (input.categoryId != null) {
+        await assertCategoryInTenant(tx, ctx.tenantId, input.categoryId);
+      }
+      return data.insertProduct(tx, ctx.tenantId, {
         name: input.name,
         barcode: input.barcode ?? null,
         unit: input.unit,
@@ -43,9 +78,9 @@ export async function createProduct(
         stockQuantity: input.stockQuantity,
         minStock: input.minStock ?? null,
         emoji: input.emoji ?? null,
-        category: input.category ?? null,
-      }),
-    );
+        categoryId: input.categoryId ?? null,
+      });
+    });
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new ConflictError(BARCODE_CONFLICT_MESSAGE, "barcode");
@@ -66,7 +101,8 @@ export async function updateProduct(
   if (input.stockQuantity !== undefined) patch.stockQuantity = input.stockQuantity;
   if (input.minStock !== undefined) patch.minStock = input.minStock ?? null;
   if (input.emoji !== undefined) patch.emoji = input.emoji ?? null;
-  if (input.category !== undefined) patch.category = input.category ?? null;
+  // null explícito = remover categoria (volta a "Sem categoria", RN04).
+  if (input.categoryId !== undefined) patch.categoryId = input.categoryId;
   if (input.costCents !== undefined) patch.costCents = input.costCents ?? null;
   if (input.markupPercent !== undefined)
     patch.markupPercent = input.markupPercent ?? null;
@@ -77,9 +113,13 @@ export async function updateProduct(
   }
 
   try {
-    const result = await withUserRls(ctx.userId, (tx) =>
-      data.updateProductRow(tx, ctx.tenantId, input.id, patch),
-    );
+    const result = await withUserRls(ctx.userId, async (tx) => {
+      // RN02 (0025F): valida o vínculo de categoria sob RLS antes de gravar.
+      if (input.categoryId != null) {
+        await assertCategoryInTenant(tx, ctx.tenantId, input.categoryId);
+      }
+      return data.updateProductRow(tx, ctx.tenantId, input.id, patch);
+    });
     if (!result) throw new NotFoundError("Produto não encontrado");
     return result;
   } catch (error) {

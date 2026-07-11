@@ -2,7 +2,11 @@
 
 import * as React from "react";
 
-import type { ProductDto, ProductUnit } from "@/types/product";
+import type {
+  ProductCategoryRef,
+  ProductDto,
+  ProductUnit,
+} from "@/types/product";
 
 export type CartItem = {
   productId: string;
@@ -11,7 +15,8 @@ export type CartItem = {
   unitPriceCents: number;
   quantity: number;
   emoji: string | null;
-  category: string | null;
+  // Espelha ProductDto.category (0025F): null = Sem categoria (RN04).
+  category: ProductCategoryRef | null;
   imageUrl: string | null;
 };
 

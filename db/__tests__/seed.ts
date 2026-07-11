@@ -10,6 +10,7 @@ import {
   comandas,
   customers,
   payables,
+  productCategories,
   products,
   receivables,
   tenantMembers,
@@ -170,6 +171,32 @@ export async function seedProduct(
     })
     .returning({ id: products.id });
   return product.id;
+}
+
+// ---------------------------------------------------------------------------
+// Product category seed helper (0025F). Uses the owner `db` connection —
+// bypasses RLS intentionally (correct for seeding test data across tenants).
+// ---------------------------------------------------------------------------
+
+/** Inserts a product category for the given tenant; returns the full inserted row. */
+export async function seedProductCategory(
+  tenantId: string,
+  opts: {
+    name?: string;
+    color?: string;
+    position?: number;
+  } = {},
+): Promise<typeof productCategories.$inferSelect> {
+  const [row] = await db
+    .insert(productCategories)
+    .values({
+      tenantId,
+      name: opts.name ?? "Categoria Teste",
+      color: opts.color ?? "azul",
+      position: opts.position ?? 0,
+    })
+    .returning();
+  return row;
 }
 
 // ---------------------------------------------------------------------------

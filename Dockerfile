@@ -23,9 +23,11 @@ COPY --from=builder /app .
 
 EXPOSE 3000
 
-# Ao iniciar: aplica schema + RLS, VERIFICA (SESSION_SECRET + policies de RLS)
-# e só então sobe o servidor. Se a verificação falhar (ex.: push apagou as RLS
-# policies, ou SESSION_SECRET ausente), o boot é abortado em vez de servir
-# inseguro. Se o banco não estiver pronto, o container falha e o orquestrador
-# (Coolify / Docker) reinicia automaticamente até conseguir.
-CMD ["sh", "-c", "npm run db:setup && npm run verify:prod && npm start"]
+# Ao iniciar: aplica schema + RLS, semeia as 7 categorias padrão de produto
+# (RN03, feature 0025F — idempotente, só toca tenant pendente), VERIFICA
+# (SESSION_SECRET + policies de RLS) e só então sobe o servidor. Se a
+# verificação falhar (ex.: push apagou as RLS policies, ou SESSION_SECRET
+# ausente), o boot é abortado em vez de servir inseguro. Se o banco não
+# estiver pronto, o container falha e o orquestrador (Coolify / Docker)
+# reinicia automaticamente até conseguir.
+CMD ["sh", "-c", "npm run db:setup && npx tsx scripts/seed-product-categories.ts && npm run verify:prod && npm start"]

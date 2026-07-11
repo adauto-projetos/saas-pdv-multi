@@ -6,11 +6,15 @@ import { toast } from "sonner";
 import { createProductAction } from "@/app/(app)/products/actions";
 import { ProductForm } from "@/components/products/ProductForm";
 import type { CreateProductInput } from "@/lib/validation/product";
+import type { ProductCategoryDto } from "@/types/product";
 
 export function NewProductForm({
   defaultMarkupPercent,
+  categories,
 }: {
   defaultMarkupPercent: number;
+  /** Categorias do tenant (0025F/RF07) — buscadas pela página RSC. */
+  categories: ProductCategoryDto[];
 }) {
   const router = useRouter();
 
@@ -49,6 +53,7 @@ export function NewProductForm({
     <ProductForm
       mode="create"
       defaultMarkupPercent={defaultMarkupPercent}
+      categories={categories}
       onSubmit={onSubmit}
     />
   );

@@ -23,26 +23,48 @@ export default async function ProductsPage() {
         >
           Produtos
         </h1>
-        <Link
-          href="/products/new"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            height: 46,
-            padding: "0 20px",
-            border: "none",
-            borderRadius: 13,
-            background: "#4f46e5",
-            color: "#fff",
-            fontSize: 14.5,
-            fontWeight: 700,
-            textDecoration: "none",
-            boxShadow: "0 6px 16px rgba(79,70,229,.28)",
-          }}
-        >
-          + Novo produto
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* RF05 — acesso à gestão de categorias a partir da tela de produtos. */}
+          <Link
+            href="/products/categories"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              height: 46,
+              padding: "0 20px",
+              border: "1px solid #e2e8f0",
+              borderRadius: 13,
+              background: "#fff",
+              color: "#475569",
+              fontSize: 14.5,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Gerenciar categorias
+          </Link>
+          <Link
+            href="/products/new"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              height: 46,
+              padding: "0 20px",
+              border: "none",
+              borderRadius: 13,
+              background: "#4f46e5",
+              color: "#fff",
+              fontSize: 14.5,
+              fontWeight: 700,
+              textDecoration: "none",
+              boxShadow: "0 6px 16px rgba(79,70,229,.28)",
+            }}
+          >
+            + Novo produto
+          </Link>
+        </div>
       </div>
 
       {!result.ok ? (

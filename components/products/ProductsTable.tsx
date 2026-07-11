@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { centsToBRL } from "@/lib/format/money";
+import { CATEGORY_PALETTE } from "@/lib/validation/product";
 import type { ProductDto } from "@/types/product";
 
 /**
@@ -21,6 +22,7 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
         <TableRow>
           <PdvTableHead className="w-12">Foto</PdvTableHead>
           <PdvTableHead>Produto</PdvTableHead>
+          <PdvTableHead>Categoria</PdvTableHead>
           <PdvTableHead className="text-right">Preço de venda</PdvTableHead>
           <PdvTableHead className="text-center">Un.</PdvTableHead>
           <PdvTableHead className="text-right">Estoque</PdvTableHead>
@@ -47,6 +49,26 @@ export function ProductsTable({ products }: { products: ProductDto[] }) {
               </div>
             </PdvTableCell>
             <PdvTableCell className="font-medium">{product.name}</PdvTableCell>
+            <PdvTableCell>
+              {product.category ? (
+                // Badge colorida da categoria do tenant (RF07) — cores da paleta.
+                <span
+                  className="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                  style={{
+                    background: CATEGORY_PALETTE[product.category.color].bg,
+                    color: CATEGORY_PALETTE[product.category.color].fg,
+                    border: `1px solid ${CATEGORY_PALETTE[product.category.color].bd}`,
+                  }}
+                >
+                  {product.category.name}
+                </span>
+              ) : (
+                // RN04: ausência de categoria — neutro, sem cor de paleta.
+                <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">
+                  Sem categoria
+                </span>
+              )}
+            </PdvTableCell>
             <PdvTableCell className="text-right font-semibold text-green-600">
               {centsToBRL(product.salePriceCents)}
             </PdvTableCell>

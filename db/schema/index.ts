@@ -3,6 +3,7 @@ export * from "./tenants";
 export * from "./tenant-members";
 export * from "./user-permissions";
 export * from "./override-log";
+export * from "./product-categories";
 export * from "./products";
 export * from "./sales";
 export * from "./sale-items";

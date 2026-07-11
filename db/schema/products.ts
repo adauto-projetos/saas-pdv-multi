@@ -12,6 +12,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { productCategories } from "./product-categories";
 import { tenants } from "./tenants";
 
 /**
@@ -43,7 +44,16 @@ export const products = pgTable(
     // Nível mínimo de estoque (opcional) — dispara alerta de estoque baixo (RF06/RN06).
     minStock: numeric("min_stock", { precision: 10, scale: 3 }),
     emoji: text("emoji"),
+    // Deprecated (feature 0025F): mantida só como fonte do backfill e fallback
+    // de rollback (push-only não tem release faseado) — o app para de
+    // escrever aqui após o retrofit; leitura passa a ser via `categoryId`.
     category: text("category"),
+    // Categoria do produto (feature 0025F) — FK para a tabela tenant-scoped
+    // `product_categories`. ON DELETE SET NULL: excluir a categoria move o
+    // produto para "Sem categoria" (RF03/RN04), sem apagar o produto.
+    categoryId: uuid("category_id").references(() => productCategories.id, {
+      onDelete: "set null",
+    }),
     // Foto do produto (feature 0016F). O banco guarda só a referência, nunca o binário:
     // `image_key` é a chave do objeto no R2 (<slug-da-loja>-<tenant_id>/<uuid>.webp — usada p/ deletar),
     // `image_url` é a URL pública de exibição. Ambas nullable (RN01: foto é opcional).
@@ -71,6 +81,9 @@ export const products = pgTable(
       .where(sql`${t.barcode} is not null`),
     // Todas as queries são tenant-scoped: índice no padrão de acesso primário.
     index("products_tenant_id_idx").on(t.tenantId),
+    // 0025F: contagem/JOIN por categoria filtram (tenant_id, category_id) —
+    // mesmo padrão composto de receivables/stock_movements.
+    index("products_tenant_category_idx").on(t.tenantId, t.categoryId),
   ],
 );
 

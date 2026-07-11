@@ -31,6 +31,14 @@ export const tenants = pgTable("tenants", {
   // suspended_at: preenchido manualmente pelo founder para forçar status 'travada'
   // independente de valid_until (RN03). Null = não suspensa manualmente.
   suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+  // product_categories_seeded_at (feature 0025F, RN03): grava quando o seed das
+  // 7 categorias padrão + backfill de produtos rodou para este tenant. Gate de
+  // execução única — sem ela, um re-run do seed no boot ressuscitaria categoria
+  // padrão excluída e re-vincularia produto movido para "Sem categoria". Null =
+  // tenant ainda pendente de seed.
+  productCategoriesSeededAt: timestamp("product_categories_seeded_at", {
+    withTimezone: true,
+  }),
 });
 
 export type Tenant = typeof tenants.$inferSelect;

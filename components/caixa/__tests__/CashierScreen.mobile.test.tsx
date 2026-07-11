@@ -52,7 +52,7 @@ const SAMPLE_PRODUCT: ProductDto = {
   unit: "un",
   barcode: null,
   emoji: "🥤",
-  category: "Bebidas",
+  category: { id: "c1", name: "Bebidas", color: "azul" },
   imageKey: null,
   imageUrl: null,
   stockQuantity: 10,
@@ -71,7 +71,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
 
   // --- T16: tab bar present ---
   it("T16 — tab bar is present in DOM (flex lg:hidden)", () => {
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     const prodBtn = screen.getByRole("button", { name: /^produtos$/i });
     const cartBtn = screen.getByRole("button", { name: /^carrinho$/i });
     expect(prodBtn).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
 
   // --- T17: default tab is Produtos ---
   it("T17 — default active tab is Produtos", () => {
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     // Products panel should be flex (visible); search input is inside products panel
     const searchInput = screen.getByRole("textbox", {
       name: /código de barras/i,
@@ -91,7 +91,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
   // --- T18: switch to Carrinho tab ---
   it("T18 — clicking Carrinho tab shows cart panel", async () => {
     const user = userEvent.setup();
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     const cartBtn = screen.getByRole("button", { name: /^carrinho$/i });
     await user.click(cartBtn);
     // Cart panel becomes visible — empty state text appears
@@ -103,7 +103,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
     mockCart.items = [
       { productId: "p1", name: "Refri", quantity: 2, unitPriceCents: 500, unit: "un", emoji: null, category: null },
     ];
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     // The Carrinho tab button's accessible name includes the badge count
     const carrinhoTab = screen.getByRole("button", { name: /^carrinho/i });
     expect(carrinhoTab).toHaveTextContent("1");
@@ -116,14 +116,14 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
       { productId: "p2", name: "B", quantity: 1, unitPriceCents: 200, unit: "un", emoji: null, category: null },
       { productId: "p3", name: "C", quantity: 1, unitPriceCents: 300, unit: "un", emoji: null, category: null },
     ];
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     const carrinhoTab = screen.getByRole("button", { name: /^carrinho/i });
     expect(carrinhoTab).toHaveTextContent("3");
   });
 
   // --- T21: Products tab has search input ---
   it("T21 — Products tab has search bar", () => {
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     expect(
       screen.getByRole("textbox", { name: /código de barras/i }),
     ).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
   // --- T22–T23: Cart tab has Cobrar and Limpar ---
   it("T22 — Carrinho tab has Finalizar venda (Cobrar) button", async () => {
     const user = userEvent.setup();
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     await user.click(screen.getByRole("button", { name: /^carrinho$/i }));
     expect(
       screen.getByRole("button", { name: /finalizar venda/i }),
@@ -141,7 +141,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
 
   it("T23 — Carrinho tab has Limpar button", async () => {
     const user = userEvent.setup();
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
     await user.click(screen.getByRole("button", { name: /^carrinho$/i }));
     expect(
       screen.getByRole("button", { name: /^limpar$/i }),
@@ -154,7 +154,7 @@ describe("CashierScreen mobile tabs (RF07–RF09, RN04)", () => {
       { productId: "p1", name: "Refri", quantity: 2, unitPriceCents: 500, unit: "un", emoji: null, category: null },
     ];
     const user = userEvent.setup();
-    render(<CashierScreen products={[SAMPLE_PRODUCT]} />);
+    render(<CashierScreen products={[SAMPLE_PRODUCT]} categories={[]} />);
 
     // Switch to cart (button name starts with "Carrinho" + badge "1")
     await user.click(screen.getByRole("button", { name: /^carrinho/i }));

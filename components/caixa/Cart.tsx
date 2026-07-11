@@ -1,22 +1,17 @@
 "use client";
 
 import { centsToBRL } from "@/lib/format/money";
+import { CATEGORY_PALETTE } from "@/lib/validation/product";
+import type { ProductCategoryRef } from "@/types/product";
 
 import { itemSubtotal, type CartItem } from "./use-cart";
 
-const CATEGORY_BG: Record<string, string> = {
-  Bebidas:    "#e0f2fe",
-  Hortifruti: "#dcfce7",
-  Mercearia:  "#fef3c7",
-  Lanches:    "#ffedd5",
-  Doces:      "#fce7f3",
-  Limpeza:    "#cffafe",
-  Outros:     "#f1f5f9",
-};
+// Fundo neutro do item sem categoria (RN04 — null é ausência, nunca "Outros").
+const NO_CATEGORY_BG = "#f1f5f9";
 
-function tileBg(category: string | null): string {
-  if (!category) return CATEGORY_BG["Outros"];
-  return CATEGORY_BG[category] ?? CATEGORY_BG["Outros"];
+function tileBg(category: ProductCategoryRef | null): string {
+  if (!category) return NO_CATEGORY_BG;
+  return CATEGORY_PALETTE[category.color].bg;
 }
 
 export function Cart({

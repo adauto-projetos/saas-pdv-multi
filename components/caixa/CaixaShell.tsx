@@ -3,7 +3,7 @@
 import * as React from "react";
 import { FileText, ShoppingCart, Wallet } from "lucide-react";
 
-import type { ProductDto } from "@/types/product";
+import type { ProductCategoryDto, ProductDto } from "@/types/product";
 import type { CashSessionDto } from "@/types/profit";
 import {
   Dialog,
@@ -26,9 +26,11 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 export function CaixaShell({
   products,
+  categories,
   session,
 }: {
   products: ProductDto[];
+  categories: ProductCategoryDto[];
   session?: CashSessionDto | null;
 }) {
   const [tab, setTab] = React.useState<Tab>("caixa");
@@ -120,7 +122,7 @@ export function CaixaShell({
 
       {/* Caixa tab — always mounted, CSS-hide to preserve cart state */}
       <div className={tab === "caixa" ? "flex flex-1 min-w-0 overflow-hidden" : "hidden"}>
-        <CashierScreen products={products} />
+        <CashierScreen products={products} categories={categories} />
       </div>
 
       {/* Notas a Receber tab */}

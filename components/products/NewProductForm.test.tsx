@@ -19,6 +19,10 @@ vi.mock("sonner", () => ({
 vi.mock("@/app/(app)/products/actions", () => ({
   createProductAction: vi.fn(),
 }));
+// O CategorySelect (embutido no ProductForm, 0025F) importa a action de criação inline.
+vi.mock("@/app/(app)/products/categories/actions", () => ({
+  createProductCategoryAction: vi.fn(),
+}));
 
 import { toast } from "sonner";
 
@@ -44,7 +48,7 @@ describe("NewProductForm", () => {
   it("cria o produto e redireciona para /products no sucesso", async () => {
     mockedCreate.mockResolvedValue({ ok: true, data: { id: "p1" } as ProductDto });
     const user = userEvent.setup();
-    render(<NewProductForm defaultMarkupPercent={30} />);
+    render(<NewProductForm defaultMarkupPercent={30} categories={[]} />);
 
     await user.type(screen.getByLabelText("Nome"), "Pão");
     await user.type(screen.getByLabelText("Custo"), "5,00");
@@ -59,7 +63,7 @@ describe("NewProductForm", () => {
     // Upload da foto falha (R2 indisponível).
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
     const user = userEvent.setup();
-    render(<NewProductForm defaultMarkupPercent={30} />);
+    render(<NewProductForm defaultMarkupPercent={30} categories={[]} />);
 
     await user.type(screen.getByLabelText("Nome"), "Pão");
     await user.type(screen.getByLabelText("Custo"), "5,00");

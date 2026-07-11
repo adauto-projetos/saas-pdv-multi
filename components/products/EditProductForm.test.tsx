@@ -19,6 +19,10 @@ vi.mock("@/app/(app)/products/actions", () => ({
   previewPriceOnCostChangeAction: vi.fn(),
   applyCostChangeAction: vi.fn(),
 }));
+// O CategorySelect (embutido no ProductForm, 0025F) importa a action de criação inline.
+vi.mock("@/app/(app)/products/categories/actions", () => ({
+  createProductCategoryAction: vi.fn(),
+}));
 
 import {
   applyCostChangeAction,
@@ -56,7 +60,7 @@ describe("EditProductForm (RF07/RF06)", () => {
   it("edição sem mudar custo chama updateProduct e redireciona", async () => {
     mockedUpdate.mockResolvedValue({ ok: true, data: product });
     const user = userEvent.setup();
-    render(<EditProductForm product={product} />);
+    render(<EditProductForm product={product} categories={[]} />);
 
     const nome = screen.getByLabelText("Nome");
     await user.clear(nome);
@@ -84,7 +88,7 @@ describe("EditProductForm (RF07/RF06)", () => {
     });
     mockedApply.mockResolvedValue({ ok: true, data: product });
     const user = userEvent.setup();
-    render(<EditProductForm product={product} />);
+    render(<EditProductForm product={product} categories={[]} />);
 
     const custo = screen.getByLabelText("Custo");
     await user.clear(custo);

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # deploy.sh — versiona, push GitHub e redeploy no Hetzner
 # Uso: bash scripts/deploy.sh
-# Requer: SSH key em /tmp/pdv_deploy, git configurado, docker no servidor
+# Requer: SSH key em ~/.ssh/pdv_deploy, git configurado, docker no servidor
 
 set -e
 
 SERVER="root@37.27.220.149"
-KEY="/tmp/pdv_deploy"
+KEY="$HOME/.ssh/pdv_deploy"
 APP_DIR="/opt/pdv"
 
 # 1. Bump patch version (0.0.1 → 0.0.2)

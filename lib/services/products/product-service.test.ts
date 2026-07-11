@@ -7,9 +7,10 @@ import {
   createTestUser,
   deleteTestUser,
   HAS_AUTH,
+  seedProductCategory,
   seedTenant,
 } from "@/db/__tests__/seed";
-import { ConflictError } from "@/lib/services/errors";
+import { ConflictError, ValidationError } from "@/lib/services/errors";
 import {
   applyCostChangeSchema,
   createProductSchema,
@@ -311,5 +312,93 @@ suite("product-service (integração)", () => {
     // Nenhuma operação de storage foi disparada por create/update.
     expect(r2.put).not.toHaveBeenCalled();
     expect(r2.del).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Categoria do produto (feature 0025F) — guard cross-tenant + LEFT JOIN.
+  // -------------------------------------------------------------------------
+
+  it("T14/RN02 — createProduct com categoryId de outro tenant → ValidationError, nada gravado", async () => {
+    const foreign = await seedProductCategory(tenant2Id, {
+      name: "Categoria da Loja B",
+    });
+    await expect(
+      create({
+        name: "Cross tenant cat",
+        unit: "un",
+        stockQuantity: 0,
+        salePriceCents: 100,
+        categoryId: foreign.id,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      create({
+        name: "Cross tenant cat",
+        unit: "un",
+        stockQuantity: 0,
+        salePriceCents: 100,
+        categoryId: foreign.id,
+      }),
+    ).rejects.toThrow("Categoria inválida");
+
+    // O guard barrou ANTES do insert: o produto não existe na loja A.
+    const list = await service.listProducts(ctx);
+    expect(list.some((p) => p.name === "Cross tenant cat")).toBe(false);
+  });
+
+  it("T14/RN02 — updateProduct com categoryId de outro tenant → ValidationError, produto intacto", async () => {
+    const foreign = await seedProductCategory(tenant2Id, {
+      name: "Categoria da Loja B (update)",
+    });
+    const p = await create({
+      name: "Update cross tenant",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 100,
+    });
+    await expect(
+      service.updateProduct(
+        ctx,
+        updateProductSchema.parse({ id: p.id, categoryId: foreign.id }),
+      ),
+    ).rejects.toThrow("Categoria inválida");
+
+    const after = await service.getProduct(ctx, p.id);
+    expect(after.category).toBeNull();
+  });
+
+  it("categoryId da própria loja → ProductDto.category embutida via LEFT JOIN", async () => {
+    const own = await seedProductCategory(tenantId, {
+      name: "Categoria da Loja A",
+      color: "verde",
+      position: 42,
+    });
+    const created = await create({
+      name: "Com categoria própria",
+      unit: "un",
+      stockQuantity: 0,
+      salePriceCents: 100,
+      categoryId: own.id,
+    });
+    expect(created.category).toEqual({
+      id: own.id,
+      name: "Categoria da Loja A",
+      color: "verde",
+    });
+
+    // O LEFT JOIN dos selects devolve o mesmo shape { id, name, color }.
+    const fetched = await service.getProduct(ctx, created.id);
+    expect(fetched.category).toEqual({
+      id: own.id,
+      name: "Categoria da Loja A",
+      color: "verde",
+    });
+
+    // null explícito remove o vínculo (RN04 — volta a "Sem categoria").
+    const cleared = await service.updateProduct(
+      ctx,
+      updateProductSchema.parse({ id: created.id, categoryId: null }),
+    );
+    expect(cleared.category).toBeNull();
   });
 });
