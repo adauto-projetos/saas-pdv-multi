@@ -38,17 +38,23 @@ próximos passos é que fazem a instalação de verdade.
 
 ### 2. Gerar o arquivo de dados do cliente (na produção)
 
-Ainda na sua máquina (ou via SSH na Hetzner, do jeito que você já acessa a
-produção hoje), rode o script de exportação, passando o ID do tenant do
-cliente:
+O banco de produção não é acessível de fora da Hetzner — só o próprio
+container `app`, rodando lá, enxerga o Postgres de produção. Por isso, este
+passo é feito **via SSH na Hetzner** (mesmo acesso que você já usa para
+`bash scripts/deploy.sh`), rodando o script de exportação **dentro** do
+container `app`:
 
 ```bash
-npx tsx scripts/export-tenant.ts <tenantId> tenant-export.json
+ssh -i ~/.ssh/pdv_deploy root@37.27.220.149
+cd /opt/pdv
+docker compose -f docker-compose.prod.yml exec app npx tsx scripts/export-tenant.ts <tenantId> /app/tenant-export.json
+exit
 ```
 
-Isso gera um arquivo `tenant-export.json` com **todos os dados desse
-cliente** (produtos, vendas, clientes, fiado, caixa, etc.) — e só desse
-cliente, nenhum dado de outra loja.
+Isso gera um arquivo `tenant-export.json` **dentro do container**, com
+**todos os dados desse cliente** (produtos, vendas, clientes, fiado, caixa,
+etc.) — e só desse cliente, nenhum dado de outra loja. O passo 3 abaixo
+mostra como tirar esse arquivo de dentro do container.
 
 **Esse arquivo é sensível — nunca envie para o Git.** Ele contém dados
 pessoais dos clientes e as senhas dos usuários (em formato criptografado,
@@ -70,15 +76,20 @@ registrado na nuvem.
 
 ### 3. Transferir o arquivo para o PC do cliente
 
-O arquivo `tenant-export.json` gerado no passo 2 precisa chegar no PC do
-cliente. Não existe um caminho automático para isso — copie manualmente, do
-jeito que for mais prático para você, por exemplo:
+O arquivo `tenant-export.json` gerado no passo 2 está **dentro do container**
+na Hetzner — precisa sair de lá em duas etapas: primeiro pro disco da própria
+Hetzner, depois pro PC do cliente. Não existe um caminho automático para
+isso — copie manualmente, do jeito que for mais prático para você:
 
 ```bash
-# Se você gerou o export dentro do container na Hetzner:
-docker cp pdv_app:/app/tenant-export.json ./tenant-export.json
+# 1. Ainda com SSH aberto na Hetzner (ou reabra): tira o arquivo de dentro
+#    do container pro disco do servidor.
+docker cp pdv_app:/app/tenant-export.json /opt/pdv/tenant-export.json
+exit
 
-# Para levar da sua máquina até o PC do cliente (rede local, pendrive, etc.):
+# 2. Da sua própria máquina, copie da Hetzner pro PC do cliente (rede local,
+#    pendrive, etc.) — ou baixe primeiro pra sua máquina e leve por scp/pendrive.
+scp -i ~/.ssh/pdv_deploy root@37.27.220.149:/opt/pdv/tenant-export.json ./tenant-export.json
 scp tenant-export.json usuario@pc-do-cliente:/caminho/pdv/tenant-export.json
 ```
 
