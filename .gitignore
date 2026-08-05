@@ -56,3 +56,7 @@ next-env.d.ts
 # Design reference mockups (não versionados)
 /Design funcional e moderno/
 /Redesign do PDV/
+
+# Export de dados de tenant (feature 0026F) — contém PII e hash de senha;
+# nunca deve ser commitado no repositório público.
+tenant-export*.json
