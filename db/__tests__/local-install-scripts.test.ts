@@ -99,3 +99,31 @@ describe("documentação de instalação/atualização (script-SC10-docs-exist)"
     expect(existsSync(join(featureDocsDir, "UPDATE.md"))).toBe(true);
   });
 });
+
+describe("coletar-logs.sh — estrutura e guardas (chore 0027C)", () => {
+  const scriptPath = join(root, "scripts", "coletar-logs.sh");
+  const content = readFileSync(scriptPath, "utf-8");
+
+  it("aborta se .env não existe, mesma guarda de update-local.sh", () => {
+    expect(content).toMatch(/!\s*-f\s+\.env/);
+  });
+
+  it("usa docker-compose.prod.yml e coleta ps + logs de app e db", () => {
+    expect(content).toMatch(/docker-compose\.prod\.yml/);
+    expect(content).toMatch(/docker compose[^\n]*ps/);
+    expect(content).toMatch(/docker compose[^\n]*logs[^\n]*\bapp\b/);
+    expect(content).toMatch(/docker compose[^\n]*logs[^\n]*\bdb\b/);
+  });
+
+  it("grava a coleta num arquivo .txt, não só imprime no terminal", () => {
+    expect(content).toMatch(/>\s*"?\$OUT"?/);
+    expect(content).toMatch(/logs-pdv-.*\.txt/);
+  });
+
+  it("não referencia código do app (app/, lib/, components/, db/schema/) — só leitura de logs", () => {
+    expect(content).not.toMatch(/\bapp\//);
+    expect(content).not.toMatch(/\blib\//);
+    expect(content).not.toMatch(/\bcomponents\//);
+    expect(content).not.toMatch(/db\/schema\//);
+  });
+});
