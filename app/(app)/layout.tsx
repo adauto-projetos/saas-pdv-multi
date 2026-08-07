@@ -7,7 +7,7 @@ import { getAuthUser } from "@/lib/auth/session";
 import { getNavPermissions } from "@/lib/auth/permissions";
 import { getImpersonatedTenantId } from "@/lib/auth/impersonation";
 import { getUserTenantId } from "@/lib/services/tenants/onboarding";
-import { getDaysUntilExpiry, getTenantStatus } from "@/lib/services/subscriptions/subscription-status";
+import { getTenantStatus, resolveSubscriptionBanners } from "@/lib/services/subscriptions/subscription-status";
 import { selectHasRenewed } from "@/lib/services/subscriptions/repository";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -59,7 +59,6 @@ export default async function AppLayout({
   const canSeeAll = nav.isOwner || impersonating;
 
   let subscriptionStatus: "testando" | "ativa" | "travada" | null = null;
-  let daysLeft = 0;
   let storeName = "";
 
   const [tenantRow] = await db
@@ -76,22 +75,16 @@ export default async function AppLayout({
     storeName = tenantRow.name;
     const hasRenewed = await selectHasRenewed(tenantId);
     subscriptionStatus = getTenantStatus(tenantRow, hasRenewed);
-
-    // Days until expiry for warning banner (RF04: warn when < 3 days).
-    if (tenantRow.validUntil && subscriptionStatus !== "travada") {
-      daysLeft = getDaysUntilExpiry(tenantRow.validUntil);
-    }
   }
 
-  // Impersonando, não mostramos os banners de assinatura da loja-alvo — eles são
-  // do contexto do dono, não do suporte do super admin.
-  const showWarning =
-    !impersonating && subscriptionStatus !== null && subscriptionStatus !== "travada" && daysLeft <= 3;
-  const showLocked = !impersonating && subscriptionStatus === "travada";
-  // Em teste e ainda com folga (> 3 dias): banner informativo sempre visível com
-  // os dias restantes. Na reta final (≤ 3 dias) o aviso âmbar acima assume.
-  const showTrial =
-    !impersonating && subscriptionStatus === "testando" && !showWarning && daysLeft > 0;
+  // Decisão dos banners (RF04) numa função pura e testada — inclui a regra de
+  // que loja SEM vencimento (`validUntil` null) nunca vira aviso de expiração.
+  const { showWarning, showLocked, showTrial, daysLeft } =
+    resolveSubscriptionBanners({
+      status: subscriptionStatus,
+      validUntil: tenantRow?.validUntil ?? null,
+      impersonating,
+    });
 
   return (
     <HelpProvider>
