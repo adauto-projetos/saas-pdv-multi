@@ -1,4 +1,5 @@
 import { withUserRls } from "@/db/rls";
+import { endOfTodayBrazil, startOfTodayBrazil } from "@/lib/business-day";
 import { insertCashMovement } from "@/lib/services/finance/cash-data";
 import { recordSaleReceivable } from "@/lib/services/finance/receivable-service";
 import { ValidationError } from "@/lib/services/errors";
@@ -123,11 +124,14 @@ export async function finalizeSale(
   });
 }
 
-/** RF09 — vendas do dia atual (fuso do servidor). */
+/**
+ * RF09 — vendas do dia atual (fuso do Brasil, UTC-3 — hotfix 0027H: antes usava
+ * getters locais do runtime, que em produção refletem UTC, fazendo o "dia"
+ * virar amanhã às 21h no horário do Brasil).
+ */
 export async function listTodaySales(ctx: AuthContext): Promise<SaleDto[]> {
-  const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const to = new Date(from.getTime() + 24 * 60 * 60 * 1000);
+  const from = startOfTodayBrazil();
+  const to = endOfTodayBrazil();
   return withUserRls(ctx.userId, (tx) =>
     data.selectSalesOfDay(tx, ctx.tenantId, from, to),
   );

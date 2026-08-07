@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import { withUserRls } from "@/db/rls";
 import { comandaItems, comandas, products, saleItems, sales } from "@/db/schema";
+import { todayBrazilIso } from "@/lib/business-day";
 import type { AuthContext } from "@/types/product";
 import type { ComandaDto, ComandaItemDto } from "@/types/comanda";
 import type { SaleDto } from "@/types/sale";
@@ -28,10 +29,11 @@ import { UsbPrinterDriver } from "./printer-driver";
 /**
  * Retorna a data atual em UTC-3 no formato YYYY-MM-DD (RN02).
  * O sequencial de cozinha reinicia à meia-noite local (UTC-3).
+ * Reaproveita `@/lib/business-day` (hotfix 0027H) — implementação original
+ * desta função, generalizada e centralizada para todo o app.
  */
 function todayUtcMinus3(): string {
-  const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
+  return todayBrazilIso();
 }
 
 // ---- T06 — tryKitchenPrint / tryReceiptPrint --------------------------------
