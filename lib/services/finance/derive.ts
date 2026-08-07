@@ -1,12 +1,13 @@
+import { todayBrazilIso } from "@/lib/business-day";
 import type { AccountStatus } from "@/types/finance";
 
-/** Data de hoje em "YYYY-MM-DD" (fuso do servidor), para comparar com due_date. */
+/**
+ * Data de hoje em "YYYY-MM-DD" (fuso do Brasil, UTC-3 — hotfix 0027H: antes
+ * usava getters locais do runtime, que em produção refletem UTC e marcavam
+ * contas como vencidas 3h antes da meia-noite local), para comparar com due_date.
+ */
 export function todayIso(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return todayBrazilIso();
 }
 
 /** Status derivado do saldo (RN04): aberto / parcial / quitado. */

@@ -1,4 +1,5 @@
 import { withUserRls } from "@/db/rls";
+import { endOfTodayBrazil, startOfTodayBrazil } from "@/lib/business-day";
 import type { ProfitFilterInput } from "@/lib/validation/profit";
 import type { AuthContext } from "@/types/product";
 import type { ProfitDto } from "@/types/profit";
@@ -43,13 +44,13 @@ export async function getProfitByPeriod(
 }
 
 /**
- * Resolve o intervalo [from, to). Default = hoje (fuso do servidor), espelhando
- * `listTodaySales`. Datas inválidas no filtro caem no default.
+ * Resolve o intervalo [from, to). Default = hoje (fuso do Brasil, UTC-3 —
+ * hotfix 0027H), espelhando `listTodaySales`. Datas inválidas no filtro caem
+ * no default.
  */
 function resolvePeriod(filter: ProfitFilterInput): { from: Date; to: Date } {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  const todayStart = startOfTodayBrazil();
+  const todayEnd = endOfTodayBrazil();
 
   const fromDate = filter.from ? new Date(filter.from) : null;
   const toDate = filter.to ? new Date(filter.to) : null;
