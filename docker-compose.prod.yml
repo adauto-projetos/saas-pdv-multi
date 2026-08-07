@@ -1,4 +1,5 @@
-# ⚠️ TOPOLOGIA: o app publica direto na porta 80 (mapeamento "80:3000" abaixo).
+# ⚠️ TOPOLOGIA: o app publica direto na porta do host (default 80, configurável
+# via APP_PORT no .env — ver mapeamento abaixo).
 # Use APENAS em deploy SEM reverse proxy. Se for usar o nginx de docker-compose.proxy.yml
 # (que também escuta na 80), NÃO suba os dois no mesmo host — conflito de porta 80.
 # São topologias mutuamente exclusivas: ou app-direto-na-80 (este arquivo) ou nginx-na-80 (proxy).
@@ -29,7 +30,11 @@ services:
     container_name: pdv_app
     restart: unless-stopped
     ports:
-      - "80:3000"
+      # Porta do host configurável via APP_PORT no .env (default 80). Necessário
+      # quando a 80 já está ocupada na máquina (ex.: IIS no Windows) — antes o
+      # valor era fixo, e editar este arquivo à mão quebrava no próximo
+      # update-local.sh (git sobrescreve arquivos versionados; o .env não).
+      - "${APP_PORT:-80}:3000"
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/pdv
